@@ -56,10 +56,20 @@ export default function TableDetail() {
   const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
 
   const handleAddGuest = () => {
-    const name = newGuestName.trim();
-    addGuest(table.id, name);
-    toast.success(`✓ ${name || 'Nuevo comensal'} agregado`);
-    setNewGuestName('');
+    const seatNum = parseInt(newSeatNumber.trim(), 10);
+    if (isNaN(seatNum) || seatNum < 1) return;
+    // Create guest and assign seat in one step
+    const guestId = `g${table.id}-m${Date.now()}`;
+    addGuest(table.id, '');
+    // Find the just-added guest (last one) and assign seat
+    // We use a slight workaround: addGuest creates with auto name, then we assign seat
+    setTimeout(() => {
+      const current = useTablesStore.getState().tables.find((t) => t.id === table.id);
+      const lastGuest = current?.guests[current.guests.length - 1];
+      if (lastGuest) assignSeat(table.id, lastGuest.id, seatNum);
+    }, 0);
+    toast.success(`✓ Silla ${seatNum} agregada`);
+    setNewSeatNumber('');
     setShowAddGuest(false);
   };
 
