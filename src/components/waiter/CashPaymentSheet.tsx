@@ -1,26 +1,109 @@
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
-import { useTablesStore, type GuestInfo, type OrderItem } from '@/stores/tablesStore';
+import { X, Split, Check } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { useTablesStore, type GuestInfo, type OrderItem, type Round, type ItemAssignment } from '@/stores/tablesStore';
 import { toast } from 'sonner';
+
+interface FlatItem {
+  roundNumber: number;
+  itemIndex: number;
+  name: string;
+  qty: number;
+  price: number;
+  total: number;
+  assignedTo?: string;
+  assignedName?: string;
+}
 
 interface Props {
   tableId: string;
   guest: GuestInfo;
-  allItems: OrderItem[];
+  rounds: Round[];
+  allGuests: GuestInfo[];
   onDismiss: () => void;
 }
 
-export default function CashPaymentSheet({ tableId, guest, allItems, onDismiss }: Props) {
-  const markGuestPaidCash = useTablesStore((s) => s.markGuestPaidCash);
-  const guestItems = allItems.filter((i) => i.assignedTo === guest.id);
-  const hasAssigned = guestItems.length > 0;
+export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, onDismiss }: Props) {
+  const assignItemsAndPay = useTablesStore((s) => s.assignItemsAndPay);
+
+  // Flatten all items across rounds
+  const flatItems = useMemo<FlatItem[]>(() => {
+    const items: FlatItem[] = [];
+    rounds.forEach((r) => {
+      r.items.forEach((item, idx) => {
+        const owner = item.assignedTo ? allGuests.find((g) => g.id === item.assignedTo) : null;
+        items.push({
+          roundNumber: r.number,
+          itemIndex: idx,
+          name: item.name,
+          qty: item.qty,
+          price: item.price,
+          total: item.price * item.qty,
+          assignedTo: item.assignedTo,
+          assignedName: owner?.name,
+        });
+      });
+    });
+    return items;
+  }, [rounds, allGuests]);
+
+  // Track selected items: key = "roundNumber-itemIndex"
+  const [selected, setSelected] = useState<Set<string>>(() => {
+    const initial = new Set<string>();
+    flatItems.forEach((fi) => {
+      if (fi.assignedTo === guest.id) initial.add(`${fi.roundNumber}-${fi.itemIndex}`);
+    });
+    return initial;
+  });
+
+  // Track split counts per item key
+  const [splits, setSplits] = useState<Record<string, number>>({});
+
+  const toggleItem = (key: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleSplit = (key: string) => {
+    setSplits((prev) => {
+      const current = prev[key] || 1;
+      if (current === 1) return { ...prev, [key]: 2 };
+      if (current === 2) return { ...prev, [key]: 3 };
+      // Reset back to 1
+      const { [key]: _, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const dynamicTotal = useMemo(() => {
+    let total = 0;
+    flatItems.forEach((fi) => {
+      const key = `${fi.roundNumber}-${fi.itemIndex}`;
+      if (selected.has(key)) {
+        const splitCount = splits[key] || 1;
+        total += fi.total / splitCount;
+      }
+    });
+    return Math.round(total * 100) / 100;
+  }, [selected, splits, flatItems]);
 
   const handlePay = (method: 'cash' | 'card-physical') => {
-    markGuestPaidCash(tableId, guest.id, method);
+    const assignments: ItemAssignment[] = [];
+    selected.forEach((key) => {
+      const [rn, ii] = key.split('-').map(Number);
+      assignments.push({ roundNumber: rn, itemIndex: ii, splitCount: splits[key] || 1 });
+    });
+    assignItemsAndPay(tableId, guest.id, method, assignments);
     const label = method === 'cash' ? '💵 Efectivo' : '💳 Tarjeta física';
-    toast.success(`${label} · ${guest.name} · $${guest.amountOwed}`);
+    toast.success(`${label} · ${guest.name} · $${dynamicTotal}`);
     onDismiss();
   };
+
+  const hasSelection = selected.size > 0;
 
   return (
     <>
@@ -32,54 +115,109 @@ export default function CashPaymentSheet({ tableId, guest, allItems, onDismiss }
       <motion.div
         initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="fixed bottom-0 left-0 right-0 z-[51] bg-w-elevated rounded-t-[16px] border-t border-w-border"
+        className="fixed bottom-0 left-0 right-0 z-[51] bg-w-elevated rounded-t-[16px] border-t border-w-border max-h-[85vh] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 pb-2">
+        <div className="flex items-center justify-between p-4 pb-2 shrink-0">
           <div>
-            <h3 className="text-[14px] font-semibold text-w-text">💰 Cobrar en mesa</h3>
-            <p className="text-[12px] text-w-text-secondary">{guest.name}</p>
+            <h3 className="text-[14px] font-semibold text-w-text">💰 Cobrar · {guest.name}</h3>
+            <p className="text-[11px] text-w-text-secondary">Selecciona los items de este comensal</p>
           </div>
           <button onClick={onDismiss} className="w-11 h-11 flex items-center justify-center">
             <X size={18} className="text-w-text-secondary" />
           </button>
         </div>
 
-        <div className="px-4 pb-4 space-y-3">
-          {/* Breakdown */}
-          {hasAssigned ? (
-            <div className="rounded-[8px] border border-w-border bg-w-surface p-3 space-y-1.5">
-              <p className="text-[10px] font-mono uppercase tracking-wider text-w-text-secondary mb-1">Desglose</p>
-              {guestItems.map((item, i) => (
-                <div key={i} className="flex justify-between text-[12px]">
-                  <span className="text-w-text">{item.name} ×{item.qty}</span>
-                  <span className="font-mono text-w-text-secondary">${item.price * item.qty}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-[8px] border border-w-border bg-w-surface p-3">
-              <p className="text-[12px] text-w-text-secondary text-center">Sin items asignados individualmente</p>
-            </div>
-          )}
+        {/* Items checklist */}
+        <div className="flex-1 overflow-y-auto px-4 pb-2 space-y-1.5">
+          {flatItems.map((fi) => {
+            const key = `${fi.roundNumber}-${fi.itemIndex}`;
+            const isSelected = selected.has(key);
+            const isOtherGuest = fi.assignedTo && fi.assignedTo !== guest.id;
+            const otherGuestPaid = isOtherGuest && allGuests.find((g) => g.id === fi.assignedTo)?.paymentStatus === 'paid';
+            const splitCount = splits[key] || 1;
+            const displayPrice = splitCount > 1 ? fi.total / splitCount : fi.total;
+            const isDisabled = !!otherGuestPaid;
 
-          {/* Total */}
+            return (
+              <button
+                key={key}
+                onClick={() => !isDisabled && toggleItem(key)}
+                disabled={isDisabled}
+                className={`w-full flex items-center gap-3 p-2.5 rounded-[8px] border transition-all min-h-[44px] text-left ${
+                  isDisabled
+                    ? 'border-w-border/50 bg-w-surface/50 opacity-50'
+                    : isSelected
+                    ? 'border-w-brand/40 bg-w-brand/5'
+                    : 'border-w-border bg-w-surface'
+                }`}
+              >
+                {/* Checkbox */}
+                <div className={`w-5 h-5 rounded-[4px] border-2 flex items-center justify-center shrink-0 ${
+                  isSelected ? 'border-w-brand bg-w-brand' : 'border-w-text-secondary/40'
+                }`}>
+                  {isSelected && <Check size={12} className="text-white" />}
+                </div>
+
+                {/* Item info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[13px] text-w-text truncate">{fi.name} ×{fi.qty}</span>
+                    {isOtherGuest && !otherGuestPaid && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-text-secondary/10 text-w-text-secondary shrink-0">
+                        {fi.assignedName}
+                      </span>
+                    )}
+                    {otherGuestPaid && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-success/10 text-w-success shrink-0">
+                        ✓ {fi.assignedName}
+                      </span>
+                    )}
+                  </div>
+                  {splitCount > 1 && (
+                    <span className="text-[10px] text-w-brand">÷{splitCount} = ${displayPrice.toFixed(0)} c/u</span>
+                  )}
+                </div>
+
+                {/* Price + split */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`font-mono text-[13px] ${isSelected ? 'text-w-text font-medium' : 'text-w-text-secondary'}`}>
+                    ${splitCount > 1 ? displayPrice.toFixed(0) : fi.total}
+                  </span>
+                  {isSelected && !isDisabled && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleSplit(key); }}
+                      className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                        splitCount > 1 ? 'bg-w-brand/15 text-w-brand' : 'bg-w-surface text-w-text-secondary'
+                      }`}
+                    >
+                      <Split size={12} />
+                    </button>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer: total + pay buttons */}
+        <div className="shrink-0 border-t border-w-border px-4 pt-3 pb-4 space-y-3">
           <div className="flex items-center justify-between px-1">
             <span className="text-[13px] text-w-text font-medium">Total a cobrar</span>
-            <span className="font-mono text-[18px] font-bold text-w-text">${guest.amountOwed}</span>
+            <span className="font-mono text-[20px] font-bold text-w-text">${dynamicTotal}</span>
           </div>
-
-          {/* Payment buttons */}
           <div className="flex gap-2">
             <button
               onClick={() => handlePay('cash')}
-              className="flex-1 h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
+              disabled={!hasSelection}
+              className="flex-1 h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform disabled:opacity-40"
             >
               💵 Pagó efectivo ✓
             </button>
             <button
               onClick={() => handlePay('card-physical')}
-              className="flex-1 h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
+              disabled={!hasSelection}
+              className="flex-1 h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform disabled:opacity-40"
             >
               💳 Pagó tarjeta ✓
             </button>

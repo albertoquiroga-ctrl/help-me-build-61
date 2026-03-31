@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useTablesStore } from '@/stores/tablesStore';
@@ -26,6 +26,9 @@ export default function TableDetail() {
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
   const [manualOrderGuest, setManualOrderGuest] = useState<{ id: string; name: string } | null>(null);
   const [cashPaymentGuest, setCashPaymentGuest] = useState<string | null>(null);
+  const [showAddGuest, setShowAddGuest] = useState(false);
+  const [newGuestName, setNewGuestName] = useState('');
+  const addGuest = useTablesStore((s) => s.addGuest);
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
@@ -44,8 +47,15 @@ export default function TableDetail() {
     (g) => g.paymentStatus === 'pending' && g.amountOwed > 0 && (allDelivered || table.status === 'paying')
   );
 
-  const allItems = table.rounds.flatMap((r) => r.items);
   const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
+
+  const handleAddGuest = () => {
+    if (!newGuestName.trim()) return;
+    addGuest(table.id, newGuestName.trim());
+    toast.success(`✓ ${newGuestName.trim()} agregado`);
+    setNewGuestName('');
+    setShowAddGuest(false);
+  };
 
   return (
     <div className="min-h-screen bg-w-bg">
@@ -64,9 +74,31 @@ export default function TableDetail() {
         {/* Guests */}
         <div>
           <p className="text-[11px] font-mono uppercase tracking-wider text-w-text-secondary mb-2">Comensales</p>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none items-center">
             {table.guests.map((g) => <GuestPill key={g.id} guest={g} />)}
+            {!showAddGuest && (
+              <button
+                onClick={() => setShowAddGuest(true)}
+                className="shrink-0 w-8 h-8 rounded-full border border-dashed border-w-text-secondary/40 flex items-center justify-center text-w-text-secondary active:scale-95 transition-transform"
+              >
+                <Plus size={14} />
+              </button>
+            )}
           </div>
+          {showAddGuest && (
+            <div className="flex gap-2 mt-1">
+              <input
+                autoFocus
+                value={newGuestName}
+                onChange={(e) => setNewGuestName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddGuest()}
+                placeholder="Nombre del comensal"
+                className="flex-1 h-9 rounded-[6px] border border-w-border bg-w-surface px-3 text-[13px] text-w-text placeholder:text-w-text-secondary/50 focus:outline-none focus:border-w-brand"
+              />
+              <button onClick={handleAddGuest} className="px-3 h-9 rounded-[6px] bg-w-brand text-white text-[12px] font-semibold">Agregar</button>
+              <button onClick={() => { setShowAddGuest(false); setNewGuestName(''); }} className="px-2 h-9 rounded-[6px] text-w-text-secondary text-[12px]">✕</button>
+            </div>
+          )}
           {table.guests.length > 0 && (
             <div className="mt-2">
               <div className="w-full h-1.5 bg-w-border rounded-full overflow-hidden">
@@ -129,16 +161,22 @@ export default function TableDetail() {
                   {isExpanded && (
                     <div className="px-3 pb-3 border-t border-w-border pt-2 space-y-1.5">
                       {round.items.map((item, i) => (
-                        <div key={i} className="flex justify-between text-[12px]">
-                          <span className="text-w-text">
-                            {item.name} ×{item.qty}
-                            {item.assignedTo && (
-                              <span className="text-w-text-secondary ml-1">
-                                · {table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
+                         <div key={i} className="flex justify-between text-[12px]">
+                          <div className="flex items-center gap-1 flex-1 min-w-0">
+                            <span className="text-w-text">
+                              {item.name} ×{item.qty}
+                            </span>
+                            {item.assignedTo ? (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-brand/10 text-w-brand shrink-0">
+                                {table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
+                              </span>
+                            ) : (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-text-secondary/10 text-w-text-secondary shrink-0">
+                                Sin asignar
                               </span>
                             )}
-                          </span>
-                          <span className="font-mono text-w-text-secondary">${item.price * item.qty}</span>
+                          </div>
+                          <span className="font-mono text-w-text-secondary shrink-0">${item.price * item.qty}</span>
                         </div>
                       ))}
                     </div>
@@ -252,7 +290,8 @@ export default function TableDetail() {
           <CashPaymentSheet
             tableId={table.id}
             guest={cashGuest}
-            allItems={allItems}
+            rounds={table.rounds}
+            allGuests={table.guests}
             onDismiss={() => setCashPaymentGuest(null)}
           />
         )}
