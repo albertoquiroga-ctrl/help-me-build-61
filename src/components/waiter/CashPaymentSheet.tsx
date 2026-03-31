@@ -99,7 +99,7 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
     });
     assignItemsAndPay(tableId, guest.id, method, assignments);
     const label = method === 'cash' ? '💵 Efectivo' : '💳 Tarjeta física';
-    toast.success(`${label} · ${guest.name} · $${dynamicTotal}`);
+    toast.success(`${label} · ${guestDisplayName(guest)} · $${dynamicTotal}`);
     onDismiss();
   };
 
