@@ -150,11 +150,11 @@ const initialTables: WaiterTable[] = [
   {
     id: '7', number: 7, section: 'Terraza',
     guests: [
-      { id: 'g7-1', name: 'Grupo 1', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g7-2', name: 'Grupo 2', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g7-3', name: 'Grupo 3', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g7-4', name: 'Grupo 4', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g7-5', name: 'Grupo 5', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-1', name: 'Silla 1', seatNumber: 1, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-2', name: 'Silla 2', seatNumber: 2, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-3', name: 'Silla 3', seatNumber: 3, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-4', name: 'Silla 4', seatNumber: 4, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-5', name: 'Silla 5', seatNumber: 5, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
     ],
     rounds: [
       { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 3, price: 120 }, { name: 'Agua de Jamaica', qty: 2, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 25 * 60000).toISOString() },
