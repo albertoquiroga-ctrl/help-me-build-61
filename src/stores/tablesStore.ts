@@ -171,7 +171,7 @@ const initialTables: WaiterTable[] = [
     ],
     rounds: [
       { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 3, price: 120 }, { name: 'Agua de Jamaica', qty: 2, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 25 * 60000).toISOString() },
-      { number: 2, label: 'Entradas', items: [{ name: 'Guacamole', qty: 2, price: 95 }], status: 'confirmed', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
+      { number: 2, label: 'Entradas', items: [{ name: 'Guacamole', qty: 2, price: 95, assignedTo: 'g7-3' }, { name: 'Nachos con Queso', qty: 1, price: 85, assignedTo: 'g7-1' }, { name: 'Quesadilla de Huitlacoche', qty: 1, price: 110, assignedTo: 'g7-2' }], status: 'pending', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En orden', timeOpened: 28, tipTotal: 0,
   },
