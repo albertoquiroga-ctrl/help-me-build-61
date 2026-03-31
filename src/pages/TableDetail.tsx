@@ -76,38 +76,62 @@ export default function TableDetail() {
         {/* Guests */}
         <div>
           <p className="text-[11px] font-mono uppercase tracking-wider text-w-text-secondary mb-2">Comensales</p>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none items-center">
-            {table.guests.map((g) => <GuestPill key={g.id} guest={g} />)}
-            {!showAddGuest && (
-              <button
-                onClick={() => setShowAddGuest(true)}
-                className="shrink-0 w-8 h-8 rounded-full border border-dashed border-w-text-secondary/40 flex items-center justify-center text-w-text-secondary active:scale-95 transition-transform"
-              >
-                <Plus size={14} />
-              </button>
-            )}
-          </div>
-          {showAddGuest && (
-            <div className="flex gap-2 mt-1">
-              <input
-                autoFocus
-                value={newGuestName}
-                onChange={(e) => setNewGuestName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddGuest()}
-                placeholder="Nombre del comensal"
-                className="flex-1 h-9 rounded-[6px] border border-w-border bg-w-surface px-3 text-[13px] text-w-text placeholder:text-w-text-secondary/50 focus:outline-none focus:border-w-brand"
-              />
-              <button onClick={handleAddGuest} className="px-3 h-9 rounded-[6px] bg-w-brand text-white text-[12px] font-semibold">Agregar</button>
-              <button onClick={() => { setShowAddGuest(false); setNewGuestName(''); }} className="px-2 h-9 rounded-[6px] text-w-text-secondary text-[12px]">✕</button>
+
+          {/* Seat initialization for empty tables */}
+          {table.guests.length === 0 && (
+            <div className="rounded-[10px] border border-dashed border-w-border bg-w-surface p-4 text-center space-y-3">
+              <p className="text-[13px] text-w-text">¿Cuántos comensales?</p>
+              <div className="flex justify-center gap-2">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => {
+                      initializeSeats(table.id, n);
+                      toast.success(`✓ ${n} silla${n > 1 ? 's' : ''} creada${n > 1 ? 's' : ''}`);
+                    }}
+                    className="w-10 h-10 rounded-[8px] border border-w-border bg-w-bg text-w-text font-semibold text-[14px] active:scale-95 transition-transform hover:border-w-brand hover:text-w-brand"
+                  >
+                    {n === 6 ? '6+' : n}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
+
           {table.guests.length > 0 && (
-            <div className="mt-2">
-              <div className="w-full h-1.5 bg-w-border rounded-full overflow-hidden">
-                <div className="h-full bg-w-brand rounded-full transition-all" style={{ width: `${paidPct}%` }} />
+            <>
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none items-center flex-wrap">
+                {table.guests.map((g) => <GuestPill key={g.id} guest={g} tableId={table.id} editable />)}
+                {!showAddGuest && (
+                  <button
+                    onClick={() => setShowAddGuest(true)}
+                    className="shrink-0 w-8 h-8 rounded-full border border-dashed border-w-text-secondary/40 flex items-center justify-center text-w-text-secondary active:scale-95 transition-transform"
+                  >
+                    <Plus size={14} />
+                  </button>
+                )}
               </div>
-              <p className="text-[11px] text-w-text-secondary mt-1">{paidCount} de {table.guests.length} pagaron · {paidPct}%</p>
-            </div>
+              {showAddGuest && (
+                <div className="flex gap-2 mt-1">
+                  <input
+                    autoFocus
+                    value={newGuestName}
+                    onChange={(e) => setNewGuestName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddGuest()}
+                    placeholder="Nombre (vacío = Silla N)"
+                    className="flex-1 h-9 rounded-[6px] border border-w-border bg-w-surface px-3 text-[13px] text-w-text placeholder:text-w-text-secondary/50 focus:outline-none focus:border-w-brand"
+                  />
+                  <button onClick={handleAddGuest} className="px-3 h-9 rounded-[6px] bg-w-brand text-white text-[12px] font-semibold">Agregar</button>
+                  <button onClick={() => { setShowAddGuest(false); setNewGuestName(''); }} className="px-2 h-9 rounded-[6px] text-w-text-secondary text-[12px]">✕</button>
+                </div>
+              )}
+              <div className="mt-2">
+                <div className="w-full h-1.5 bg-w-border rounded-full overflow-hidden">
+                  <div className="h-full bg-w-brand rounded-full transition-all" style={{ width: `${paidPct}%` }} />
+                </div>
+                <p className="text-[11px] text-w-text-secondary mt-1">{paidCount} de {table.guests.length} pagaron · {paidPct}%</p>
+              </div>
+            </>
           )}
         </div>
 
