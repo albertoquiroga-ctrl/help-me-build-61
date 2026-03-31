@@ -518,4 +518,22 @@ export const useTablesStore = create<TablesState>((set) => ({
       });
       return { tables: applyDerived(updated, tableId) };
     }),
+  removeRound: (tableId, roundNumber) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        const rounds = t.rounds.filter((r) => r.number !== roundNumber);
+        // Reset amountOwed for guests whose items were in this round
+        const removedRound = t.rounds.find((r) => r.number === roundNumber);
+        const guests = t.guests.map((g) => {
+          const removedAmount = removedRound?.items
+            .filter((item) => item.assignedTo === g.id)
+            .reduce((sum, item) => sum + item.qty * item.price, 0) ?? 0;
+          if (removedAmount <= 0) return g;
+          return { ...g, amountOwed: Math.max(0, g.amountOwed - removedAmount) };
+        });
+        return { ...t, rounds, guests };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
 }));

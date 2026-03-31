@@ -492,7 +492,8 @@ export default function TableDetail() {
                 </button>
                 <button
                   onClick={() => {
-                    toast.warning(`Rechazo enviado · R${pendingRound.number} Mesa ${table.number}`);
+                    useTablesStore.getState().removeRound(table.id, pendingRound.number);
+                    toast.warning(`Ronda R${pendingRound.number} rechazada · Mesa ${table.number} — el comensal puede volver a ordenar`);
                   }}
                   className="flex-1 h-12 rounded-[8px] border border-w-error text-w-error font-semibold text-[14px] active:scale-[0.98] transition-transform"
                 >
