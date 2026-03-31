@@ -126,17 +126,20 @@ export default function TableDetail() {
                 )}
               </div>
               {showAddGuest && (
-                <div className="flex gap-2 mt-1">
+                <div className="flex gap-2 mt-1 items-center">
+                  <span className="text-[12px] text-w-text-secondary shrink-0">🪑 Silla #</span>
                   <input
                     autoFocus
-                    value={newGuestName}
-                    onChange={(e) => setNewGuestName(e.target.value)}
+                    type="number"
+                    min="1"
+                    value={newSeatNumber}
+                    onChange={(e) => setNewSeatNumber(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddGuest()}
-                    placeholder="Nombre (vacío = Guest N)"
-                    className="flex-1 h-9 rounded-[6px] border border-w-border bg-w-surface px-3 text-[13px] text-w-text placeholder:text-w-text-secondary/50 focus:outline-none focus:border-w-brand"
+                    placeholder="Ej: 5"
+                    className="w-16 h-9 rounded-[6px] border border-w-border bg-w-surface px-3 text-[13px] text-w-text text-center placeholder:text-w-text-secondary/50 focus:outline-none focus:border-w-brand"
                   />
                   <button onClick={handleAddGuest} className="px-3 h-9 rounded-[6px] bg-w-brand text-white text-[12px] font-semibold">Agregar</button>
-                  <button onClick={() => { setShowAddGuest(false); setNewGuestName(''); }} className="px-2 h-9 rounded-[6px] text-w-text-secondary text-[12px]">✕</button>
+                  <button onClick={() => { setShowAddGuest(false); setNewSeatNumber(''); }} className="px-2 h-9 rounded-[6px] text-w-text-secondary text-[12px]">✕</button>
                 </div>
               )}
 
