@@ -68,12 +68,12 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
     });
   };
 
+  const maxSplit = allGuests.length;
+
   const toggleSplit = (key: string) => {
     setSplits((prev) => {
       const current = prev[key] || 1;
-      if (current === 1) return { ...prev, [key]: 2 };
-      if (current === 2) return { ...prev, [key]: 3 };
-      // Reset back to 1
+      if (current < maxSplit) return { ...prev, [key]: current + 1 };
       const { [key]: _, ...rest } = prev;
       return rest;
     });
