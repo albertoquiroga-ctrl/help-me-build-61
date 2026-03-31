@@ -25,6 +25,10 @@ function formatDuration(seconds: number) {
 
 export default function WaiterDashboard() {
   const tables = useTablesStore((s) => s.tables);
+  const addRound = useTablesStore((s) => s.addRound);
+  const updateRoundStatus = useTablesStore((s) => s.updateRoundStatus);
+  const markGuestPaymentFailed = useTablesStore((s) => s.markGuestPaymentFailed);
+  const markGuestLeft = useTablesStore((s) => s.markGuestLeft);
   const { waiterName, shiftDuration } = useWaiterSession();
   const todayTotal = useTipsStore((s) => s.todayTotal);
   const navigate = useNavigate();
@@ -34,15 +38,103 @@ export default function WaiterDashboard() {
   const addNotification = useNotificationsStore((s) => s.addNotification);
 
   const highestAlert = useNotificationsStore((s) => s.queue.find((n) => !n.dismissed));
+  const activeTables = tables.filter((t) => t.status !== 'empty');
 
   const simActions = [
-    { label: 'Nueva orden en Mesa 4 (R2)', action: () => { setOverlay('new-order'); setShowSimMenu(false); } },
-    { label: 'Orden lista Mesa 4 (R2)', action: () => { setOverlay('order-ready'); setShowSimMenu(false); } },
-    { label: 'Llamado servicio Mesa 4 (sal)', action: () => { setOverlay('service-call'); setShowSimMenu(false); } },
-    { label: 'Check-in sugerido Mesa 7', action: () => { setShowCheckIn(true); setShowSimMenu(false); } },
-    { label: 'Pago fallido Mesa 6', action: () => { setOverlay('payment-failed'); setShowSimMenu(false); } },
-    { label: 'C1 pagó y se fue Mesa 4', action: () => { setOverlay('early-exit'); setShowSimMenu(false); } },
-    { label: 'Todos pagaron Mesa 4', action: () => { setOverlay('table-close'); setShowSimMenu(false); } },
+    {
+      label: 'Nueva orden en Mesa 4 (R3)',
+      action: () => {
+        // Add a pending round to table 4
+        addRound('4', {
+          number: 3, label: 'Postres',
+          items: [{ name: 'Tiramisú', qty: 2, price: 145 }, { name: 'Flan Napolitano', qty: 1, price: 95 }],
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        });
+        addNotification({
+          id: `n-${Date.now()}`, type: 'new-order', priority: 'medium', tableId: '4',
+          title: 'Nueva orden · Mesa 4 · R3 · $385', subtitle: 'Esperando confirmación',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        setOverlay('new-order');
+        setShowSimMenu(false);
+      },
+    },
+    {
+      label: 'Orden lista Mesa 4 (R2)',
+      action: () => {
+        updateRoundStatus('4', 2, 'ready');
+        addNotification({
+          id: `n-${Date.now()}`, type: 'order-ready', priority: 'high', tableId: '4',
+          title: 'Orden lista · Mesa 4 · R2 · 3 items', subtitle: 'Listo para recoger',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        setOverlay('order-ready');
+        setShowSimMenu(false);
+      },
+    },
+    {
+      label: 'Llamado servicio Mesa 4 (sal)',
+      action: () => {
+        addNotification({
+          id: `n-${Date.now()}`, type: 'service-call', priority: 'medium', tableId: '4',
+          title: 'Llamado servicio · Mesa 4 · C3 · Sal y Pimienta', subtitle: 'Esperando',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        setOverlay('service-call');
+        setShowSimMenu(false);
+      },
+    },
+    {
+      label: 'Check-in sugerido Mesa 7',
+      action: () => {
+        addNotification({
+          id: `n-${Date.now()}`, type: 'check-in', priority: 'low', tableId: '7',
+          title: 'Check-in · Mesa 7 · 28 min sin nueva orden', subtitle: 'Sugerido',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        setShowCheckIn(true);
+        setShowSimMenu(false);
+      },
+    },
+    {
+      label: 'Pago fallido Mesa 6',
+      action: () => {
+        markGuestPaymentFailed('6', 'g6-2');
+        addNotification({
+          id: `n-${Date.now()}`, type: 'payment-failed', priority: 'urgent', tableId: '6',
+          title: 'Pago fallido · Mesa 6 · C2 · $245', subtitle: 'Tarjeta rechazada',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        setOverlay('payment-failed');
+        setShowSimMenu(false);
+      },
+    },
+    {
+      label: 'C1 pagó y se fue Mesa 4',
+      action: () => {
+        markGuestLeft('4', 'g4-1');
+        addNotification({
+          id: `n-${Date.now()}`, type: 'early-exit', priority: 'medium', tableId: '4',
+          title: 'C1 pagó y se fue · Mesa 4', subtitle: '$240 pagado · $74 propina',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        setOverlay('early-exit');
+        setShowSimMenu(false);
+      },
+    },
+    {
+      label: 'Todos pagaron Mesa 4',
+      action: () => {
+        addNotification({
+          id: `n-${Date.now()}`, type: 'table-close', priority: 'high', tableId: '4',
+          title: 'Todos pagaron · Mesa 4', subtitle: 'Mesa lista para cerrar',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        setOverlay('table-close');
+        setShowSimMenu(false);
+      },
+    },
   ];
 
   return (
@@ -78,12 +170,23 @@ export default function WaiterDashboard() {
           />
         )}
 
-        {/* Table grid */}
-        <div className="grid grid-cols-2 gap-2.5">
-          {tables.map((table) => (
-            <TableCard key={table.id} table={table} />
-          ))}
-        </div>
+        {/* Zero state */}
+        {activeTables.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <p className="text-[48px] mb-3">☕</p>
+            <p className="text-[18px] font-semibold text-w-text">Tu turno acaba de empezar</p>
+            <p className="text-[13px] text-w-text-secondary mt-1 text-center max-w-[240px]">
+              Las mesas asignadas aparecerán aquí conforme los comensales escaneen su QR.
+            </p>
+          </div>
+        ) : (
+          /* Table grid */
+          <div className="grid grid-cols-2 gap-2.5">
+            {tables.map((table) => (
+              <TableCard key={table.id} table={table} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Sim FAB */}

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import WaiterBottomNav from '@/components/waiter/WaiterBottomNav';
 import NotificationCard from '@/components/waiter/NotificationCard';
 import { useNotificationsStore } from '@/stores/notificationsStore';
@@ -11,10 +12,10 @@ const priorityIcons: Record<string, string> = {
 
 export default function AlertsQueue() {
   const { queue, markAllRead } = useNotificationsStore();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>('all');
 
-  // Mark all read on mount
-  useState(() => { markAllRead(); });
+  useEffect(() => { markAllRead(); }, []);
 
   const filtered = queue.filter((n) => {
     if (filter === 'active') return !n.resolved;
@@ -27,6 +28,12 @@ export default function AlertsQueue() {
     { key: 'active', label: 'Activas' },
     { key: 'resolved', label: 'Resueltas' },
   ];
+
+  const handleAlertClick = (n: typeof queue[0]) => {
+    if (n.tableId) {
+      navigate(`/waiter/table/${n.tableId}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-w-bg pb-20">
@@ -54,7 +61,13 @@ export default function AlertsQueue() {
           </div>
         ) : (
           filtered.map((n) => (
-            <NotificationCard key={n.id} priority={n.priority} title={`${priorityIcons[n.priority]} ${n.title}`} className={n.resolved ? 'opacity-60' : ''}>
+            <NotificationCard
+              key={n.id}
+              priority={n.priority}
+              title={`${priorityIcons[n.priority]} ${n.title}`}
+              className={n.resolved ? 'opacity-60' : ''}
+              onClick={() => handleAlertClick(n)}
+            >
               <div className="flex items-center justify-between mt-1.5">
                 <span className="font-mono text-[10px] text-w-text-secondary">
                   {new Date(n.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
