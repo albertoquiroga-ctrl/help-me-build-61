@@ -421,4 +421,30 @@ export const useTablesStore = create<TablesState>((set) => ({
       });
       return { tables: applyDerived(updated, tableId) };
     }),
+  removeItemFromRound: (tableId, roundNumber, itemIndex) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        const rounds = t.rounds.map((r) => {
+          if (r.number !== roundNumber) return r;
+          const items = r.items.filter((_, i) => i !== itemIndex);
+          return { ...r, items };
+        }).filter((r) => r.items.length > 0); // remove empty rounds
+        return { ...t, rounds };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
+  editItemInRound: (tableId, roundNumber, itemIndex, updates) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        const rounds = t.rounds.map((r) => {
+          if (r.number !== roundNumber) return r;
+          const items = r.items.map((item, i) => (i === itemIndex ? { ...item, ...updates } : item));
+          return { ...r, items };
+        });
+        return { ...t, rounds };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
 }));
