@@ -307,13 +307,11 @@ export const useTablesStore = create<TablesState>((set) => ({
     set((s) => {
       const updated = s.tables.map((t) => {
         if (t.id !== tableId) return t;
-        const maxSeat = t.guests.reduce((max, g) => Math.max(max, g.seatNumber || 0), 0);
-        const seatNum = maxSeat + 1;
-        const finalName = name || `Silla ${seatNum}`;
+        const guestNum = t.guests.length + 1;
+        const finalName = name || `Guest ${guestNum}`;
         const newGuest: GuestInfo = {
           id: `g${tableId}-m${Date.now()}`,
           name: finalName,
-          seatNumber: seatNum,
           amountOwed: 0,
           amountPaid: 0,
           tipAmount: 0,
@@ -331,8 +329,7 @@ export const useTablesStore = create<TablesState>((set) => ({
         if (t.id !== tableId) return t;
         const newGuests: GuestInfo[] = Array.from({ length: count }, (_, i) => ({
           id: `g${tableId}-s${i + 1}-${Date.now()}`,
-          name: `Silla ${i + 1}`,
-          seatNumber: i + 1,
+          name: `Guest ${i + 1}`,
           amountOwed: 0,
           amountPaid: 0,
           tipAmount: 0,
@@ -351,6 +348,32 @@ export const useTablesStore = create<TablesState>((set) => ({
           ? { ...t, guests: t.guests.map((g) => (g.id === guestId ? { ...g, name: newName } : g)) }
           : t
       ),
+    })),
+  assignSeat: (tableId, guestId, seatNumber) =>
+    set((s) => ({
+      tables: s.tables.map((t) =>
+        t.id === tableId
+          ? { ...t, guests: t.guests.map((g) => (g.id === guestId ? { ...g, seatLabel: `Silla ${seatNumber}`, seatNumber } : g)) }
+          : t
+      ),
+    })),
+  assignAllSeats: (tableId) =>
+    set((s) => ({
+      tables: s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        let nextSeat = 1;
+        const guests = t.guests.map((g) => {
+          if (g.seatLabel) {
+            nextSeat = Math.max(nextSeat, (g.seatNumber || 0) + 1);
+            return g;
+          }
+          const label = `Silla ${nextSeat}`;
+          const num = nextSeat;
+          nextSeat++;
+          return { ...g, seatLabel: label, seatNumber: num };
+        });
+        return { ...t, guests };
+      }),
     })),
   assignItemsAndPay: (tableId, guestId, method, assignments) =>
     set((s) => {
