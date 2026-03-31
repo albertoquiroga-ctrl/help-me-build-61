@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Plus, Trash2, Minus, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useTablesStore, guestDisplayName } from '@/stores/tablesStore';
 import type { GuestInfo } from '@/stores/tablesStore';
 import GuestPill from '@/components/waiter/GuestPill';
