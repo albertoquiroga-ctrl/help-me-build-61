@@ -25,6 +25,7 @@ export interface Round {
 export interface GuestInfo {
   id: string;
   name: string;
+  seatNumber?: number;
   amountOwed: number;
   amountPaid: number;
   tipAmount: number;
