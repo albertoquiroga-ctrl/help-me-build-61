@@ -4,10 +4,14 @@ export type PaymentStatus = 'pending' | 'paid' | 'left' | 'failed';
 export type RoundStatus = 'pending' | 'confirmed' | 'cooking' | 'ready' | 'delivered';
 export type TableStatus = 'active' | 'paying' | 'empty' | 'problem';
 
+export type OrderMethod = 'qr' | 'manual';
+export type PaymentMethod = 'qr' | 'cash' | 'card-physical' | null;
+
 export interface OrderItem {
   name: string;
   qty: number;
   price: number;
+  assignedTo?: string; // guest ID
 }
 
 export interface Round {
