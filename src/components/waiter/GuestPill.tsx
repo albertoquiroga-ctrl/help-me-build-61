@@ -128,7 +128,20 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
             >
               🪑 {hasSeat ? 'Cambiar silla' : 'Asignar silla'}
             </button>
-          </div>
+            {guest.orderMethod === 'manual' && guest.amountOwed === 0 && guest.paymentStatus === 'pending' && (
+              <button
+                onClick={() => {
+                  if (tableId) {
+                    removeGuest(tableId, guest.id);
+                    toast.success('Comensal eliminado');
+                  }
+                  setShowMenu(false);
+                }}
+                className="w-full text-left px-3 py-2.5 text-[12px] text-w-error hover:bg-w-surface transition-colors"
+              >
+                🗑️ Eliminar
+              </button>
+            )}
         </>,
         document.body
       )}
