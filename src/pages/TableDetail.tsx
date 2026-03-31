@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 const statusBadge: Record<string, { bg: string; text: string; label: string }> = {
   delivered: { bg: 'bg-w-success/15', text: 'text-w-success', label: 'Entregado ✓' },
   cooking: { bg: 'bg-w-warning/15', text: 'text-w-warning', label: 'En cocina 🔥' },
-  ready: { bg: 'bg-w-priority/15', text: 'text-w-priority', label: 'En camino 🚶' },
+  ready: { bg: 'bg-w-priority/15', text: 'text-w-priority', label: 'Listo para recoger 🚶' },
   confirmed: { bg: 'bg-w-priority/15', text: 'text-w-priority', label: 'Confirmado' },
   pending: { bg: 'bg-w-text-secondary/15', text: 'text-w-text-secondary', label: 'Pendiente' },
 };
@@ -19,13 +19,18 @@ export default function TableDetail() {
   const navigate = useNavigate();
   const table = useTablesStore((s) => s.tables.find((t) => t.id === id));
   const markDelivered = useTablesStore((s) => s.markDelivered);
+  const updateRoundStatus = useTablesStore((s) => s.updateRoundStatus);
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
-  const paidCount = table.guests.filter((g) => g.paymentStatus === 'paid').length;
+  const paidCount = table.guests.filter((g) => g.paymentStatus === 'paid' || g.paymentStatus === 'left').length;
   const paidPct = table.guests.length > 0 ? Math.round((paidCount / table.guests.length) * 100) : 0;
-  const inTransitRound = table.rounds.find((r) => r.status === 'ready' || r.status === 'cooking');
+  const readyRound = table.rounds.find((r) => r.status === 'ready');
+  const cookingRound = table.rounds.find((r) => r.status === 'cooking');
+  const pendingRound = table.rounds.find((r) => r.status === 'pending');
+  const allDelivered = table.rounds.length > 0 && table.rounds.every((r) => r.status === 'delivered');
+  const noPaying = table.guests.every((g) => g.paymentStatus === 'pending');
 
   return (
     <div className="min-h-screen bg-w-bg">
@@ -95,18 +100,61 @@ export default function TableDetail() {
           </div>
         </div>
 
-        {/* Actions */}
-        {inTransitRound && (
-          <button
-            onClick={() => {
-              markDelivered(table.id, inTransitRound.number);
-              toast.success(`✓ R${inTransitRound.number} entregada · Mesa ${table.number}`);
-            }}
-            className="w-full h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
-          >
-            Marcar R{inTransitRound.number} como entregado ✓
-          </button>
-        )}
+        {/* Contextual Actions */}
+        <div className="space-y-2">
+          {/* Pending round → Confirm / Reject */}
+          {pendingRound && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  updateRoundStatus(table.id, pendingRound.number, 'confirmed');
+                  toast.success(`✓ R${pendingRound.number} confirmada · Mesa ${table.number}`);
+                }}
+                className="flex-1 h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
+              >
+                Confirmar R{pendingRound.number} ✓
+              </button>
+              <button
+                onClick={() => {
+                  toast.warning(`Rechazo enviado · R${pendingRound.number} Mesa ${table.number}`);
+                }}
+                className="flex-1 h-12 rounded-[8px] border border-w-error text-w-error font-semibold text-[14px] active:scale-[0.98] transition-transform"
+              >
+                Rechazar
+              </button>
+            </div>
+          )}
+
+          {/* Ready round → Mark delivered */}
+          {readyRound && (
+            <button
+              onClick={() => {
+                markDelivered(table.id, readyRound.number);
+                toast.success(`✓ R${readyRound.number} entregada · Mesa ${table.number}`);
+              }}
+              className="w-full h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
+            >
+              Marcar R{readyRound.number} como entregado ✓
+            </button>
+          )}
+
+          {/* Cooking → info only */}
+          {!pendingRound && !readyRound && cookingRound && (
+            <div className="rounded-[8px] border border-w-warning/30 bg-w-warning/5 p-3 text-center">
+              <p className="text-[13px] text-w-warning font-medium">🔥 R{cookingRound.number} en cocina</p>
+            </div>
+          )}
+
+          {/* All delivered + nobody paying → Suggest bill */}
+          {allDelivered && noPaying && table.guests.length > 0 && (
+            <button
+              onClick={() => toast.info('💳 Sugerencia de cuenta enviada a los comensales')}
+              className="w-full h-12 rounded-[8px] border border-w-brand text-w-brand font-semibold text-[14px] active:scale-[0.98] transition-transform"
+            >
+              💳 Sugerir cuenta
+            </button>
+          )}
+        </div>
 
         {/* Tips */}
         {table.tipTotal > 0 && (

@@ -3,12 +3,27 @@ import { cn } from '@/lib/utils';
 import RoundBadge from './RoundBadge';
 import type { WaiterTable } from '@/stores/tablesStore';
 
-const statusDotColor: Record<string, string> = {
-  active: 'bg-w-success',
-  paying: 'bg-w-priority',
-  problem: 'bg-w-error',
-  empty: '',
-};
+/** Derive dot color from actual table data */
+function getDotInfo(table: WaiterTable): { color: string; pulse: boolean } {
+  const hasFailedPayment = table.guests.some((g) => g.paymentStatus === 'failed');
+  if (hasFailedPayment) return { color: 'bg-w-error', pulse: true };
+
+  const hasPendingRound = table.rounds.some((r) => r.status === 'pending');
+  if (hasPendingRound) return { color: 'bg-w-warning', pulse: true };
+
+  const hasReadyRound = table.rounds.some((r) => r.status === 'ready');
+  if (hasReadyRound) return { color: 'bg-w-success', pulse: true };
+
+  const hasCookingRound = table.rounds.some((r) => r.status === 'cooking');
+  if (hasCookingRound) return { color: 'bg-w-warning', pulse: false };
+
+  const allDelivered = table.rounds.length > 0 && table.rounds.every((r) => r.status === 'delivered');
+  const somePaying = table.guests.some((g) => g.paymentStatus === 'paid');
+  if (allDelivered && somePaying) return { color: 'bg-w-brand', pulse: false };
+  if (allDelivered) return { color: 'bg-w-success', pulse: false };
+
+  return { color: 'bg-w-text-secondary', pulse: false };
+}
 
 interface TableCardProps {
   table: WaiterTable;
@@ -17,8 +32,8 @@ interface TableCardProps {
 export default function TableCard({ table }: TableCardProps) {
   const navigate = useNavigate();
   const isEmpty = table.status === 'empty';
-  const needsAttention = table.statusText.includes('pendiente') || table.statusText.includes('Check-in');
   const lastRound = table.rounds[table.rounds.length - 1];
+  const dot = getDotInfo(table);
 
   if (isEmpty) {
     return (
@@ -36,8 +51,8 @@ export default function TableCard({ table }: TableCardProps) {
       {/* Status dot */}
       <div className={cn(
         'absolute top-2.5 right-2.5 w-2 h-2 rounded-full',
-        statusDotColor[table.status] || 'bg-w-warning',
-        needsAttention && 'animate-pulse-dot'
+        dot.color,
+        dot.pulse && 'animate-pulse-dot'
       )} />
 
       <p className="font-mono text-[20px] font-bold text-w-text text-center">{table.number}</p>
