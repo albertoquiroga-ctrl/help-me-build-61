@@ -121,11 +121,30 @@ export default function TableDetail() {
                     value={newGuestName}
                     onChange={(e) => setNewGuestName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddGuest()}
-                    placeholder="Nombre (vacío = Silla N)"
+                    placeholder="Nombre (vacío = Guest N)"
                     className="flex-1 h-9 rounded-[6px] border border-w-border bg-w-surface px-3 text-[13px] text-w-text placeholder:text-w-text-secondary/50 focus:outline-none focus:border-w-brand"
                   />
                   <button onClick={handleAddGuest} className="px-3 h-9 rounded-[6px] bg-w-brand text-white text-[12px] font-semibold">Agregar</button>
                   <button onClick={() => { setShowAddGuest(false); setNewGuestName(''); }} className="px-2 h-9 rounded-[6px] text-w-text-secondary text-[12px]">✕</button>
+                </div>
+              )}
+
+              {/* Seat assignment banner */}
+              {guestsWithoutSeat.length > 0 && table.guests.length > 0 && (
+                <div className="mt-2 rounded-[8px] border border-dashed border-w-brand/40 bg-w-brand/5 p-2.5 flex items-center justify-between">
+                  <div>
+                    <p className="text-[12px] text-w-brand font-medium">🪑 {guestsWithoutSeat.length} sin posición</p>
+                    <p className="text-[10px] text-w-text-secondary">Asigna sillas para facilitar el cobro</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      assignAllSeats(table.id);
+                      toast.success('✓ Posiciones asignadas');
+                    }}
+                    className="px-3 py-1.5 rounded-[6px] bg-w-brand text-white text-[11px] font-semibold min-h-[32px] active:scale-[0.98] transition-transform"
+                  >
+                    Asignar todas
+                  </button>
                 </div>
               )}
               <div className="mt-2">
