@@ -152,6 +152,45 @@ export default function WaiterDashboard() {
         setShowSimMenu(false);
       },
     },
+    {
+      label: '👨‍💼 Mensaje de gerente',
+      action: () => {
+        addNotification({
+          id: `n-${Date.now()}`, type: 'manager-msg', priority: 'high', tableId: '',
+          title: 'Mesa 12 es VIP corporativo', subtitle: 'Ofrecer cortesía de postre, autorizado',
+          channel: 'gerente',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        toast.info('👨‍💼 Nuevo mensaje del gerente');
+        setShowSimMenu(false);
+      },
+    },
+    {
+      label: '🍳 Aviso de cocina',
+      action: () => {
+        addNotification({
+          id: `n-${Date.now()}`, type: 'kitchen-msg', priority: 'urgent', tableId: '',
+          title: 'Se terminó el salmón', subtitle: 'Ofrecer robalo como alternativa',
+          channel: 'cocina',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        toast.info('🍳 Aviso urgente de cocina');
+        setShowSimMenu(false);
+      },
+    },
+    {
+      label: '🍸 Aviso de barra',
+      action: () => {
+        addNotification({
+          id: `n-${Date.now()}`, type: 'bar-msg', priority: 'low', tableId: '',
+          title: 'Nuevo cocktail del día disponible', subtitle: 'Margarita de maracuyá · $165',
+          channel: 'barra',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        toast.info('🍸 Mensaje de barra');
+        setShowSimMenu(false);
+      },
+    },
   ];
 
   return (
