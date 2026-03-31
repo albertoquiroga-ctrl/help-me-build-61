@@ -161,16 +161,22 @@ export default function TableDetail() {
                   {isExpanded && (
                     <div className="px-3 pb-3 border-t border-w-border pt-2 space-y-1.5">
                       {round.items.map((item, i) => (
-                        <div key={i} className="flex justify-between text-[12px]">
-                          <span className="text-w-text">
-                            {item.name} ×{item.qty}
-                            {item.assignedTo && (
-                              <span className="text-w-text-secondary ml-1">
-                                · {table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
+                         <div key={i} className="flex justify-between text-[12px]">
+                          <div className="flex items-center gap-1 flex-1 min-w-0">
+                            <span className="text-w-text">
+                              {item.name} ×{item.qty}
+                            </span>
+                            {item.assignedTo ? (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-brand/10 text-w-brand shrink-0">
+                                {table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
+                              </span>
+                            ) : (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-text-secondary/10 text-w-text-secondary shrink-0">
+                                Sin asignar
                               </span>
                             )}
-                          </span>
-                          <span className="font-mono text-w-text-secondary">${item.price * item.qty}</span>
+                          </div>
+                          <span className="font-mono text-w-text-secondary shrink-0">${item.price * item.qty}</span>
                         </div>
                       ))}
                     </div>
