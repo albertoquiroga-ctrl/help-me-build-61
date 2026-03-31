@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { X, Split, Check } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { useTablesStore, type GuestInfo, type OrderItem, type Round, type ItemAssignment } from '@/stores/tablesStore';
+import { useTablesStore, guestDisplayName, type GuestInfo, type OrderItem, type Round, type ItemAssignment } from '@/stores/tablesStore';
 import { toast } from 'sonner';
 
 interface FlatItem {
