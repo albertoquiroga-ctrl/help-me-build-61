@@ -438,7 +438,9 @@ export const useTablesStore = create<TablesState>((set) => ({
         );
         return { ...t, rounds, guests };
       });
-      return { tables: applyDerived(updated, tableId) };
+      const result = applyDerived(updated, tableId);
+      checkAllPaidAndNotify(result, tableId);
+      return { tables: result };
     }),
   removeGuest: (tableId, guestId) =>
     set((s) => {
