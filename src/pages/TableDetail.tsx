@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useTablesStore } from '@/stores/tablesStore';
+import type { GuestInfo } from '@/stores/tablesStore';
 import GuestPill from '@/components/waiter/GuestPill';
 import RoundBadge from '@/components/waiter/RoundBadge';
 import ManualOrderSheet from '@/components/waiter/ManualOrderSheet';
