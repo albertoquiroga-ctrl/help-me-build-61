@@ -25,6 +25,7 @@ export interface Round {
 export interface GuestInfo {
   id: string;
   name: string;
+  seatNumber?: number;
   amountOwed: number;
   amountPaid: number;
   tipAmount: number;
@@ -92,6 +93,8 @@ interface TablesState {
   markGuestPaidCash: (tableId: string, guestId: string, method: 'cash' | 'card-physical') => void;
   markGuestNoOrder: (tableId: string, guestId: string) => void;
   addGuest: (tableId: string, name: string) => void;
+  initializeSeats: (tableId: string, count: number) => void;
+  renameGuest: (tableId: string, guestId: string, newName: string) => void;
   assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
 }
 
@@ -120,10 +123,10 @@ const initialTables: WaiterTable[] = [
   {
     id: '4', number: 4, section: 'Norte',
     guests: [
-      { id: 'g4-1', name: 'C1', amountOwed: 240, amountPaid: 240, tipAmount: 74, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g4-1', name: 'Silla 1', seatNumber: 1, amountOwed: 240, amountPaid: 240, tipAmount: 74, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
       { id: 'g4-2', name: 'Ana', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
       { id: 'g4-3', name: 'Carlos', amountOwed: 195, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g4-4', name: 'C4', amountOwed: 95, amountPaid: 95, tipAmount: 48, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g4-4', name: 'Silla 4', seatNumber: 4, amountOwed: 95, amountPaid: 95, tipAmount: 48, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
       { number: 1, label: 'Bebidas + Entradas', items: [{ name: 'Margarita Clásica', qty: 2, price: 120 }, { name: 'Guacamole', qty: 1, price: 95 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
@@ -147,11 +150,11 @@ const initialTables: WaiterTable[] = [
   {
     id: '7', number: 7, section: 'Terraza',
     guests: [
-      { id: 'g7-1', name: 'Grupo 1', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g7-2', name: 'Grupo 2', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g7-3', name: 'Grupo 3', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g7-4', name: 'Grupo 4', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g7-5', name: 'Grupo 5', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-1', name: 'Silla 1', seatNumber: 1, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-2', name: 'Silla 2', seatNumber: 2, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-3', name: 'Silla 3', seatNumber: 3, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-4', name: 'Silla 4', seatNumber: 4, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-5', name: 'Silla 5', seatNumber: 5, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
     ],
     rounds: [
       { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 3, price: 120 }, { name: 'Agua de Jamaica', qty: 2, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 25 * 60000).toISOString() },
@@ -293,9 +296,13 @@ export const useTablesStore = create<TablesState>((set) => ({
     set((s) => {
       const updated = s.tables.map((t) => {
         if (t.id !== tableId) return t;
+        const maxSeat = t.guests.reduce((max, g) => Math.max(max, g.seatNumber || 0), 0);
+        const seatNum = maxSeat + 1;
+        const finalName = name || `Silla ${seatNum}`;
         const newGuest: GuestInfo = {
           id: `g${tableId}-m${Date.now()}`,
-          name,
+          name: finalName,
+          seatNumber: seatNum,
           amountOwed: 0,
           amountPaid: 0,
           tipAmount: 0,
@@ -307,6 +314,33 @@ export const useTablesStore = create<TablesState>((set) => ({
       });
       return { tables: applyDerived(updated, tableId) };
     }),
+  initializeSeats: (tableId, count) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        const newGuests: GuestInfo[] = Array.from({ length: count }, (_, i) => ({
+          id: `g${tableId}-s${i + 1}-${Date.now()}`,
+          name: `Silla ${i + 1}`,
+          seatNumber: i + 1,
+          amountOwed: 0,
+          amountPaid: 0,
+          tipAmount: 0,
+          paymentStatus: 'pending' as PaymentStatus,
+          orderMethod: 'manual' as OrderMethod,
+          paymentMethod: null,
+        }));
+        return { ...t, guests: [...t.guests, ...newGuests] };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
+  renameGuest: (tableId, guestId, newName) =>
+    set((s) => ({
+      tables: s.tables.map((t) =>
+        t.id === tableId
+          ? { ...t, guests: t.guests.map((g) => (g.id === guestId ? { ...g, name: newName } : g)) }
+          : t
+      ),
+    })),
   assignItemsAndPay: (tableId, guestId, method, assignments) =>
     set((s) => {
       const updated = s.tables.map((t) => {
