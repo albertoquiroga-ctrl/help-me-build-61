@@ -28,10 +28,11 @@ export default function TableDetail() {
   const [manualOrderGuest, setManualOrderGuest] = useState<{ id: string; name: string } | null>(null);
   const [cashPaymentGuest, setCashPaymentGuest] = useState<string | null>(null);
   const [showAddGuest, setShowAddGuest] = useState(false);
-  const [newGuestName, setNewGuestName] = useState('');
+  const [newSeatNumber, setNewSeatNumber] = useState('');
   const addGuest = useTablesStore((s) => s.addGuest);
   const initializeSeats = useTablesStore((s) => s.initializeSeats);
   const assignAllSeats = useTablesStore((s) => s.assignAllSeats);
+  const assignSeat = useTablesStore((s) => s.assignSeat);
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
@@ -55,10 +56,20 @@ export default function TableDetail() {
   const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
 
   const handleAddGuest = () => {
-    const name = newGuestName.trim();
-    addGuest(table.id, name);
-    toast.success(`✓ ${name || 'Nuevo comensal'} agregado`);
-    setNewGuestName('');
+    const seatNum = parseInt(newSeatNumber.trim(), 10);
+    if (isNaN(seatNum) || seatNum < 1) return;
+    // Create guest and assign seat in one step
+    const guestId = `g${table.id}-m${Date.now()}`;
+    addGuest(table.id, '');
+    // Find the just-added guest (last one) and assign seat
+    // We use a slight workaround: addGuest creates with auto name, then we assign seat
+    setTimeout(() => {
+      const current = useTablesStore.getState().tables.find((t) => t.id === table.id);
+      const lastGuest = current?.guests[current.guests.length - 1];
+      if (lastGuest) assignSeat(table.id, lastGuest.id, seatNum);
+    }, 0);
+    toast.success(`✓ Silla ${seatNum} agregada`);
+    setNewSeatNumber('');
     setShowAddGuest(false);
   };
 
@@ -115,17 +126,20 @@ export default function TableDetail() {
                 )}
               </div>
               {showAddGuest && (
-                <div className="flex gap-2 mt-1">
+                <div className="flex gap-2 mt-1 items-center">
+                  <span className="text-[12px] text-w-text-secondary shrink-0">🪑 Silla #</span>
                   <input
                     autoFocus
-                    value={newGuestName}
-                    onChange={(e) => setNewGuestName(e.target.value)}
+                    type="number"
+                    min="1"
+                    value={newSeatNumber}
+                    onChange={(e) => setNewSeatNumber(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddGuest()}
-                    placeholder="Nombre (vacío = Guest N)"
-                    className="flex-1 h-9 rounded-[6px] border border-w-border bg-w-surface px-3 text-[13px] text-w-text placeholder:text-w-text-secondary/50 focus:outline-none focus:border-w-brand"
+                    placeholder="Ej: 5"
+                    className="w-16 h-9 rounded-[6px] border border-w-border bg-w-surface px-3 text-[13px] text-w-text text-center placeholder:text-w-text-secondary/50 focus:outline-none focus:border-w-brand"
                   />
                   <button onClick={handleAddGuest} className="px-3 h-9 rounded-[6px] bg-w-brand text-white text-[12px] font-semibold">Agregar</button>
-                  <button onClick={() => { setShowAddGuest(false); setNewGuestName(''); }} className="px-2 h-9 rounded-[6px] text-w-text-secondary text-[12px]">✕</button>
+                  <button onClick={() => { setShowAddGuest(false); setNewSeatNumber(''); }} className="px-2 h-9 rounded-[6px] text-w-text-secondary text-[12px]">✕</button>
                 </div>
               )}
 
