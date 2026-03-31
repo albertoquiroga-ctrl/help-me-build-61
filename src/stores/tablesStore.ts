@@ -296,9 +296,13 @@ export const useTablesStore = create<TablesState>((set) => ({
     set((s) => {
       const updated = s.tables.map((t) => {
         if (t.id !== tableId) return t;
+        const maxSeat = t.guests.reduce((max, g) => Math.max(max, g.seatNumber || 0), 0);
+        const seatNum = maxSeat + 1;
+        const finalName = name || `Silla ${seatNum}`;
         const newGuest: GuestInfo = {
           id: `g${tableId}-m${Date.now()}`,
-          name,
+          name: finalName,
+          seatNumber: seatNum,
           amountOwed: 0,
           amountPaid: 0,
           tipAmount: 0,
@@ -310,6 +314,33 @@ export const useTablesStore = create<TablesState>((set) => ({
       });
       return { tables: applyDerived(updated, tableId) };
     }),
+  initializeSeats: (tableId, count) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        const newGuests: GuestInfo[] = Array.from({ length: count }, (_, i) => ({
+          id: `g${tableId}-s${i + 1}-${Date.now()}`,
+          name: `Silla ${i + 1}`,
+          seatNumber: i + 1,
+          amountOwed: 0,
+          amountPaid: 0,
+          tipAmount: 0,
+          paymentStatus: 'pending' as PaymentStatus,
+          orderMethod: 'manual' as OrderMethod,
+          paymentMethod: null,
+        }));
+        return { ...t, guests: [...t.guests, ...newGuests] };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
+  renameGuest: (tableId, guestId, newName) =>
+    set((s) => ({
+      tables: s.tables.map((t) =>
+        t.id === tableId
+          ? { ...t, guests: t.guests.map((g) => (g.id === guestId ? { ...g, name: newName } : g)) }
+          : t
+      ),
+    })),
   assignItemsAndPay: (tableId, guestId, method, assignments) =>
     set((s) => {
       const updated = s.tables.map((t) => {
