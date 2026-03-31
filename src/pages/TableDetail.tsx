@@ -431,6 +431,29 @@ export default function TableDetail() {
               ))}
             </div>
           )}
+          {/* Close table section */}
+          {allPaid && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-[12px] border-2 border-w-success/40 bg-w-success/5 p-4 space-y-3"
+            >
+              <div className="text-center space-y-1">
+                <p className="text-[16px] font-semibold text-w-success">🧹 Todo pagado · Levantar muertos</p>
+                <p className="text-[12px] text-w-text-secondary">
+                  Total: <span className="font-mono font-bold text-w-text">${totalBilled} MXN</span>
+                  {totalTips > 0 && <> · Propinas: <span className="font-mono font-bold text-w-tip">${totalTips} MXN</span></>}
+                </p>
+              </div>
+              <button
+                onClick={handleCloseTable}
+                className="w-full h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
+              >
+                ✓ Mesa limpia · Cerrar y liberar
+              </button>
+              <p className="text-[10px] text-w-text-secondary text-center">La hostess podrá asignar nuevos clientes</p>
+            </motion.div>
+          )}
         </div>
 
         {/* Tips */}
