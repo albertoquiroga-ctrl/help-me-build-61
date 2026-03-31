@@ -216,7 +216,7 @@ export default function TableDetail() {
                             </span>
                             {item.assignedTo ? (
                               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-brand/10 text-w-brand shrink-0">
-                                {table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
+                                {table.guests.find((g) => g.id === item.assignedTo)?.seatLabel || table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
                               </span>
                             ) : (
                               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-text-secondary/10 text-w-text-secondary shrink-0">
