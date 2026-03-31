@@ -70,7 +70,7 @@ export default function TableDetail() {
     if (closeNotif) notifStore.resolve(closeNotif.id, 'Mesa cerrada ✓');
     closeTable(table.id);
     toast.success(`✓ Mesa ${table.number} cerrada y disponible`);
-    navigate('/waiter');
+    navigate('/waiter/dashboard');
   };
 
   const handleAddGuest = () => {
