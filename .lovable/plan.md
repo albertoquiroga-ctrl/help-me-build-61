@@ -1,95 +1,73 @@
 
 
-# Plan: Captura manual de órdenes y pago presencial para comensales sin QR
+# Plan: CashPaymentSheet interactivo con asignación de items por mesero
 
-## Problema
+## Problema actual
 
-El comensal mexicano promedio no siempre usa el QR. El mesero necesita:
-1. **Al ordenar**: Verificar quién ya pidió por QR y capturar manualmente los platillos de quien no lo hizo, asignándolos al comensal correcto.
-2. **Al pagar**: Generar una cuenta física para quienes no pagan por QR, manteniendo la división clara.
+El `CashPaymentSheet` actual muestra un desglose estático basado en items pre-asignados y solo tiene dos botones de "Pagó". El mesero no puede:
+1. Seleccionar qué items corresponden a cada comensal (el mesero pregunta en la mesa y asigna)
+2. Dividir items compartidos entre comensales
+3. Crear perfiles de guest sobre la marcha para que la cuenta ya esté dividida antes de cobrar
 
 ## Cambios
 
-### 1. Modelo de datos — `tablesStore.ts`
+### 1. Agregar guests desde TableDetail — `tablesStore.ts` + `TableDetail.tsx`
 
-- Agregar campo `orderMethod: 'qr' | 'manual'` a `GuestInfo` para distinguir cómo ordenó cada comensal.
-- Agregar campo `paymentMethod: 'qr' | 'cash' | 'card-physical' | null` a `GuestInfo` para saber cómo pagará.
-- Agregar campo `assignedTo?: string` (guest ID) a `OrderItem` para vincular cada platillo a un comensal específico.
-- Agregar acción `addManualOrder(tableId, guestId, items[])` que crea o agrega items a un round pendiente marcado como manual.
-- Agregar acción `markGuestPaidCash(tableId, guestId)` para registrar pago presencial.
+- Nueva acción `addGuest(tableId, name)` en el store que crea un `GuestInfo` con `orderMethod: 'manual'`, `amountOwed: 0`.
+- Botón **"+ Agregar comensal"** en la sección de Comensales de `TableDetail`, que abre un input inline para nombre y crea el perfil. Esto permite al mesero crear perfiles antes de cobrar para que la división sea clara.
 
-### 2. Verificación de orden en mesa — `TableDetail.tsx`
+### 2. Rediseñar CashPaymentSheet como flujo de asignación — `CashPaymentSheet.tsx`
 
-Agregar una sección **"Verificar pedidos"** visible cuando hay una ronda pendiente o recién confirmada:
-- Lista de comensales con indicador: ✅ "Pidió por QR" / ⚠️ "Sin pedido".
-- Botón **"+ Capturar orden"** junto a cada comensal sin pedido, que abre un bottom sheet para agregar platillos manualmente.
-- Al confirmar la ronda, todos los items (QR + manuales) se envían juntos a cocina.
+Transformar el sheet de un desglose estático a una herramienta interactiva donde el mesero asigna items:
 
-### 3. Bottom sheet de captura manual — Nuevo componente `ManualOrderSheet.tsx`
+**Vista principal:**
+- Lista todos los items de la mesa (de todos los rounds) con checkboxes
+- Los items ya asignados a este guest vienen pre-seleccionados
+- Los items asignados a otros guests aparecen grises con el nombre del dueño
+- Los items sin asignar están disponibles para seleccionar
+- Opción de "dividir item" (ej: Guacamole compartido → $95 / 2 = $47.50 cada uno)
 
-- Header: "Capturar orden · [Nombre del comensal]"
-- Buscador de platillos con lista filtrable (menú hardcoded para el prototipo: ~15 items organizados por categoría).
-- Cada item tiene botón +/- para cantidad.
-- Resumen al fondo con total y botón "Agregar a la ronda".
-- Al confirmar, los items se agregan al round pendiente con `assignedTo` = guest ID y `orderMethod` = 'manual'.
+**Flujo:**
+1. Mesero abre "Cobrar en mesa" para un comensal
+2. Ve todos los items, selecciona los que son de ese comensal
+3. El total se calcula dinámicamente según selección
+4. Toca "💵 Pagó efectivo" o "💳 Pagó tarjeta"
+5. Los items quedan asignados y el guest marcado como paid
 
-### 4. Flujo de pago presencial — `TableDetail.tsx`
+### 3. Store: asignar items y dividir — `tablesStore.ts`
 
-Cuando la mesa está en estado "Todo entregado" o "Pagando":
-- Mostrar por cada comensal sin pago QR: botón **"Cobrar en mesa"**.
-- Al tocar, abrir un mini-overlay que muestra el desglose de lo que debe ese comensal (sus items asignados) con opciones: "Pagó efectivo ✓" / "Pagó con tarjeta física ✓".
-- Esto marca al comensal como `paid` con el `paymentMethod` correspondiente.
-- El `GuestPill` mostrará un icono diferente según método: 📱 (QR), 💵 (efectivo), 💳 (tarjeta física).
+- Nueva acción `assignItemsToGuest(tableId, guestId, assignments)` donde cada assignment es `{ roundNumber, itemIndex, splitWith?: string[] }`.
+- Actualiza `assignedTo` de cada item y recalcula `amountOwed` de los guests involucrados.
+- Nueva acción `markItemsPaidByGuest(tableId, guestId, method, selectedItems)` que marca los items seleccionados como pagados por ese guest y actualiza su `paymentStatus`.
 
-### 5. Indicadores visuales — `GuestPill.tsx`
+### 4. Indicadores en items de rounds — `TableDetail.tsx`
 
-- Agregar icono de método de orden/pago: 📱 para QR, ✏️ para manual.
-- Los comensales sin pedido muestran "⚠️ Sin pedido" en vez del monto.
+En la vista expandida de cada round, mostrar junto a cada item quién lo tiene asignado (pill con nombre) o "Sin asignar" si nadie lo reclamó. Esto da visibilidad al mesero de qué falta por asignar antes de cobrar.
 
-### 6. Simulación — `WaiterDashboard.tsx`
-
-Agregar un evento de simulación: **"Comensal sin QR en Mesa 7"** que marca a un guest como sin pedido para probar el flujo de captura manual.
-
-## Archivos a crear/modificar
+## Archivos a modificar
 
 | Archivo | Cambio |
 |---|---|
-| `tablesStore.ts` | Nuevos campos en tipos, nuevas acciones |
-| `TableDetail.tsx` | Sección de verificación + botón cobrar en mesa |
-| `ManualOrderSheet.tsx` | **Nuevo** — Bottom sheet de captura manual |
-| `CashPaymentSheet.tsx` | **Nuevo** — Mini-overlay de cobro presencial |
-| `GuestPill.tsx` | Iconos de método de orden/pago |
-| `WaiterDashboard.tsx` | Nuevo evento de simulación |
+| `tablesStore.ts` | `addGuest`, `assignItemsToGuest`, `markItemsPaidByGuest` |
+| `CashPaymentSheet.tsx` | Rediseño completo: checklist de items, split, total dinámico |
+| `TableDetail.tsx` | Botón "+ Agregar comensal", indicadores de asignación en items |
 
 ## Flujo completo
 
 ```text
-Mesa abierta → Comensales escanean QR
-                    ↓
-        ┌── Todos pidieron ──→ Confirmar ronda normal
-        │
-        └── Faltan pedidos ──→ TableDetail muestra ⚠️
-                                    ↓
-                            Mesero toca "+ Capturar orden"
-                                    ↓
-                            ManualOrderSheet (buscar, agregar items)
-                                    ↓
-                            Items asignados al comensal
-                                    ↓
-                            Confirmar ronda (QR + manual juntos)
-                                    ↓
-                            ... cocina, entrega ...
-                                    ↓
-                            Hora de pagar
-                                    ↓
-        ┌── Pagó por QR ──→ Automático ✓
-        │
-        └── No paga por QR ──→ Mesero toca "Cobrar en mesa"
-                                    ↓
-                            Ve desglose personal
-                                    ↓
-                            Marca "Pagó efectivo" o "Pagó tarjeta"
-                                    ↓
-                            Guest marcado como paid ✓
+Mesa con 4 personas → 2 pidieron por QR, 2 no
+
+Mesero:
+  1. Crea perfiles: "+ Agregar comensal" → "Don Pepe", "Doña María"
+  2. Captura orden manual para cada uno (ManualOrderSheet existente)
+  3. Items van a cocina → se cocinan → se entregan
+  4. Hora de cobrar:
+     - QR guests pagan solos ✓
+     - Mesero abre "Cobrar en mesa" → Don Pepe
+     - Ve todos los items, pregunta: "¿Lo suyo fueron los tacos y el agua?"
+     - Selecciona esos items ✓, el guacamole lo marca como "dividido con Doña María"
+     - Total se calcula: $160 + $65 + $47.50 = $272.50
+     - "Pagó efectivo ✓"
+     - Repite con Doña María (sus items ya pre-seleccionados)
 ```
 
