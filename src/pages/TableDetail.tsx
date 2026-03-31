@@ -30,6 +30,7 @@ export default function TableDetail() {
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'rounds' | 'by-guest'>('rounds');
   const [expandedGuest, setExpandedGuest] = useState<string | null>(null);
+  const [showUnpaidBreakdown, setShowUnpaidBreakdown] = useState(false);
   const [manualOrderGuest, setManualOrderGuest] = useState<{ id: string; name: string } | null>(null);
   const [cashPaymentGuest, setCashPaymentGuest] = useState<string | null>(null);
   const [showAddGuest, setShowAddGuest] = useState(false);
