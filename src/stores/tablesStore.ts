@@ -107,6 +107,8 @@ interface TablesState {
   assignAllSeats: (tableId: string) => void;
   assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
   removeGuest: (tableId: string, guestId: string) => void;
+  removeItemFromRound: (tableId: string, roundNumber: number, itemIndex: number) => void;
+  editItemInRound: (tableId: string, roundNumber: number, itemIndex: number, updates: Partial<OrderItem>) => void;
 }
 
 function applyDerived(tables: WaiterTable[], id: string): WaiterTable[] {
@@ -416,6 +418,32 @@ export const useTablesStore = create<TablesState>((set) => ({
         const guest = t.guests.find((g) => g.id === guestId);
         if (!guest || guest.orderMethod !== 'manual') return t;
         return { ...t, guests: t.guests.filter((g) => g.id !== guestId) };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
+  removeItemFromRound: (tableId, roundNumber, itemIndex) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        const rounds = t.rounds.map((r) => {
+          if (r.number !== roundNumber) return r;
+          const items = r.items.filter((_, i) => i !== itemIndex);
+          return { ...r, items };
+        }).filter((r) => r.items.length > 0); // remove empty rounds
+        return { ...t, rounds };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
+  editItemInRound: (tableId, roundNumber, itemIndex, updates) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        const rounds = t.rounds.map((r) => {
+          if (r.number !== roundNumber) return r;
+          const items = r.items.map((item, i) => (i === itemIndex ? { ...item, ...updates } : item));
+          return { ...r, items };
+        });
+        return { ...t, rounds };
       });
       return { tables: applyDerived(updated, tableId) };
     }),
