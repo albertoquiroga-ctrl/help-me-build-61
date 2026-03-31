@@ -30,6 +30,7 @@ export default function TableDetail() {
   const [showAddGuest, setShowAddGuest] = useState(false);
   const [newGuestName, setNewGuestName] = useState('');
   const addGuest = useTablesStore((s) => s.addGuest);
+  const initializeSeats = useTablesStore((s) => s.initializeSeats);
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
