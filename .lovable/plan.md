@@ -1,73 +1,56 @@
 
 
-# Plan: CashPaymentSheet interactivo con asignación de items por mesero
+# Plan: Identificación de comensales por posición (Silla 1, Silla 2...)
 
-## Problema actual
+## Problema
 
-El `CashPaymentSheet` actual muestra un desglose estático basado en items pre-asignados y solo tiene dos botones de "Pagó". El mesero no puede:
-1. Seleccionar qué items corresponden a cada comensal (el mesero pregunta en la mesa y asigna)
-2. Dividir items compartidos entre comensales
-3. Crear perfiles de guest sobre la marcha para que la cuenta ya esté dividida antes de cobrar
+La mayoría de comensales no inician sesión — solo escanean el QR para ver el menú. El mesero necesita trabajar con identificadores posicionales ("Silla 1", "Silla 2") en lugar de nombres reales, y poder renombrar si el comensal da su nombre.
 
 ## Cambios
 
-### 1. Agregar guests desde TableDetail — `tablesStore.ts` + `TableDetail.tsx`
+### 1. Auto-generación de guests por silla — `tablesStore.ts`
 
-- Nueva acción `addGuest(tableId, name)` en el store que crea un `GuestInfo` con `orderMethod: 'manual'`, `amountOwed: 0`.
-- Botón **"+ Agregar comensal"** en la sección de Comensales de `TableDetail`, que abre un input inline para nombre y crea el perfil. Esto permite al mesero crear perfiles antes de cobrar para que la división sea clara.
+- Agregar acción `initializeSeats(tableId, count)` que crea N guests con nombres `Silla 1`, `Silla 2`, etc., todos con `orderMethod: 'manual'`.
+- Agregar campo opcional `seatNumber?: number` a `GuestInfo` para mantener el orden visual.
+- Agregar acción `renameGuest(tableId, guestId, newName)` para que el mesero pueda poner nombre real si el comensal lo da.
+- Modificar `addGuest` para que el nombre default sea `Silla N+1` si no se proporciona nombre.
 
-### 2. Rediseñar CashPaymentSheet como flujo de asignación — `CashPaymentSheet.tsx`
+### 2. Inicialización rápida de mesa — `TableDetail.tsx`
 
-Transformar el sheet de un desglose estático a una herramienta interactiva donde el mesero asigna items:
+- Cuando la mesa tiene 0 guests, mostrar un selector rápido: **"¿Cuántos comensales?"** con botones `[1] [2] [3] [4] [5] [6+]`.
+- Al seleccionar, se llama `initializeSeats` y se crean los perfiles automáticamente.
+- Esto reemplaza el flujo actual donde el mesero tiene que agregar uno por uno.
 
-**Vista principal:**
-- Lista todos los items de la mesa (de todos los rounds) con checkboxes
-- Los items ya asignados a este guest vienen pre-seleccionados
-- Los items asignados a otros guests aparecen grises con el nombre del dueño
-- Los items sin asignar están disponibles para seleccionar
-- Opción de "dividir item" (ej: Guacamole compartido → $95 / 2 = $47.50 cada uno)
+### 3. Renombrar guest inline — `TableDetail.tsx`
 
-**Flujo:**
-1. Mesero abre "Cobrar en mesa" para un comensal
-2. Ve todos los items, selecciona los que son de ese comensal
-3. El total se calcula dinámicamente según selección
-4. Toca "💵 Pagó efectivo" o "💳 Pagó tarjeta"
-5. Los items quedan asignados y el guest marcado como paid
+- Al tocar un `GuestPill`, permitir edición inline del nombre (tap → input con el nombre actual → Enter para confirmar).
+- Esto permite al mesero poner "Don Pepe" en lugar de "Silla 3" cuando el comensal se identifica.
 
-### 3. Store: asignar items y dividir — `tablesStore.ts`
+### 4. Datos de prueba actualizados — `tablesStore.ts`
 
-- Nueva acción `assignItemsToGuest(tableId, guestId, assignments)` donde cada assignment es `{ roundNumber, itemIndex, splitWith?: string[] }`.
-- Actualiza `assignedTo` de cada item y recalcula `amountOwed` de los guests involucrados.
-- Nueva acción `markItemsPaidByGuest(tableId, guestId, method, selectedItems)` que marca los items seleccionados como pagados por ese guest y actualiza su `paymentStatus`.
+- Cambiar los guests con nombres genéricos (`C1`, `C4`, `Grupo 1-5`) a usar el formato `Silla N` para consistencia.
+- Mantener los que tienen nombre real (Lucía, Pedro, Ana) como ejemplo de guests que sí iniciaron sesión.
 
-### 4. Indicadores en items de rounds — `TableDetail.tsx`
+### 5. Adaptación visual — `GuestPill.tsx`
 
-En la vista expandida de cada round, mostrar junto a cada item quién lo tiene asignado (pill con nombre) o "Sin asignar" si nadie lo reclamó. Esto da visibilidad al mesero de qué falta por asignar antes de cobrar.
+- Mostrar icono de silla 🪑 para guests sin sesión (posicionales), 👤 para los que dieron nombre, 📱 para QR con sesión.
 
 ## Archivos a modificar
 
 | Archivo | Cambio |
 |---|---|
-| `tablesStore.ts` | `addGuest`, `assignItemsToGuest`, `markItemsPaidByGuest` |
-| `CashPaymentSheet.tsx` | Rediseño completo: checklist de items, split, total dinámico |
-| `TableDetail.tsx` | Botón "+ Agregar comensal", indicadores de asignación en items |
+| `tablesStore.ts` | `initializeSeats`, `renameGuest`, campo `seatNumber`, datos actualizados |
+| `TableDetail.tsx` | Selector de cantidad de comensales, edición inline de nombre |
+| `GuestPill.tsx` | Icono contextual según tipo de identificación |
 
-## Flujo completo
+## Flujo
 
 ```text
-Mesa con 4 personas → 2 pidieron por QR, 2 no
-
-Mesero:
-  1. Crea perfiles: "+ Agregar comensal" → "Don Pepe", "Doña María"
-  2. Captura orden manual para cada uno (ManualOrderSheet existente)
-  3. Items van a cocina → se cocinan → se entregan
-  4. Hora de cobrar:
-     - QR guests pagan solos ✓
-     - Mesero abre "Cobrar en mesa" → Don Pepe
-     - Ve todos los items, pregunta: "¿Lo suyo fueron los tacos y el agua?"
-     - Selecciona esos items ✓, el guacamole lo marca como "dividido con Doña María"
-     - Total se calcula: $160 + $65 + $47.50 = $272.50
-     - "Pagó efectivo ✓"
-     - Repite con Doña María (sus items ya pre-seleccionados)
+Mesa vacía → Mesero abre TableDetail
+  → "¿Cuántos comensales?" → [4]
+  → Se crean: Silla 1, Silla 2, Silla 3, Silla 4
+  → Mesero captura órdenes por silla
+  → Si alguien dice su nombre: tap en "Silla 2" → "Don Pepe"
+  → Al cobrar: CashPaymentSheet muestra "Silla 1" o "Don Pepe"
 ```
 
