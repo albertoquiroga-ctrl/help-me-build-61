@@ -34,6 +34,7 @@ interface NotificationsState {
 
 const initialNotifications: WaiterNotification[] = [
   { id: 'n1', type: 'payment-failed', priority: 'urgent', tableId: '11', title: 'Pago fallido · Mesa 11 · C1 · $185', subtitle: 'Tarjeta rechazada', channel: 'mesas', timestamp: new Date(Date.now() - 2 * 60000).toISOString(), dismissed: false, resolved: false },
+  { id: 'n0', type: 'new-order', priority: 'high', tableId: '7', title: 'Nueva orden · Mesa 7 · R2 · $385', subtitle: '3 items · Confirma o se envía en 45s', channel: 'mesas', timestamp: new Date(Date.now() - 1 * 60000).toISOString(), dismissed: false, resolved: false },
   { id: 'n2', type: 'new-order', priority: 'medium', tableId: '2', title: 'Nueva orden · Mesa 2 · R2 · $430', subtitle: 'Auto-confirmado', channel: 'mesas', timestamp: new Date(Date.now() - 8 * 60000).toISOString(), dismissed: true, resolved: true, resolution: 'Auto-confirmado ✓' },
   { id: 'n3', type: 'order-ready', priority: 'high', tableId: '4', title: 'Orden lista · Mesa 4 · R1 · 3 items', subtitle: 'Recogido', channel: 'mesas', timestamp: new Date(Date.now() - 12 * 60000).toISOString(), dismissed: true, resolved: true, resolution: 'Entregado ✓' },
   { id: 'n4', type: 'check-in', priority: 'low', tableId: '7', title: 'Check-in · Mesa 7 · 22 min sin pedir', subtitle: 'Expirado', channel: 'mesas', timestamp: new Date(Date.now() - 15 * 60000).toISOString(), dismissed: true, resolved: true, resolution: 'Expirado' },
