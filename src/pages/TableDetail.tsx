@@ -172,7 +172,7 @@ export default function TableDetail() {
                   </div>
                   {!hasOrder && (
                     <button
-                      onClick={() => setManualOrderGuest({ id: g.id, name: g.name })}
+                      onClick={() => setManualOrderGuest({ id: g.id, name: guestDisplayName(g) })}
                       className="px-3 py-1.5 rounded-[6px] bg-w-brand text-white text-[11px] font-semibold min-h-[32px] active:scale-[0.98] transition-transform"
                     >
                       + Capturar orden
