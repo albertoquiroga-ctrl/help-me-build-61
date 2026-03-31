@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useNotificationsStore } from './notificationsStore';
 
 export type PaymentStatus = 'pending' | 'paid' | 'left' | 'failed';
 export type RoundStatus = 'pending' | 'confirmed' | 'cooking' | 'ready' | 'delivered';
