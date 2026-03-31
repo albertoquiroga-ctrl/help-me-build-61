@@ -106,6 +106,7 @@ interface TablesState {
   assignSeat: (tableId: string, guestId: string, seatNumber: number) => void;
   assignAllSeats: (tableId: string) => void;
   assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
+  removeGuest: (tableId: string, guestId: string) => void;
 }
 
 function applyDerived(tables: WaiterTable[], id: string): WaiterTable[] {
@@ -405,6 +406,16 @@ export const useTablesStore = create<TablesState>((set) => ({
             : g
         );
         return { ...t, rounds, guests };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
+  removeGuest: (tableId, guestId) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        const guest = t.guests.find((g) => g.id === guestId);
+        if (!guest || guest.orderMethod !== 'manual') return t;
+        return { ...t, guests: t.guests.filter((g) => g.id !== guestId) };
       });
       return { tables: applyDerived(updated, tableId) };
     }),

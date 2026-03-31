@@ -4,6 +4,7 @@ import { guestDisplayName } from '@/stores/tablesStore';
 import { useState, useRef, useEffect } from 'react';
 import { useTablesStore } from '@/stores/tablesStore';
 import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
 
 interface GuestPillProps {
   guest: GuestInfo;
@@ -21,7 +22,7 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
   const pillRef = useRef<HTMLSpanElement>(null);
   const renameGuest = useTablesStore((s) => s.renameGuest);
   const assignSeat = useTablesStore((s) => s.assignSeat);
-
+  const removeGuest = useTablesStore((s) => s.removeGuest);
   const isPaid = guest.paymentStatus === 'paid';
   const isLeft = guest.paymentStatus === 'left';
   const isFailed = guest.paymentStatus === 'failed';
@@ -127,6 +128,20 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
             >
               🪑 {hasSeat ? 'Cambiar silla' : 'Asignar silla'}
             </button>
+            {guest.orderMethod === 'manual' && guest.amountOwed === 0 && guest.paymentStatus === 'pending' && (
+              <button
+                onClick={() => {
+                  if (tableId) {
+                    removeGuest(tableId, guest.id);
+                    toast.success('Comensal eliminado');
+                  }
+                  setShowMenu(false);
+                }}
+                className="w-full text-left px-3 py-2.5 text-[12px] text-w-error hover:bg-w-surface transition-colors"
+              >
+                🗑️ Eliminar
+              </button>
+            )}
           </div>
         </>,
         document.body
