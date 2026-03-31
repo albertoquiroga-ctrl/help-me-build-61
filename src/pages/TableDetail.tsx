@@ -341,54 +341,6 @@ export default function TableDetail() {
                   </div>
                 );
               })}
-
-              {/* Unassigned items */}
-              {(() => {
-                const unassigned: { roundNumber: number; roundStatus: string; item: typeof table.rounds[0]['items'][0]; }[] = [];
-                table.rounds.forEach((round) => {
-                  round.items.forEach((item) => {
-                    if (!item.assignedTo) {
-                      unassigned.push({ roundNumber: round.number, roundStatus: round.status, item });
-                    }
-                  });
-                });
-                if (unassigned.length === 0) return null;
-                const unassignedTotal = unassigned.reduce((sum, u) => sum + u.item.price * u.item.qty, 0);
-                const isExpanded = expandedGuest === '__unassigned__';
-                return (
-                  <div className="rounded-[10px] border border-dashed border-w-warning/40 bg-w-warning/5 overflow-hidden">
-                    <button
-                      onClick={() => setExpandedGuest(isExpanded ? null : '__unassigned__')}
-                      className="w-full flex items-center justify-between p-3 min-h-[44px]"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px]">⚠️</span>
-                        <span className="text-[13px] text-w-warning font-medium">Sin asignar</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[12px] text-w-text">${unassignedTotal}</span>
-                        {isExpanded ? <ChevronUp size={14} className="text-w-text-secondary" /> : <ChevronDown size={14} className="text-w-text-secondary" />}
-                      </div>
-                    </button>
-                    {isExpanded && (
-                      <div className="px-3 pb-3 border-t border-w-warning/20 pt-2 space-y-1.5">
-                        {unassigned.map((u, idx) => {
-                          const rBadge = statusBadge[u.roundStatus];
-                          return (
-                            <div key={idx} className="flex justify-between text-[12px]">
-                              <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded-[4px] ${rBadge.bg} ${rBadge.text} shrink-0`}>R{u.roundNumber}</span>
-                                <span className="text-w-text">{u.item.name} ×{u.item.qty}</span>
-                              </div>
-                              <span className="font-mono text-w-text-secondary shrink-0">${u.item.price * u.item.qty}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
             </div>
           )}
         </div>
