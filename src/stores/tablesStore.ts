@@ -171,14 +171,24 @@ const initialTables: WaiterTable[] = [
   {
     id: '4', number: 4, section: 'Norte',
     guests: [
-      { id: 'g4-1', name: 'Guest 1', amountOwed: 240, amountPaid: 240, tipAmount: 74, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
-      { id: 'g4-2', name: 'Ana', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g4-3', name: 'Guest 3', amountOwed: 195, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
-      { id: 'g4-4', name: 'Guest 4', amountOwed: 95, amountPaid: 95, tipAmount: 48, paymentStatus: 'paid', orderMethod: 'manual', paymentMethod: 'cash' },
+      { id: 'g4-1', name: 'Guest 1', amountOwed: 415, amountPaid: 415, tipAmount: 74, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g4-2', name: 'Ana', amountOwed: 415, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g4-3', name: 'Guest 3', amountOwed: 310, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
+      { id: 'g4-4', name: 'Guest 4', amountOwed: 225, amountPaid: 225, tipAmount: 48, paymentStatus: 'paid', orderMethod: 'manual', paymentMethod: 'cash' },
     ],
     rounds: [
-      { number: 1, label: 'Bebidas + Entradas', items: [{ name: 'Margarita Clásica', qty: 2, price: 120 }, { name: 'Guacamole', qty: 1, price: 95 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
-      { number: 2, label: 'Plato Fuerte', items: [{ name: 'Entrecot a las Brasas', qty: 2, price: 295 }, { name: 'Pasta con Trufa', qty: 1, price: 245 }, { name: 'Ensalada Mixta', qty: 1, price: 130 }], status: 'cooking', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
+      { number: 1, label: 'Bebidas + Entradas', items: [
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g4-1' },
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g4-2' },
+        { name: 'Guacamole', qty: 1, price: 95, assignedTo: 'g4-4' },
+        { name: 'Agua de Jamaica', qty: 1, price: 65, assignedTo: 'g4-3' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
+      { number: 2, label: 'Plato Fuerte', items: [
+        { name: 'Entrecot a las Brasas', qty: 1, price: 295, assignedTo: 'g4-1' },
+        { name: 'Entrecot a las Brasas', qty: 1, price: 295, assignedTo: 'g4-2' },
+        { name: 'Pasta con Trufa', qty: 1, price: 245, assignedTo: 'g4-3' },
+        { name: 'Ensalada Mixta', qty: 1, price: 130, assignedTo: 'g4-4' },
+      ], status: 'cooking', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En cocina', timeOpened: 32, tipTotal: 122,
   },
