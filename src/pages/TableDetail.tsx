@@ -49,6 +49,8 @@ export default function TableDetail() {
   const guestsNeedingCashPayment = table.guests.filter(
     (g) => g.paymentStatus !== 'paid' && g.paymentStatus !== 'left'
   );
+  // Guests without seat assignment
+  const guestsWithoutSeat = table.guests.filter((g) => !g.seatLabel);
 
   const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
 
