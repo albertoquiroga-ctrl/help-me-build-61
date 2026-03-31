@@ -1,8 +1,9 @@
 import { cn } from '@/lib/utils';
 import type { GuestInfo } from '@/stores/tablesStore';
 import { guestDisplayName } from '@/stores/tablesStore';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTablesStore } from '@/stores/tablesStore';
+import { createPortal } from 'react-dom';
 
 interface GuestPillProps {
   guest: GuestInfo;
@@ -16,6 +17,8 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
   const [editMode, setEditMode] = useState<EditMode>(null);
   const [editValue, setEditValue] = useState('');
   const [showMenu, setShowMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const pillRef = useRef<HTMLSpanElement>(null);
   const renameGuest = useTablesStore((s) => s.renameGuest);
   const assignSeat = useTablesStore((s) => s.assignSeat);
 
@@ -26,7 +29,6 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
 
   const hasSeat = !!guest.seatLabel;
   const isQR = guest.orderMethod === 'qr';
-  const isGenericGuest = /^Guest \d+$/i.test(guest.name);
   const methodIcon = hasSeat ? '🪑' : isQR ? '📱' : '👤';
 
   const displayName = guestDisplayName(guest);
@@ -36,6 +38,13 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
     : guest.paymentMethod === 'card-physical' ? '💳'
     : guest.paymentMethod === 'qr' ? '📱'
     : null;
+
+  const openMenu = () => {
+    if (!pillRef.current) return;
+    const rect = pillRef.current.getBoundingClientRect();
+    setMenuPos({ top: rect.bottom + 4, left: rect.left });
+    setShowMenu(true);
+  };
 
   const handleSubmit = () => {
     const trimmed = editValue.trim();
@@ -54,7 +63,6 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
     setShowMenu(false);
   };
 
-  // Inline edit input
   if (editMode && editable && tableId) {
     return (
       <input
@@ -73,9 +81,10 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
   }
 
   return (
-    <span className="relative inline-flex">
+    <>
       <span
-        onClick={() => { if (editable && tableId) setShowMenu(!showMenu); }}
+        ref={pillRef}
+        onClick={() => { if (editable && tableId) openMenu(); }}
         className={cn(
           'inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] border font-mono text-[11px] whitespace-nowrap',
           editable && 'cursor-pointer active:scale-95 transition-transform',
@@ -99,26 +108,29 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
         }
       </span>
 
-      {/* Edit menu */}
-      {showMenu && editable && (
+      {showMenu && editable && createPortal(
         <>
-          <div className="fixed inset-0 z-50" onClick={() => setShowMenu(false)} />
-          <div className="absolute top-full left-0 mt-1 z-50 bg-w-elevated border border-w-border rounded-[8px] shadow-lg py-1 min-w-[140px]">
+          <div className="fixed inset-0 z-[60]" onClick={() => setShowMenu(false)} />
+          <div
+            className="fixed z-[61] bg-w-elevated border border-w-border rounded-[8px] shadow-lg py-1 min-w-[150px]"
+            style={{ top: menuPos.top, left: menuPos.left }}
+          >
             <button
               onClick={() => { setEditValue(guest.name); setEditMode('name'); }}
-              className="w-full text-left px-3 py-2 text-[12px] text-w-text hover:bg-w-surface transition-colors"
+              className="w-full text-left px-3 py-2.5 text-[12px] text-w-text hover:bg-w-surface transition-colors"
             >
               ✏️ Renombrar
             </button>
             <button
               onClick={() => { setEditValue(guest.seatNumber?.toString() || ''); setEditMode('seat'); }}
-              className="w-full text-left px-3 py-2 text-[12px] text-w-text hover:bg-w-surface transition-colors"
+              className="w-full text-left px-3 py-2.5 text-[12px] text-w-text hover:bg-w-surface transition-colors"
             >
               🪑 {hasSeat ? 'Cambiar silla' : 'Asignar silla'}
             </button>
           </div>
-        </>
+        </>,
+        document.body
       )}
-    </span>
+    </>
   );
 }
