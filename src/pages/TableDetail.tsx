@@ -253,27 +253,116 @@ export default function TableDetail() {
 
         {/* Contextual Actions */}
         <div className="space-y-2">
-          {/* Pending round → Confirm / Reject */}
+        {/* Inline Order Review for Pending Round */}
           {pendingRound && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  updateRoundStatus(table.id, pendingRound.number, 'confirmed');
-                  toast.success(`✓ R${pendingRound.number} confirmada · Mesa ${table.number}`);
-                }}
-                className="flex-1 h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
-              >
-                Confirmar R{pendingRound.number} ✓
-              </button>
-              <button
-                onClick={() => {
-                  toast.warning(`Rechazo enviado · R${pendingRound.number} Mesa ${table.number}`);
-                }}
-                className="flex-1 h-12 rounded-[8px] border border-w-error text-w-error font-semibold text-[14px] active:scale-[0.98] transition-transform"
-              >
-                Rechazar
-              </button>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-[12px] border-2 border-w-brand/50 bg-w-brand/5 p-4 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-[16px]">📋</span>
+                  <span className="text-[15px] font-semibold text-w-text">Revisión de orden</span>
+                  <RoundBadge round={pendingRound.number} />
+                </div>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-w-warning/15 text-w-warning font-medium">Pendiente</span>
+              </div>
+
+              {/* Items grouped by guest */}
+              <div className="space-y-2">
+                {pendingRound.items.map((item, idx) => {
+                  const assignedGuest = item.assignedTo ? table.guests.find((g) => g.id === item.assignedTo) : null;
+                  return (
+                    <div key={idx} className="flex items-center gap-2 bg-w-surface rounded-[8px] border border-w-border p-2.5">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[13px] text-w-text font-medium">{item.name}</span>
+                          {assignedGuest && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-brand/10 text-w-brand shrink-0">
+                              {guestDisplayName(assignedGuest)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-w-text-secondary font-mono">${item.price} c/u</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            if (item.qty > 1) {
+                              editItemInRound(table.id, pendingRound.number, idx, { qty: item.qty - 1 });
+                            } else {
+                              removeItemFromRound(table.id, pendingRound.number, idx);
+                            }
+                          }}
+                          className="w-7 h-7 rounded-full border border-w-border flex items-center justify-center text-w-text-secondary active:scale-95"
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span className="text-[13px] font-mono text-w-text w-5 text-center">{item.qty}</span>
+                        <button
+                          onClick={() => editItemInRound(table.id, pendingRound.number, idx, { qty: item.qty + 1 })}
+                          className="w-7 h-7 rounded-full border border-w-border flex items-center justify-center text-w-text-secondary active:scale-95"
+                        >
+                          <PlusCircle size={12} />
+                        </button>
+                        <button
+                          onClick={() => removeItemFromRound(table.id, pendingRound.number, idx)}
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-w-error/70 active:scale-95 ml-1"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Add item for any guest */}
+              <div className="border-t border-w-border/50 pt-2">
+                <p className="text-[10px] font-mono uppercase tracking-wider text-w-text-secondary mb-1.5">Agregar a esta ronda</p>
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+                  {table.guests.map((g) => (
+                    <button
+                      key={g.id}
+                      onClick={() => setManualOrderGuest({ id: g.id, name: guestDisplayName(g) })}
+                      className="shrink-0 px-2.5 py-1.5 rounded-[6px] border border-dashed border-w-brand/40 text-w-brand text-[11px] font-medium active:scale-95 transition-transform"
+                    >
+                      + {guestDisplayName(g)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between items-center border-t border-w-border/50 pt-2">
+                <span className="text-[13px] text-w-text font-medium">Total ronda:</span>
+                <span className="font-mono text-[15px] font-bold text-w-text">
+                  ${pendingRound.items.reduce((s, i) => s + i.price * i.qty, 0)} MXN
+                </span>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    updateRoundStatus(table.id, pendingRound.number, 'confirmed');
+                    toast.success(`✓ R${pendingRound.number} confirmada · Mesa ${table.number}`);
+                  }}
+                  className="flex-1 h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
+                >
+                  Confirmar R{pendingRound.number} ✓
+                </button>
+                <button
+                  onClick={() => {
+                    toast.warning(`Rechazo enviado · R${pendingRound.number} Mesa ${table.number}`);
+                  }}
+                  className="flex-1 h-12 rounded-[8px] border border-w-error text-w-error font-semibold text-[14px] active:scale-[0.98] transition-transform"
+                >
+                  Rechazar
+                </button>
+              </div>
+            </motion.div>
           )}
 
           {/* Ready round → Mark delivered */}
