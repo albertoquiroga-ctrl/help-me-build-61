@@ -42,9 +42,9 @@ export default function TableDetail() {
 
   // Guests without orders (manual method + $0 owed)
   const guestsWithoutOrder = table.guests.filter((g) => g.orderMethod === 'manual' && g.amountOwed === 0 && g.paymentStatus === 'pending');
-  // Guests who need in-person payment (not paid, not QR payment)
+  // Guests who need in-person payment (any unpaid guest)
   const guestsNeedingCashPayment = table.guests.filter(
-    (g) => g.paymentStatus === 'pending' && g.amountOwed > 0 && (allDelivered || table.status === 'paying')
+    (g) => g.paymentStatus !== 'paid' && g.paymentStatus !== 'left'
   );
 
   const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
