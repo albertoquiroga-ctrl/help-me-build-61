@@ -57,8 +57,21 @@ export default function TableDetail() {
   );
   // Guests without seat assignment
   const guestsWithoutSeat = table.guests.filter((g) => !g.seatLabel);
+  const allPaid = table.guests.length > 0 && table.guests.every((g) => g.paymentStatus === 'paid' || g.paymentStatus === 'left');
+  const totalBilled = table.guests.reduce((sum, g) => sum + g.amountPaid, 0);
+  const totalTips = table.tipTotal || table.guests.reduce((sum, g) => sum + g.tipAmount, 0);
 
   const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
+
+  const handleCloseTable = () => {
+    // Resolve any table-close notification
+    const notifStore = useNotificationsStore.getState();
+    const closeNotif = notifStore.queue.find((n) => n.type === 'table-close' && n.tableId === table.id && !n.resolved);
+    if (closeNotif) notifStore.resolve(closeNotif.id, 'Mesa cerrada ✓');
+    closeTable(table.id);
+    toast.success(`✓ Mesa ${table.number} cerrada y disponible`);
+    navigate('/waiter');
+  };
 
   const handleAddGuest = () => {
     const seatNum = parseInt(newSeatNumber.trim(), 10);
