@@ -209,15 +209,15 @@ export default function WaiterDashboard() {
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-w-elevated rounded-t-[16px] border-t border-w-border p-4 pb-8"
+              className="fixed bottom-0 left-0 right-0 z-[51] bg-w-elevated rounded-t-[16px] border-t border-w-border max-h-[80vh] flex flex-col"
             >
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between p-4 pb-2">
                 <h3 className="text-[14px] font-semibold text-w-text">⚡ Simular evento</h3>
                 <button onClick={() => setShowSimMenu(false)} className="w-11 h-11 flex items-center justify-center">
                   <X size={18} className="text-w-text-secondary" />
                 </button>
               </div>
-              <div className="space-y-2">
+              <div className="overflow-y-auto px-4 pb-8 space-y-2">
                 {simActions.map((a, i) => (
                   <button
                     key={i}
