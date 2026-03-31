@@ -1,62 +1,64 @@
 
 
-# Plan: Flujo realista de identificación — Guest → Silla (asignada por mesero)
+# Plan: Canales de comunicación interna + lectura en voz alta
 
-## Contexto
+## Qué se construye
 
-Los comensales que escanean el QR sin iniciar sesión aparecen como "Guest 1", "Guest 2", etc. Los que sí tienen cuenta aparecen con su nombre real (e.g. "Pedro"). **Ninguno tiene silla asignada automáticamente** — el mesero asigna la posición en la mesa después de confirmar la orden.
-
-## Flujo corregido
-
-```text
-Comensales escanean QR → aparecen como "Guest 1", "Pedro", "Guest 3"
-  → Ordenan (QR o menú físico)
-  → Mesero confirma orden, captura las faltantes
-  → Mesero asigna silla a cada comensal: "Guest 1" → Silla 1, "Pedro" → Silla 2
-  → A la hora de cobrar: todo se muestra por posición (Silla 1, Silla 2...)
-  → Mesero cobra uno por uno a los que no pagaron desde el app
-```
+Expandir la pantalla de Alertas para incluir **mensajes internos del equipo** (gerente, barra, juice bar, hostess, cocina/POS) junto con las alertas operativas existentes. Agregar un botón de **lectura en voz alta** usando la Web Speech API del navegador para que el mesero pueda escuchar las alertas sin mirar el teléfono.
 
 ## Cambios
 
-### 1. Modelo de datos — `tablesStore.ts`
+### 1. Modelo de datos — `notificationsStore.ts`
 
-- Separar `name` (identidad del comensal: "Guest 1", "Pedro") de `seatLabel` (posición asignada por mesero: "Silla 1", null si no asignada).
-- Agregar campo `seatLabel?: string` a `GuestInfo`.
-- Agregar acción `assignSeat(tableId, guestId, seatNumber)` que pone `seatLabel = "Silla N"`.
-- Agregar acción `assignAllSeats(tableId)` que asigna sillas automáticamente a todos los guests sin silla, en orden.
-- Modificar `initializeSeats` para que cree guests con nombre "Guest N" y sin silla asignada (la silla se asigna después).
-- Actualizar mock data: guests con `name: "Guest 1"` / `"Pedro"` y `seatLabel: "Silla 1"` o `undefined`.
+- Agregar nuevos `NotifType`: `'manager-msg'` | `'kitchen-msg'` | `'bar-msg'` | `'host-msg'`
+- Agregar campo `channel?: string` a `WaiterNotification` para identificar el origen ("Gerente", "Barra", "Juice Bar", "Hostess", "Cocina")
+- Agregar mock data con mensajes de ejemplo:
+  - Gerente: "Llegó grupo VIP de 8, mesa 12, prioridad alta"
+  - Barra: "Se acabó el mezcal Amores, ofrecer Alipús"
+  - Hostess: "Mesa 3 llega en 5 min, reservación confirmada"
+  - Cocina: "Horno fuera de servicio, sin pizzas hasta nuevo aviso"
 
-### 2. UI de asignación de sillas — `TableDetail.tsx`
+### 2. Filtros por canal — `AlertsQueue.tsx`
 
-- Mostrar banner "Asignar posiciones" cuando hay guests sin `seatLabel`.
-- Botón "Asignar sillas automáticamente" que llama `assignAllSeats` (asigna Silla 1, 2, 3... en orden).
-- Opción de asignar manualmente: tap en un guest → selector de número de silla.
-- Una vez asignadas, los guests se muestran como "Silla 1 (Pedro)" o "Silla 2 (Guest 1)".
+- Agregar una segunda fila de filtros por canal: Todas | Mesas | Gerente | Cocina | Barra | Hostess
+- Los filtros existentes (Todas/Activas/Resueltas) se mantienen como estado de resolución
+- Ambos filtros se aplican en combinación (AND)
+- Cada canal tiene su icono: 👨‍💼 Gerente, 🍳 Cocina, 🍸 Barra, 🧃 Juice Bar, 💁 Hostess, 🪑 Mesas
 
-### 3. Display inteligente — `GuestPill.tsx`
+### 3. Botón de lectura en voz alta — `AlertsQueue.tsx`
 
-- Si tiene `seatLabel`: mostrar `🪑 Silla 2 · Pedro` o `🪑 Silla 1` (si el nombre es genérico Guest N, solo mostrar la silla).
-- Si no tiene `seatLabel`: mostrar `👤 Pedro` o `📱 Guest 1` como ahora.
-- En contexto de cobro (`CashPaymentSheet`), siempre priorizar `seatLabel` sobre `name`.
+- Botón `🔊` en el header que usa `window.speechSynthesis` (Web Speech API, sin dependencias externas)
+- Al presionarlo, lee en voz alta todas las alertas activas no resueltas en orden de prioridad
+- Usa `SpeechSynthesisUtterance` con `lang: 'es-MX'`
+- Estado toggle: si está leyendo, un segundo tap detiene la lectura
+- Opción de auto-lectura: toggle en perfil para que cada nueva alerta se lea automáticamente (útil en hora pico)
 
-### 4. Cobro por posición — `CashPaymentSheet.tsx`
+### 4. Simulador — `WaiterDashboard.tsx`
 
-- Mostrar el `seatLabel` como identificador principal en el header y lista de items.
-- Si el guest tiene nombre real, mostrarlo como subtítulo: "Silla 2 · Pedro".
+- Agregar 2-3 acciones de simulación para mensajes internos (mensaje de gerente, aviso de barra) al menú de simulación existente
 
-### 5. Mock data actualizado — `tablesStore.ts`
+### 5. Visual de mensajes internos — `NotificationCard.tsx`
 
-- Mesas con guests que tienen nombres genéricos ("Guest 1") y algunos con nombre real ("Pedro", "Ana").
-- Mesas donde las sillas ya fueron asignadas (mesas avanzadas) y mesas donde aún no (mesas recién abiertas).
+- Los mensajes internos muestran el nombre del canal como badge: `[Gerente]`, `[Barra]`
+- Icono del canal en lugar del icono de prioridad para mensajes tipo `*-msg`
 
 ## Archivos a modificar
 
 | Archivo | Cambio |
 |---|---|
-| `tablesStore.ts` | Campo `seatLabel`, acciones `assignSeat`/`assignAllSeats`, mock data |
-| `TableDetail.tsx` | Banner de asignación de sillas, botón automático, display dual |
-| `GuestPill.tsx` | Display condicional seatLabel + name |
-| `CashPaymentSheet.tsx` | Priorizar seatLabel en header e items |
+| `notificationsStore.ts` | Nuevos tipos, campo `channel`, mock data |
+| `AlertsQueue.tsx` | Filtros por canal, botón de voz alta, layout actualizado |
+| `NotificationCard.tsx` | Badge de canal para mensajes internos |
+| `WaiterDashboard.tsx` | Nuevas acciones de simulación |
+
+## Detalle técnico: Web Speech API
+
+```text
+const utterance = new SpeechSynthesisUtterance(text);
+utterance.lang = 'es-MX';
+utterance.rate = 1.1;  // ligeramente rápido para hora pico
+window.speechSynthesis.speak(utterance);
+```
+
+No requiere API key, funciona offline en la mayoría de dispositivos móviles. Fallback: si `speechSynthesis` no está disponible, el botón se oculta.
 
