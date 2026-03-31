@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Plus, Trash2, Minus, PlusCircle } fr
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTablesStore, guestDisplayName } from '@/stores/tablesStore';
+import { useNotificationsStore } from '@/stores/notificationsStore';
 import type { GuestInfo } from '@/stores/tablesStore';
 import GuestPill from '@/components/waiter/GuestPill';
 import RoundBadge from '@/components/waiter/RoundBadge';
@@ -35,6 +36,8 @@ export default function TableDetail() {
   const initializeSeats = useTablesStore((s) => s.initializeSeats);
   const assignAllSeats = useTablesStore((s) => s.assignAllSeats);
   const assignSeat = useTablesStore((s) => s.assignSeat);
+  const closeTable = useTablesStore((s) => s.closeTable);
+  const resolve = useNotificationsStore((s) => s.resolve);
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
@@ -54,8 +57,21 @@ export default function TableDetail() {
   );
   // Guests without seat assignment
   const guestsWithoutSeat = table.guests.filter((g) => !g.seatLabel);
+  const allPaid = table.guests.length > 0 && table.guests.every((g) => g.paymentStatus === 'paid' || g.paymentStatus === 'left');
+  const totalBilled = table.guests.reduce((sum, g) => sum + g.amountPaid, 0);
+  const totalTips = table.tipTotal || table.guests.reduce((sum, g) => sum + g.tipAmount, 0);
 
   const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
+
+  const handleCloseTable = () => {
+    // Resolve any table-close notification
+    const notifStore = useNotificationsStore.getState();
+    const closeNotif = notifStore.queue.find((n) => n.type === 'table-close' && n.tableId === table.id && !n.resolved);
+    if (closeNotif) notifStore.resolve(closeNotif.id, 'Mesa cerrada ✓');
+    closeTable(table.id);
+    toast.success(`✓ Mesa ${table.number} cerrada y disponible`);
+    navigate('/waiter');
+  };
 
   const handleAddGuest = () => {
     const seatNum = parseInt(newSeatNumber.trim(), 10);
@@ -414,6 +430,29 @@ export default function TableDetail() {
                 </div>
               ))}
             </div>
+          )}
+          {/* Close table section */}
+          {allPaid && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-[12px] border-2 border-w-success/40 bg-w-success/5 p-4 space-y-3"
+            >
+              <div className="text-center space-y-1">
+                <p className="text-[16px] font-semibold text-w-success">🧹 Todo pagado · Levantar muertos</p>
+                <p className="text-[12px] text-w-text-secondary">
+                  Total: <span className="font-mono font-bold text-w-text">${totalBilled} MXN</span>
+                  {totalTips > 0 && <> · Propinas: <span className="font-mono font-bold text-w-tip">${totalTips} MXN</span></>}
+                </p>
+              </div>
+              <button
+                onClick={handleCloseTable}
+                className="w-full h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
+              >
+                ✓ Mesa limpia · Cerrar y liberar
+              </button>
+              <p className="text-[10px] text-w-text-secondary text-center">La hostess podrá asignar nuevos clientes</p>
+            </motion.div>
           )}
         </div>
 

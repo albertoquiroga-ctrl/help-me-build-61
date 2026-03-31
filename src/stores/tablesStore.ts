@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useNotificationsStore } from './notificationsStore';
 
 export type PaymentStatus = 'pending' | 'paid' | 'left' | 'failed';
 export type RoundStatus = 'pending' | 'confirmed' | 'cooking' | 'ready' | 'delivered';
@@ -116,6 +117,32 @@ function applyDerived(tables: WaiterTable[], id: string): WaiterTable[] {
     if (t.id !== id) return t;
     const { status, statusText } = deriveTableStatus(t);
     return { ...t, status, statusText };
+  });
+}
+
+/** Check if all guests paid and fire a "levantar muertos" notification */
+function checkAllPaidAndNotify(tables: WaiterTable[], tableId: string) {
+  const table = tables.find((t) => t.id === tableId);
+  if (!table || table.guests.length === 0) return;
+  const allPaid = table.guests.every((g) => g.paymentStatus === 'paid' || g.paymentStatus === 'left');
+  if (!allPaid) return;
+  // Avoid duplicate notifications
+  const notifStore = useNotificationsStore.getState();
+  const alreadyExists = notifStore.queue.some((n) => n.type === 'table-close' && n.tableId === tableId && !n.resolved);
+  if (alreadyExists) return;
+  const totalBilled = table.guests.reduce((sum, g) => sum + g.amountPaid, 0);
+  const totalTips = table.tipTotal || table.guests.reduce((sum, g) => sum + g.tipAmount, 0);
+  notifStore.addNotification({
+    id: `n-close-${tableId}-${Date.now()}`,
+    type: 'table-close',
+    priority: 'medium',
+    tableId,
+    title: `🧹 Levantar muertos · Mesa ${table.number}`,
+    subtitle: `Todo pagado · $${totalBilled} MXN · Propinas $${totalTips}`,
+    channel: 'mesas',
+    timestamp: new Date().toISOString(),
+    dismissed: false,
+    resolved: false,
   });
 }
 
@@ -294,7 +321,9 @@ export const useTablesStore = create<TablesState>((set) => ({
             }
           : t
       );
-      return { tables: applyDerived(updated, tableId) };
+      const result = applyDerived(updated, tableId);
+      checkAllPaidAndNotify(result, tableId);
+      return { tables: result };
     }),
   markGuestNoOrder: (tableId, guestId) =>
     set((s) => {
@@ -409,7 +438,9 @@ export const useTablesStore = create<TablesState>((set) => ({
         );
         return { ...t, rounds, guests };
       });
-      return { tables: applyDerived(updated, tableId) };
+      const result = applyDerived(updated, tableId);
+      checkAllPaidAndNotify(result, tableId);
+      return { tables: result };
     }),
   removeGuest: (tableId, guestId) =>
     set((s) => {
