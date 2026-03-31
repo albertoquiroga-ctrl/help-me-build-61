@@ -321,7 +321,9 @@ export const useTablesStore = create<TablesState>((set) => ({
             }
           : t
       );
-      return { tables: applyDerived(updated, tableId) };
+      const result = applyDerived(updated, tableId);
+      checkAllPaidAndNotify(result, tableId);
+      return { tables: result };
     }),
   markGuestNoOrder: (tableId, guestId) =>
     set((s) => {
