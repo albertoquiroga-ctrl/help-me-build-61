@@ -4,6 +4,7 @@ import { guestDisplayName } from '@/stores/tablesStore';
 import { useState, useRef, useEffect } from 'react';
 import { useTablesStore } from '@/stores/tablesStore';
 import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
 
 interface GuestPillProps {
   guest: GuestInfo;

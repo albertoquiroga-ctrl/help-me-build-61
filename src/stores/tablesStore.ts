@@ -409,4 +409,14 @@ export const useTablesStore = create<TablesState>((set) => ({
       });
       return { tables: applyDerived(updated, tableId) };
     }),
+  removeGuest: (tableId, guestId) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        const guest = t.guests.find((g) => g.id === guestId);
+        if (!guest || guest.orderMethod !== 'manual') return t;
+        return { ...t, guests: t.guests.filter((g) => g.id !== guestId) };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
 }));
