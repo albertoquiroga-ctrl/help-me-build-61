@@ -82,6 +82,9 @@ interface TablesState {
   markGuestLeft: (tableId: string, guestId: string) => void;
   closeTable: (id: string) => void;
   recalculateStatus: (id: string) => void;
+  addManualOrder: (tableId: string, guestId: string, items: OrderItem[]) => void;
+  markGuestPaidCash: (tableId: string, guestId: string, method: 'cash' | 'card-physical') => void;
+  markGuestNoOrder: (tableId: string, guestId: string) => void;
 }
 
 function applyDerived(tables: WaiterTable[], id: string): WaiterTable[] {
