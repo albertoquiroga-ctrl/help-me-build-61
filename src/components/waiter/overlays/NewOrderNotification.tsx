@@ -115,6 +115,13 @@ export default function NewOrderNotification({ onDismiss }: { onDismiss: () => v
           <p className="text-[11px] text-w-text-secondary mt-2 text-center">Si no haces nada, se confirma y va a cocina.</p>
         </div>
 
+        <button
+          onClick={() => { toast.success('✓ Orden confirmada · Mesa 4 R2'); onDismiss(); }}
+          className="w-full h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] mb-2 active:scale-[0.98] transition-transform"
+        >
+          Confirmar orden ✓
+        </button>
+
         <button onClick={() => setShowReject(true)} className="w-full h-10 rounded-[8px] border border-w-error/50 text-w-error text-[13px] font-medium">
           Rechazar orden
         </button>
