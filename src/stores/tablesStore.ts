@@ -72,6 +72,12 @@ export function deriveTableStatus(table: WaiterTable): { status: TableStatus; st
   return { status: 'active', statusText: 'En orden' };
 }
 
+export interface ItemAssignment {
+  roundNumber: number;
+  itemIndex: number;
+  splitCount?: number; // if > 1, cost is divided
+}
+
 interface TablesState {
   tables: WaiterTable[];
   updateTable: (id: string, updates: Partial<WaiterTable>) => void;
@@ -85,6 +91,8 @@ interface TablesState {
   addManualOrder: (tableId: string, guestId: string, items: OrderItem[]) => void;
   markGuestPaidCash: (tableId: string, guestId: string, method: 'cash' | 'card-physical') => void;
   markGuestNoOrder: (tableId: string, guestId: string) => void;
+  addGuest: (tableId: string, name: string) => void;
+  assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
 }
 
 function applyDerived(tables: WaiterTable[], id: string): WaiterTable[] {
