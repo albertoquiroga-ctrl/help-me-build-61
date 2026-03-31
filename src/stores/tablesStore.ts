@@ -246,11 +246,14 @@ const initialTables: WaiterTable[] = [
   {
     id: '11', number: 11, section: 'Norte',
     guests: [
-      { id: 'g11-1', name: 'Guest 1', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'failed', orderMethod: 'manual', paymentMethod: null },
-      { id: 'g11-2', name: 'Valentina', amountOwed: 210, amountPaid: 210, tipAmount: 36, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g11-1', name: 'Guest 1', amountOwed: 160, amountPaid: 0, tipAmount: 0, paymentStatus: 'failed', orderMethod: 'manual', paymentMethod: null },
+      { id: 'g11-2', name: 'Valentina', amountOwed: 245, amountPaid: 245, tipAmount: 36, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
-      { number: 1, label: 'Completo', items: [{ name: 'Tacos de Asada', qty: 1, price: 160 }, { name: 'Pasta con Trufa', qty: 1, price: 245 }], status: 'delivered', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
+      { number: 1, label: 'Completo', items: [
+        { name: 'Tacos de Asada', qty: 1, price: 160, assignedTo: 'g11-1' },
+        { name: 'Pasta con Trufa', qty: 1, price: 245, assignedTo: 'g11-2' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
     ],
     status: 'problem', statusText: '⚠️ Pago fallido', timeOpened: 55, tipTotal: 36,
   },
