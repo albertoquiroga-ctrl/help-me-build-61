@@ -150,40 +150,66 @@ const initialTables: WaiterTable[] = [
   {
     id: '2', number: 2, section: 'Norte',
     guests: [
-      { id: 'g2-1', name: 'Guest 1', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g2-2', name: 'Pedro', amountOwed: 215, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g2-1', name: 'Guest 1', amountOwed: 280, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g2-2', name: 'Pedro', amountOwed: 280, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
       { id: 'g2-3', name: 'Guest 3', amountOwed: 195, amountPaid: 195, tipAmount: 85, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
-      { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 2, price: 120 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 40 * 60000).toISOString() },
-      { number: 2, label: 'Plato Fuerte', items: [{ name: 'Tacos de Asada', qty: 2, price: 160 }, { name: 'Ensalada Mixta', qty: 1, price: 130 }], status: 'cooking', createdAt: new Date(Date.now() - 8 * 60000).toISOString() },
+      { number: 1, label: 'Bebidas', items: [
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g2-1' },
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g2-2' },
+        { name: 'Agua de Jamaica', qty: 1, price: 65, assignedTo: 'g2-3' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 40 * 60000).toISOString() },
+      { number: 2, label: 'Plato Fuerte', items: [
+        { name: 'Tacos de Asada', qty: 1, price: 160, assignedTo: 'g2-1' },
+        { name: 'Tacos de Asada', qty: 1, price: 160, assignedTo: 'g2-2' },
+        { name: 'Ensalada Mixta', qty: 1, price: 130, assignedTo: 'g2-3' },
+      ], status: 'cooking', createdAt: new Date(Date.now() - 8 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 85,
   },
   {
     id: '4', number: 4, section: 'Norte',
     guests: [
-      { id: 'g4-1', name: 'Guest 1', amountOwed: 240, amountPaid: 240, tipAmount: 74, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
-      { id: 'g4-2', name: 'Ana', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g4-3', name: 'Guest 3', amountOwed: 195, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
-      { id: 'g4-4', name: 'Guest 4', amountOwed: 95, amountPaid: 95, tipAmount: 48, paymentStatus: 'paid', orderMethod: 'manual', paymentMethod: 'cash' },
+      { id: 'g4-1', name: 'Guest 1', amountOwed: 415, amountPaid: 415, tipAmount: 74, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g4-2', name: 'Ana', amountOwed: 415, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g4-3', name: 'Guest 3', amountOwed: 310, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
+      { id: 'g4-4', name: 'Guest 4', amountOwed: 225, amountPaid: 225, tipAmount: 48, paymentStatus: 'paid', orderMethod: 'manual', paymentMethod: 'cash' },
     ],
     rounds: [
-      { number: 1, label: 'Bebidas + Entradas', items: [{ name: 'Margarita Clásica', qty: 2, price: 120 }, { name: 'Guacamole', qty: 1, price: 95 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
-      { number: 2, label: 'Plato Fuerte', items: [{ name: 'Entrecot a las Brasas', qty: 2, price: 295 }, { name: 'Pasta con Trufa', qty: 1, price: 245 }, { name: 'Ensalada Mixta', qty: 1, price: 130 }], status: 'cooking', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
+      { number: 1, label: 'Bebidas + Entradas', items: [
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g4-1' },
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g4-2' },
+        { name: 'Guacamole', qty: 1, price: 95, assignedTo: 'g4-4' },
+        { name: 'Agua de Jamaica', qty: 1, price: 65, assignedTo: 'g4-3' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
+      { number: 2, label: 'Plato Fuerte', items: [
+        { name: 'Entrecot a las Brasas', qty: 1, price: 295, assignedTo: 'g4-1' },
+        { name: 'Entrecot a las Brasas', qty: 1, price: 295, assignedTo: 'g4-2' },
+        { name: 'Pasta con Trufa', qty: 1, price: 245, assignedTo: 'g4-3' },
+        { name: 'Ensalada Mixta', qty: 1, price: 130, assignedTo: 'g4-4' },
+      ], status: 'cooking', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En cocina', timeOpened: 32, tipTotal: 122,
   },
   {
     id: '6', number: 6, section: 'Sur',
     guests: [
-      { id: 'g6-1', name: 'Guest 1', amountOwed: 295, amountPaid: 295, tipAmount: 52, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
-      { id: 'g6-2', name: 'Mariana', amountOwed: 245, amountPaid: 245, tipAmount: 45, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g6-1', name: 'Guest 1', amountOwed: 510, amountPaid: 510, tipAmount: 52, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g6-2', name: 'Mariana', amountOwed: 310, amountPaid: 310, tipAmount: 45, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
-      { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 1, price: 120 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 65 * 60000).toISOString() },
-      { number: 2, label: 'Entradas', items: [{ name: 'Guacamole', qty: 1, price: 95 }], status: 'delivered', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
-      { number: 3, label: 'Plato Fuerte', items: [{ name: 'Entrecot a las Brasas', qty: 1, price: 295 }, { name: 'Pasta con Trufa', qty: 1, price: 245 }], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
+      { number: 1, label: 'Bebidas', items: [
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g6-1' },
+        { name: 'Agua de Jamaica', qty: 1, price: 65, assignedTo: 'g6-2' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 65 * 60000).toISOString() },
+      { number: 2, label: 'Entradas', items: [
+        { name: 'Guacamole', qty: 1, price: 95, assignedTo: 'g6-1' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
+      { number: 3, label: 'Plato Fuerte', items: [
+        { name: 'Entrecot a las Brasas', qty: 1, price: 295, assignedTo: 'g6-1' },
+        { name: 'Pasta con Trufa', qty: 1, price: 245, assignedTo: 'g6-2' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
     ],
     status: 'paying', statusText: 'Todos pagaron', timeOpened: 70, tipTotal: 97,
   },
@@ -197,8 +223,18 @@ const initialTables: WaiterTable[] = [
       { id: 'g7-5', name: 'Guest 5', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
     ],
     rounds: [
-      { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 3, price: 120 }, { name: 'Agua de Jamaica', qty: 2, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 25 * 60000).toISOString() },
-      { number: 2, label: 'Entradas', items: [{ name: 'Guacamole', qty: 2, price: 95, assignedTo: 'g7-3' }, { name: 'Nachos con Queso', qty: 1, price: 85, assignedTo: 'g7-1' }, { name: 'Quesadilla de Huitlacoche', qty: 1, price: 110, assignedTo: 'g7-2' }], status: 'pending', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
+      { number: 1, label: 'Bebidas', items: [
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g7-1' },
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g7-4' },
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g7-5' },
+        { name: 'Agua de Jamaica', qty: 1, price: 65, assignedTo: 'g7-2' },
+        { name: 'Agua de Jamaica', qty: 1, price: 65, assignedTo: 'g7-3' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 25 * 60000).toISOString() },
+      { number: 2, label: 'Entradas', items: [
+        { name: 'Guacamole', qty: 2, price: 95, assignedTo: 'g7-3' },
+        { name: 'Nachos con Queso', qty: 1, price: 85, assignedTo: 'g7-1' },
+        { name: 'Quesadilla de Huitlacoche', qty: 1, price: 110, assignedTo: 'g7-2' },
+      ], status: 'pending', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En orden', timeOpened: 28, tipTotal: 0,
   },
@@ -210,11 +246,14 @@ const initialTables: WaiterTable[] = [
   {
     id: '11', number: 11, section: 'Norte',
     guests: [
-      { id: 'g11-1', name: 'Guest 1', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'failed', orderMethod: 'manual', paymentMethod: null },
-      { id: 'g11-2', name: 'Valentina', amountOwed: 210, amountPaid: 210, tipAmount: 36, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g11-1', name: 'Guest 1', amountOwed: 160, amountPaid: 0, tipAmount: 0, paymentStatus: 'failed', orderMethod: 'manual', paymentMethod: null },
+      { id: 'g11-2', name: 'Valentina', amountOwed: 245, amountPaid: 245, tipAmount: 36, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
-      { number: 1, label: 'Completo', items: [{ name: 'Tacos de Asada', qty: 1, price: 160 }, { name: 'Pasta con Trufa', qty: 1, price: 245 }], status: 'delivered', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
+      { number: 1, label: 'Completo', items: [
+        { name: 'Tacos de Asada', qty: 1, price: 160, assignedTo: 'g11-1' },
+        { name: 'Pasta con Trufa', qty: 1, price: 245, assignedTo: 'g11-2' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
     ],
     status: 'problem', statusText: '⚠️ Pago fallido', timeOpened: 55, tipTotal: 36,
   },
