@@ -167,7 +167,7 @@ export default function TableDetail() {
                 <div key={g.id} className="flex items-center justify-between min-h-[36px]">
                   <div className="flex items-center gap-2">
                     <span className="text-[12px]">{hasOrder ? '✅' : '⚠️'}</span>
-                    <span className="text-[13px] text-w-text">{g.name}</span>
+                    <span className="text-[13px] text-w-text">{guestDisplayName(g)}</span>
                     <span className="text-[11px] text-w-text-secondary">{hasOrder ? 'Pidió por QR' : 'Sin pedido'}</span>
                   </div>
                   {!hasOrder && (
