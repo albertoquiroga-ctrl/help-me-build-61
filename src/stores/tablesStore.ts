@@ -25,6 +25,7 @@ export interface Round {
 export interface GuestInfo {
   id: string;
   name: string;
+  seatLabel?: string; // assigned by waiter: "Silla 1", "Silla 2"
   seatNumber?: number;
   amountOwed: number;
   amountPaid: number;
@@ -32,6 +33,13 @@ export interface GuestInfo {
   paymentStatus: PaymentStatus;
   orderMethod: OrderMethod;
   paymentMethod: PaymentMethod;
+}
+
+/** Display name for a guest, prioritizing seatLabel */
+export function guestDisplayName(guest: GuestInfo): string {
+  if (!guest.seatLabel) return guest.name;
+  const isGeneric = /^Guest \d+$/i.test(guest.name);
+  return isGeneric ? guest.seatLabel : `${guest.seatLabel} · ${guest.name}`;
 }
 
 export interface WaiterTable {
