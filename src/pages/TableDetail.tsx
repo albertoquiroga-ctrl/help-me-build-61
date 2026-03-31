@@ -28,7 +28,7 @@ export default function TableDetail() {
   const [manualOrderGuest, setManualOrderGuest] = useState<{ id: string; name: string } | null>(null);
   const [cashPaymentGuest, setCashPaymentGuest] = useState<string | null>(null);
   const [showAddGuest, setShowAddGuest] = useState(false);
-  const [newGuestName, setNewGuestName] = useState('');
+  const [newSeatNumber, setNewSeatNumber] = useState('');
   const addGuest = useTablesStore((s) => s.addGuest);
   const initializeSeats = useTablesStore((s) => s.initializeSeats);
   const assignAllSeats = useTablesStore((s) => s.assignAllSeats);
