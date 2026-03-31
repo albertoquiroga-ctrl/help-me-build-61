@@ -150,13 +150,21 @@ const initialTables: WaiterTable[] = [
   {
     id: '2', number: 2, section: 'Norte',
     guests: [
-      { id: 'g2-1', name: 'Guest 1', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g2-2', name: 'Pedro', amountOwed: 215, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g2-1', name: 'Guest 1', amountOwed: 280, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g2-2', name: 'Pedro', amountOwed: 280, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
       { id: 'g2-3', name: 'Guest 3', amountOwed: 195, amountPaid: 195, tipAmount: 85, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
-      { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 2, price: 120 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 40 * 60000).toISOString() },
-      { number: 2, label: 'Plato Fuerte', items: [{ name: 'Tacos de Asada', qty: 2, price: 160 }, { name: 'Ensalada Mixta', qty: 1, price: 130 }], status: 'cooking', createdAt: new Date(Date.now() - 8 * 60000).toISOString() },
+      { number: 1, label: 'Bebidas', items: [
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g2-1' },
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g2-2' },
+        { name: 'Agua de Jamaica', qty: 1, price: 65, assignedTo: 'g2-3' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 40 * 60000).toISOString() },
+      { number: 2, label: 'Plato Fuerte', items: [
+        { name: 'Tacos de Asada', qty: 1, price: 160, assignedTo: 'g2-1' },
+        { name: 'Tacos de Asada', qty: 1, price: 160, assignedTo: 'g2-2' },
+        { name: 'Ensalada Mixta', qty: 1, price: 130, assignedTo: 'g2-3' },
+      ], status: 'cooking', createdAt: new Date(Date.now() - 8 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 85,
   },
