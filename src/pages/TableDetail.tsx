@@ -52,9 +52,9 @@ export default function TableDetail() {
   const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
 
   const handleAddGuest = () => {
-    if (!newGuestName.trim()) return;
-    addGuest(table.id, newGuestName.trim());
-    toast.success(`✓ ${newGuestName.trim()} agregado`);
+    const name = newGuestName.trim();
+    addGuest(table.id, name);
+    toast.success(`✓ ${name || 'Nueva silla'} agregado`);
     setNewGuestName('');
     setShowAddGuest(false);
   };
