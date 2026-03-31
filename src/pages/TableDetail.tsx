@@ -297,7 +297,7 @@ export default function TableDetail() {
               {guestsNeedingCashPayment.map((g) => (
                 <div key={g.id} className="flex items-center justify-between min-h-[36px]">
                   <div>
-                    <span className="text-[13px] text-w-text">{g.name}</span>
+                    <span className="text-[13px] text-w-text">{guestDisplayName(g)}</span>
                     <span className="font-mono text-[12px] text-w-text-secondary ml-2">${g.amountOwed}</span>
                   </div>
                   <button

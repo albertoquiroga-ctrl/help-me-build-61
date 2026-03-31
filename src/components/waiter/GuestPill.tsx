@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import type { GuestInfo } from '@/stores/tablesStore';
+import { guestDisplayName } from '@/stores/tablesStore';
 import { useState } from 'react';
 import { useTablesStore } from '@/stores/tablesStore';
 
@@ -19,9 +20,12 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
   const isFailed = guest.paymentStatus === 'failed';
   const hasNoOrder = guest.orderMethod === 'manual' && guest.amountOwed === 0;
 
-  const isSeat = /^Silla \d+$/i.test(guest.name);
-  const isQR = guest.orderMethod === 'qr' && !isSeat;
-  const methodIcon = isSeat ? '🪑' : isQR ? '📱' : '👤';
+  const hasSeat = !!guest.seatLabel;
+  const isQR = guest.orderMethod === 'qr';
+  const isGenericGuest = /^Guest \d+$/i.test(guest.name);
+  const methodIcon = hasSeat ? '🪑' : isQR ? '📱' : isGenericGuest ? '👤' : '👤';
+
+  const displayName = guestDisplayName(guest);
 
   const paymentIcon =
     guest.paymentMethod === 'cash' ? '💵'
@@ -66,7 +70,8 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
                 ? 'bg-w-warning/10 border-w-warning/30 text-w-warning'
                 : 'bg-w-priority/10 border-w-priority/30 text-w-priority'
       )}>
-      {methodIcon} {guest.name}
+      {methodIcon} {displayName}
+      {!hasSeat && <span className="text-[9px] opacity-60">⊘</span>}
       {hasNoOrder
         ? ' · ⚠️ Sin pedido'
         : isPaid
