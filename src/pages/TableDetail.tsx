@@ -47,8 +47,15 @@ export default function TableDetail() {
     (g) => g.paymentStatus === 'pending' && g.amountOwed > 0 && (allDelivered || table.status === 'paying')
   );
 
-  const allItems = table.rounds.flatMap((r) => r.items);
   const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
+
+  const handleAddGuest = () => {
+    if (!newGuestName.trim()) return;
+    addGuest(table.id, newGuestName.trim());
+    toast.success(`✓ ${newGuestName.trim()} agregado`);
+    setNewGuestName('');
+    setShowAddGuest(false);
+  };
 
   return (
     <div className="min-h-screen bg-w-bg">
