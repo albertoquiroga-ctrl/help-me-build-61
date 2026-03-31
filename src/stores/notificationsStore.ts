@@ -53,7 +53,7 @@ const initialNotifications: WaiterNotification[] = [
 export const useNotificationsStore = create<NotificationsState>((set) => ({
   queue: initialNotifications,
   activeOverlay: null,
-  unreadCount: 5,
+  unreadCount: 6,
   autoReadAloud: false,
   addNotification: (n) =>
     set((s) => ({ queue: [n, ...s.queue], unreadCount: s.unreadCount + 1 })),
