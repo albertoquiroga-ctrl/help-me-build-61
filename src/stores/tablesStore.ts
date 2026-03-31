@@ -106,6 +106,7 @@ interface TablesState {
   assignSeat: (tableId: string, guestId: string, seatNumber: number) => void;
   assignAllSeats: (tableId: string) => void;
   assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
+  removeGuest: (tableId: string, guestId: string) => void;
 }
 
 function applyDerived(tables: WaiterTable[], id: string): WaiterTable[] {
