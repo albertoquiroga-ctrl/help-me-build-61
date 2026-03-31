@@ -25,6 +25,7 @@ export interface Round {
 export interface GuestInfo {
   id: string;
   name: string;
+  seatLabel?: string; // assigned by waiter: "Silla 1", "Silla 2"
   seatNumber?: number;
   amountOwed: number;
   amountPaid: number;
@@ -32,6 +33,13 @@ export interface GuestInfo {
   paymentStatus: PaymentStatus;
   orderMethod: OrderMethod;
   paymentMethod: PaymentMethod;
+}
+
+/** Display name for a guest, prioritizing seatLabel */
+export function guestDisplayName(guest: GuestInfo): string {
+  if (!guest.seatLabel) return guest.name;
+  const isGeneric = /^Guest \d+$/i.test(guest.name);
+  return isGeneric ? guest.seatLabel : `${guest.seatLabel} · ${guest.name}`;
 }
 
 export interface WaiterTable {
@@ -95,6 +103,8 @@ interface TablesState {
   addGuest: (tableId: string, name: string) => void;
   initializeSeats: (tableId: string, count: number) => void;
   renameGuest: (tableId: string, guestId: string, newName: string) => void;
+  assignSeat: (tableId: string, guestId: string, seatNumber: number) => void;
+  assignAllSeats: (tableId: string) => void;
   assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
 }
 
@@ -110,9 +120,9 @@ const initialTables: WaiterTable[] = [
   {
     id: '2', number: 2, section: 'Norte',
     guests: [
-      { id: 'g2-1', name: 'Silla 1', seatNumber: 1, amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g2-2', name: 'Pedro', seatNumber: 2, amountOwed: 215, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g2-3', name: 'Silla 3', seatNumber: 3, amountOwed: 195, amountPaid: 195, tipAmount: 85, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g2-1', name: 'Guest 1', seatLabel: 'Silla 1', seatNumber: 1, amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g2-2', name: 'Pedro', seatLabel: 'Silla 2', seatNumber: 2, amountOwed: 215, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g2-3', name: 'Guest 3', seatLabel: 'Silla 3', seatNumber: 3, amountOwed: 195, amountPaid: 195, tipAmount: 85, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
       { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 2, price: 120 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 40 * 60000).toISOString() },
@@ -123,10 +133,10 @@ const initialTables: WaiterTable[] = [
   {
     id: '4', number: 4, section: 'Norte',
     guests: [
-      { id: 'g4-1', name: 'Silla 1', seatNumber: 1, amountOwed: 240, amountPaid: 240, tipAmount: 74, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
-      { id: 'g4-2', name: 'Ana', seatNumber: 2, amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g4-3', name: 'Silla 3', seatNumber: 3, amountOwed: 195, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
-      { id: 'g4-4', name: 'Silla 4', seatNumber: 4, amountOwed: 95, amountPaid: 95, tipAmount: 48, paymentStatus: 'paid', orderMethod: 'manual', paymentMethod: 'cash' },
+      { id: 'g4-1', name: 'Guest 1', seatLabel: 'Silla 1', seatNumber: 1, amountOwed: 240, amountPaid: 240, tipAmount: 74, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g4-2', name: 'Ana', seatLabel: 'Silla 2', seatNumber: 2, amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g4-3', name: 'Guest 3', seatLabel: 'Silla 3', seatNumber: 3, amountOwed: 195, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
+      { id: 'g4-4', name: 'Guest 4', seatLabel: 'Silla 4', seatNumber: 4, amountOwed: 95, amountPaid: 95, tipAmount: 48, paymentStatus: 'paid', orderMethod: 'manual', paymentMethod: 'cash' },
     ],
     rounds: [
       { number: 1, label: 'Bebidas + Entradas', items: [{ name: 'Margarita Clásica', qty: 2, price: 120 }, { name: 'Guacamole', qty: 1, price: 95 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
@@ -137,8 +147,8 @@ const initialTables: WaiterTable[] = [
   {
     id: '6', number: 6, section: 'Sur',
     guests: [
-      { id: 'g6-1', name: 'Silla 1', seatNumber: 1, amountOwed: 295, amountPaid: 295, tipAmount: 52, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
-      { id: 'g6-2', name: 'Mariana', seatNumber: 2, amountOwed: 245, amountPaid: 245, tipAmount: 45, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g6-1', name: 'Guest 1', seatLabel: 'Silla 1', seatNumber: 1, amountOwed: 295, amountPaid: 295, tipAmount: 52, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g6-2', name: 'Mariana', seatLabel: 'Silla 2', seatNumber: 2, amountOwed: 245, amountPaid: 245, tipAmount: 45, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
       { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 1, price: 120 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 65 * 60000).toISOString() },
@@ -148,13 +158,14 @@ const initialTables: WaiterTable[] = [
     status: 'paying', statusText: 'Todos pagaron', timeOpened: 70, tipTotal: 97,
   },
   {
+    // Mesa recién abierta — guests sin silla asignada aún
     id: '7', number: 7, section: 'Terraza',
     guests: [
-      { id: 'g7-1', name: 'Silla 1', seatNumber: 1, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
-      { id: 'g7-2', name: 'Silla 2', seatNumber: 2, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
-      { id: 'g7-3', name: 'Fernanda', seatNumber: 3, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
-      { id: 'g7-4', name: 'Silla 4', seatNumber: 4, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
-      { id: 'g7-5', name: 'Silla 5', seatNumber: 5, amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
+      { id: 'g7-1', name: 'Guest 1', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
+      { id: 'g7-2', name: 'Guest 2', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
+      { id: 'g7-3', name: 'Fernanda', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-4', name: 'Guest 4', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
+      { id: 'g7-5', name: 'Guest 5', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
     ],
     rounds: [
       { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 3, price: 120 }, { name: 'Agua de Jamaica', qty: 2, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 25 * 60000).toISOString() },
@@ -170,8 +181,8 @@ const initialTables: WaiterTable[] = [
   {
     id: '11', number: 11, section: 'Norte',
     guests: [
-      { id: 'g11-1', name: 'Silla 1', seatNumber: 1, amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'failed', orderMethod: 'manual', paymentMethod: null },
-      { id: 'g11-2', name: 'Valentina', seatNumber: 2, amountOwed: 210, amountPaid: 210, tipAmount: 36, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g11-1', name: 'Guest 1', seatLabel: 'Silla 1', seatNumber: 1, amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'failed', orderMethod: 'manual', paymentMethod: null },
+      { id: 'g11-2', name: 'Valentina', seatLabel: 'Silla 2', seatNumber: 2, amountOwed: 210, amountPaid: 210, tipAmount: 36, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
       { number: 1, label: 'Completo', items: [{ name: 'Tacos de Asada', qty: 1, price: 160 }, { name: 'Pasta con Trufa', qty: 1, price: 245 }], status: 'delivered', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
@@ -296,13 +307,11 @@ export const useTablesStore = create<TablesState>((set) => ({
     set((s) => {
       const updated = s.tables.map((t) => {
         if (t.id !== tableId) return t;
-        const maxSeat = t.guests.reduce((max, g) => Math.max(max, g.seatNumber || 0), 0);
-        const seatNum = maxSeat + 1;
-        const finalName = name || `Silla ${seatNum}`;
+        const guestNum = t.guests.length + 1;
+        const finalName = name || `Guest ${guestNum}`;
         const newGuest: GuestInfo = {
           id: `g${tableId}-m${Date.now()}`,
           name: finalName,
-          seatNumber: seatNum,
           amountOwed: 0,
           amountPaid: 0,
           tipAmount: 0,
@@ -320,8 +329,7 @@ export const useTablesStore = create<TablesState>((set) => ({
         if (t.id !== tableId) return t;
         const newGuests: GuestInfo[] = Array.from({ length: count }, (_, i) => ({
           id: `g${tableId}-s${i + 1}-${Date.now()}`,
-          name: `Silla ${i + 1}`,
-          seatNumber: i + 1,
+          name: `Guest ${i + 1}`,
           amountOwed: 0,
           amountPaid: 0,
           tipAmount: 0,
@@ -340,6 +348,32 @@ export const useTablesStore = create<TablesState>((set) => ({
           ? { ...t, guests: t.guests.map((g) => (g.id === guestId ? { ...g, name: newName } : g)) }
           : t
       ),
+    })),
+  assignSeat: (tableId, guestId, seatNumber) =>
+    set((s) => ({
+      tables: s.tables.map((t) =>
+        t.id === tableId
+          ? { ...t, guests: t.guests.map((g) => (g.id === guestId ? { ...g, seatLabel: `Silla ${seatNumber}`, seatNumber } : g)) }
+          : t
+      ),
+    })),
+  assignAllSeats: (tableId) =>
+    set((s) => ({
+      tables: s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        let nextSeat = 1;
+        const guests = t.guests.map((g) => {
+          if (g.seatLabel) {
+            nextSeat = Math.max(nextSeat, (g.seatNumber || 0) + 1);
+            return g;
+          }
+          const label = `Silla ${nextSeat}`;
+          const num = nextSeat;
+          nextSeat++;
+          return { ...g, seatLabel: label, seatNumber: num };
+        });
+        return { ...t, guests };
+      }),
     })),
   assignItemsAndPay: (tableId, guestId, method, assignments) =>
     set((s) => {

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { X, Split, Check } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { useTablesStore, type GuestInfo, type OrderItem, type Round, type ItemAssignment } from '@/stores/tablesStore';
+import { useTablesStore, guestDisplayName, type GuestInfo, type OrderItem, type Round, type ItemAssignment } from '@/stores/tablesStore';
 import { toast } from 'sonner';
 
 interface FlatItem {
@@ -99,7 +99,7 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
     });
     assignItemsAndPay(tableId, guest.id, method, assignments);
     const label = method === 'cash' ? '💵 Efectivo' : '💳 Tarjeta física';
-    toast.success(`${label} · ${guest.name} · $${dynamicTotal}`);
+    toast.success(`${label} · ${guestDisplayName(guest)} · $${dynamicTotal}`);
     onDismiss();
   };
 
@@ -120,7 +120,7 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
         {/* Header */}
         <div className="flex items-center justify-between p-4 pb-2 shrink-0">
           <div>
-            <h3 className="text-[14px] font-semibold text-w-text">💰 Cobrar · {guest.name}</h3>
+            <h3 className="text-[14px] font-semibold text-w-text">💰 Cobrar · {guestDisplayName(guest)}</h3>
             <p className="text-[11px] text-w-text-secondary">Selecciona los items de este comensal</p>
           </div>
           <button onClick={onDismiss} className="w-11 h-11 flex items-center justify-center">
