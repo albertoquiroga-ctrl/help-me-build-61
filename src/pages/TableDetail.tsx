@@ -28,6 +28,8 @@ export default function TableDetail() {
   const removeItemFromRound = useTablesStore((s) => s.removeItemFromRound);
   const editItemInRound = useTablesStore((s) => s.editItemInRound);
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'rounds' | 'by-guest'>('rounds');
+  const [expandedGuest, setExpandedGuest] = useState<string | null>(null);
   const [manualOrderGuest, setManualOrderGuest] = useState<{ id: string; name: string } | null>(null);
   const [cashPaymentGuest, setCashPaymentGuest] = useState<string | null>(null);
   const [showAddGuest, setShowAddGuest] = useState(false);
