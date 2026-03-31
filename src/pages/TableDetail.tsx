@@ -57,7 +57,7 @@ export default function TableDetail() {
   const handleAddGuest = () => {
     const name = newGuestName.trim();
     addGuest(table.id, name);
-    toast.success(`✓ ${name || 'Nueva silla'} agregado`);
+    toast.success(`✓ ${name || 'Nuevo comensal'} agregado`);
     setNewGuestName('');
     setShowAddGuest(false);
   };
