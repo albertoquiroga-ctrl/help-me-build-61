@@ -289,4 +289,56 @@ export const useTablesStore = create<TablesState>((set) => ({
       );
       return { tables: applyDerived(updated, tableId) };
     }),
+  addGuest: (tableId, name) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        const newGuest: GuestInfo = {
+          id: `g${tableId}-m${Date.now()}`,
+          name,
+          amountOwed: 0,
+          amountPaid: 0,
+          tipAmount: 0,
+          paymentStatus: 'pending',
+          orderMethod: 'manual',
+          paymentMethod: null,
+        };
+        return { ...t, guests: [...t.guests, newGuest] };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
+  assignItemsAndPay: (tableId, guestId, method, assignments) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        // Assign items to guest
+        const rounds = t.rounds.map((r) => ({
+          ...r,
+          items: r.items.map((item, idx) => {
+            const assignment = assignments.find((a) => a.roundNumber === r.number && a.itemIndex === idx);
+            if (assignment) return { ...item, assignedTo: guestId };
+            return item;
+          }),
+        }));
+        // Calculate total for this guest from assignments
+        let totalOwed = 0;
+        assignments.forEach((a) => {
+          const round = t.rounds.find((r) => r.number === a.roundNumber);
+          if (round) {
+            const item = round.items[a.itemIndex];
+            if (item) {
+              const splitCount = a.splitCount && a.splitCount > 1 ? a.splitCount : 1;
+              totalOwed += (item.price * item.qty) / splitCount;
+            }
+          }
+        });
+        const guests = t.guests.map((g) =>
+          g.id === guestId
+            ? { ...g, amountOwed: totalOwed, amountPaid: totalOwed, paymentStatus: 'paid' as PaymentStatus, paymentMethod: method }
+            : g
+        );
+        return { ...t, rounds, guests };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
 }));
