@@ -290,7 +290,8 @@ export default function TableDetail() {
           <CashPaymentSheet
             tableId={table.id}
             guest={cashGuest}
-            allItems={allItems}
+            rounds={table.rounds}
+            allGuests={table.guests}
             onDismiss={() => setCashPaymentGuest(null)}
           />
         )}
