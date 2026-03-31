@@ -1,9 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { useTablesStore } from '@/stores/tablesStore';
 import GuestPill from '@/components/waiter/GuestPill';
 import RoundBadge from '@/components/waiter/RoundBadge';
+import ManualOrderSheet from '@/components/waiter/ManualOrderSheet';
+import CashPaymentSheet from '@/components/waiter/CashPaymentSheet';
 import { toast } from 'sonner';
 
 const statusBadge: Record<string, { bg: string; text: string; label: string }> = {
@@ -21,6 +24,8 @@ export default function TableDetail() {
   const markDelivered = useTablesStore((s) => s.markDelivered);
   const updateRoundStatus = useTablesStore((s) => s.updateRoundStatus);
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
+  const [manualOrderGuest, setManualOrderGuest] = useState<{ id: string; name: string } | null>(null);
+  const [cashPaymentGuest, setCashPaymentGuest] = useState<string | null>(null);
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
@@ -31,6 +36,16 @@ export default function TableDetail() {
   const pendingRound = table.rounds.find((r) => r.status === 'pending');
   const allDelivered = table.rounds.length > 0 && table.rounds.every((r) => r.status === 'delivered');
   const noPaying = table.guests.every((g) => g.paymentStatus === 'pending');
+
+  // Guests without orders (manual method + $0 owed)
+  const guestsWithoutOrder = table.guests.filter((g) => g.orderMethod === 'manual' && g.amountOwed === 0 && g.paymentStatus === 'pending');
+  // Guests who need in-person payment (not paid, not QR payment)
+  const guestsNeedingCashPayment = table.guests.filter(
+    (g) => g.paymentStatus === 'pending' && g.amountOwed > 0 && (allDelivered || table.status === 'paying')
+  );
+
+  const allItems = table.rounds.flatMap((r) => r.items);
+  const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
 
   return (
     <div className="min-h-screen bg-w-bg">
@@ -62,6 +77,33 @@ export default function TableDetail() {
           )}
         </div>
 
+        {/* Order Verification Section */}
+        {guestsWithoutOrder.length > 0 && (
+          <div className="rounded-[10px] border border-w-warning/30 bg-w-warning/5 p-3 space-y-2">
+            <p className="text-[11px] font-mono uppercase tracking-wider text-w-warning">⚠️ Verificar pedidos</p>
+            {table.guests.map((g) => {
+              const hasOrder = !(g.orderMethod === 'manual' && g.amountOwed === 0 && g.paymentStatus === 'pending');
+              return (
+                <div key={g.id} className="flex items-center justify-between min-h-[36px]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px]">{hasOrder ? '✅' : '⚠️'}</span>
+                    <span className="text-[13px] text-w-text">{g.name}</span>
+                    <span className="text-[11px] text-w-text-secondary">{hasOrder ? 'Pidió por QR' : 'Sin pedido'}</span>
+                  </div>
+                  {!hasOrder && (
+                    <button
+                      onClick={() => setManualOrderGuest({ id: g.id, name: g.name })}
+                      className="px-3 py-1.5 rounded-[6px] bg-w-brand text-white text-[11px] font-semibold min-h-[32px] active:scale-[0.98] transition-transform"
+                    >
+                      + Capturar orden
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Rounds */}
         <div>
           <p className="text-[11px] font-mono uppercase tracking-wider text-w-text-secondary mb-2">Rondas</p>
@@ -88,7 +130,14 @@ export default function TableDetail() {
                     <div className="px-3 pb-3 border-t border-w-border pt-2 space-y-1.5">
                       {round.items.map((item, i) => (
                         <div key={i} className="flex justify-between text-[12px]">
-                          <span className="text-w-text">{item.name} ×{item.qty}</span>
+                          <span className="text-w-text">
+                            {item.name} ×{item.qty}
+                            {item.assignedTo && (
+                              <span className="text-w-text-secondary ml-1">
+                                · {table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
+                              </span>
+                            )}
+                          </span>
                           <span className="font-mono text-w-text-secondary">${item.price * item.qty}</span>
                         </div>
                       ))}
@@ -154,6 +203,27 @@ export default function TableDetail() {
               💳 Sugerir cuenta
             </button>
           )}
+
+          {/* In-person payment section */}
+          {guestsNeedingCashPayment.length > 0 && (
+            <div className="rounded-[10px] border border-w-border bg-w-surface p-3 space-y-2">
+              <p className="text-[10px] font-mono uppercase tracking-wider text-w-text-secondary">💰 Cobro presencial</p>
+              {guestsNeedingCashPayment.map((g) => (
+                <div key={g.id} className="flex items-center justify-between min-h-[36px]">
+                  <div>
+                    <span className="text-[13px] text-w-text">{g.name}</span>
+                    <span className="font-mono text-[12px] text-w-text-secondary ml-2">${g.amountOwed}</span>
+                  </div>
+                  <button
+                    onClick={() => setCashPaymentGuest(g.id)}
+                    className="px-3 py-1.5 rounded-[6px] bg-w-success text-white text-[11px] font-semibold min-h-[32px] active:scale-[0.98] transition-transform"
+                  >
+                    Cobrar en mesa
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Tips */}
@@ -163,6 +233,30 @@ export default function TableDetail() {
           </p>
         )}
       </div>
+
+      {/* Manual Order Sheet */}
+      <AnimatePresence>
+        {manualOrderGuest && (
+          <ManualOrderSheet
+            tableId={table.id}
+            guestId={manualOrderGuest.id}
+            guestName={manualOrderGuest.name}
+            onDismiss={() => setManualOrderGuest(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Cash Payment Sheet */}
+      <AnimatePresence>
+        {cashGuest && (
+          <CashPaymentSheet
+            tableId={table.id}
+            guest={cashGuest}
+            allItems={allItems}
+            onDismiss={() => setCashPaymentGuest(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
