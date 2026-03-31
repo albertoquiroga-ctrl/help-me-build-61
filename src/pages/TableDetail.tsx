@@ -24,6 +24,8 @@ export default function TableDetail() {
   const table = useTablesStore((s) => s.tables.find((t) => t.id === id));
   const markDelivered = useTablesStore((s) => s.markDelivered);
   const updateRoundStatus = useTablesStore((s) => s.updateRoundStatus);
+  const removeItemFromRound = useTablesStore((s) => s.removeItemFromRound);
+  const editItemInRound = useTablesStore((s) => s.editItemInRound);
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
   const [manualOrderGuest, setManualOrderGuest] = useState<{ id: string; name: string } | null>(null);
   const [cashPaymentGuest, setCashPaymentGuest] = useState<string | null>(null);
