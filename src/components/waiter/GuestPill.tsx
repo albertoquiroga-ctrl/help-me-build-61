@@ -142,6 +142,7 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
                 🗑️ Eliminar
               </button>
             )}
+          </div>
         </>,
         document.body
       )}
