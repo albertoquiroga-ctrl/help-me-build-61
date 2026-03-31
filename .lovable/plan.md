@@ -1,56 +1,62 @@
 
 
-# Plan: Identificación de comensales por posición (Silla 1, Silla 2...)
+# Plan: Flujo realista de identificación — Guest → Silla (asignada por mesero)
 
-## Problema
+## Contexto
 
-La mayoría de comensales no inician sesión — solo escanean el QR para ver el menú. El mesero necesita trabajar con identificadores posicionales ("Silla 1", "Silla 2") en lugar de nombres reales, y poder renombrar si el comensal da su nombre.
+Los comensales que escanean el QR sin iniciar sesión aparecen como "Guest 1", "Guest 2", etc. Los que sí tienen cuenta aparecen con su nombre real (e.g. "Pedro"). **Ninguno tiene silla asignada automáticamente** — el mesero asigna la posición en la mesa después de confirmar la orden.
+
+## Flujo corregido
+
+```text
+Comensales escanean QR → aparecen como "Guest 1", "Pedro", "Guest 3"
+  → Ordenan (QR o menú físico)
+  → Mesero confirma orden, captura las faltantes
+  → Mesero asigna silla a cada comensal: "Guest 1" → Silla 1, "Pedro" → Silla 2
+  → A la hora de cobrar: todo se muestra por posición (Silla 1, Silla 2...)
+  → Mesero cobra uno por uno a los que no pagaron desde el app
+```
 
 ## Cambios
 
-### 1. Auto-generación de guests por silla — `tablesStore.ts`
+### 1. Modelo de datos — `tablesStore.ts`
 
-- Agregar acción `initializeSeats(tableId, count)` que crea N guests con nombres `Silla 1`, `Silla 2`, etc., todos con `orderMethod: 'manual'`.
-- Agregar campo opcional `seatNumber?: number` a `GuestInfo` para mantener el orden visual.
-- Agregar acción `renameGuest(tableId, guestId, newName)` para que el mesero pueda poner nombre real si el comensal lo da.
-- Modificar `addGuest` para que el nombre default sea `Silla N+1` si no se proporciona nombre.
+- Separar `name` (identidad del comensal: "Guest 1", "Pedro") de `seatLabel` (posición asignada por mesero: "Silla 1", null si no asignada).
+- Agregar campo `seatLabel?: string` a `GuestInfo`.
+- Agregar acción `assignSeat(tableId, guestId, seatNumber)` que pone `seatLabel = "Silla N"`.
+- Agregar acción `assignAllSeats(tableId)` que asigna sillas automáticamente a todos los guests sin silla, en orden.
+- Modificar `initializeSeats` para que cree guests con nombre "Guest N" y sin silla asignada (la silla se asigna después).
+- Actualizar mock data: guests con `name: "Guest 1"` / `"Pedro"` y `seatLabel: "Silla 1"` o `undefined`.
 
-### 2. Inicialización rápida de mesa — `TableDetail.tsx`
+### 2. UI de asignación de sillas — `TableDetail.tsx`
 
-- Cuando la mesa tiene 0 guests, mostrar un selector rápido: **"¿Cuántos comensales?"** con botones `[1] [2] [3] [4] [5] [6+]`.
-- Al seleccionar, se llama `initializeSeats` y se crean los perfiles automáticamente.
-- Esto reemplaza el flujo actual donde el mesero tiene que agregar uno por uno.
+- Mostrar banner "Asignar posiciones" cuando hay guests sin `seatLabel`.
+- Botón "Asignar sillas automáticamente" que llama `assignAllSeats` (asigna Silla 1, 2, 3... en orden).
+- Opción de asignar manualmente: tap en un guest → selector de número de silla.
+- Una vez asignadas, los guests se muestran como "Silla 1 (Pedro)" o "Silla 2 (Guest 1)".
 
-### 3. Renombrar guest inline — `TableDetail.tsx`
+### 3. Display inteligente — `GuestPill.tsx`
 
-- Al tocar un `GuestPill`, permitir edición inline del nombre (tap → input con el nombre actual → Enter para confirmar).
-- Esto permite al mesero poner "Don Pepe" en lugar de "Silla 3" cuando el comensal se identifica.
+- Si tiene `seatLabel`: mostrar `🪑 Silla 2 · Pedro` o `🪑 Silla 1` (si el nombre es genérico Guest N, solo mostrar la silla).
+- Si no tiene `seatLabel`: mostrar `👤 Pedro` o `📱 Guest 1` como ahora.
+- En contexto de cobro (`CashPaymentSheet`), siempre priorizar `seatLabel` sobre `name`.
 
-### 4. Datos de prueba actualizados — `tablesStore.ts`
+### 4. Cobro por posición — `CashPaymentSheet.tsx`
 
-- Cambiar los guests con nombres genéricos (`C1`, `C4`, `Grupo 1-5`) a usar el formato `Silla N` para consistencia.
-- Mantener los que tienen nombre real (Lucía, Pedro, Ana) como ejemplo de guests que sí iniciaron sesión.
+- Mostrar el `seatLabel` como identificador principal en el header y lista de items.
+- Si el guest tiene nombre real, mostrarlo como subtítulo: "Silla 2 · Pedro".
 
-### 5. Adaptación visual — `GuestPill.tsx`
+### 5. Mock data actualizado — `tablesStore.ts`
 
-- Mostrar icono de silla 🪑 para guests sin sesión (posicionales), 👤 para los que dieron nombre, 📱 para QR con sesión.
+- Mesas con guests que tienen nombres genéricos ("Guest 1") y algunos con nombre real ("Pedro", "Ana").
+- Mesas donde las sillas ya fueron asignadas (mesas avanzadas) y mesas donde aún no (mesas recién abiertas).
 
 ## Archivos a modificar
 
 | Archivo | Cambio |
 |---|---|
-| `tablesStore.ts` | `initializeSeats`, `renameGuest`, campo `seatNumber`, datos actualizados |
-| `TableDetail.tsx` | Selector de cantidad de comensales, edición inline de nombre |
-| `GuestPill.tsx` | Icono contextual según tipo de identificación |
-
-## Flujo
-
-```text
-Mesa vacía → Mesero abre TableDetail
-  → "¿Cuántos comensales?" → [4]
-  → Se crean: Silla 1, Silla 2, Silla 3, Silla 4
-  → Mesero captura órdenes por silla
-  → Si alguien dice su nombre: tap en "Silla 2" → "Don Pepe"
-  → Al cobrar: CashPaymentSheet muestra "Silla 1" o "Don Pepe"
-```
+| `tablesStore.ts` | Campo `seatLabel`, acciones `assignSeat`/`assignAllSeats`, mock data |
+| `TableDetail.tsx` | Banner de asignación de sillas, botón automático, display dual |
+| `GuestPill.tsx` | Display condicional seatLabel + name |
+| `CashPaymentSheet.tsx` | Priorizar seatLabel en header e items |
 
