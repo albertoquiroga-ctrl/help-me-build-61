@@ -109,6 +109,7 @@ interface TablesState {
   assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
   removeGuest: (tableId: string, guestId: string) => void;
   removeItemFromRound: (tableId: string, roundNumber: number, itemIndex: number) => void;
+  removeRound: (tableId: string, roundNumber: number) => void;
   editItemInRound: (tableId: string, roundNumber: number, itemIndex: number, updates: Partial<OrderItem>) => void;
 }
 
