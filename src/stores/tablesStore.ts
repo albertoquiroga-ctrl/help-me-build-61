@@ -93,6 +93,8 @@ interface TablesState {
   markGuestPaidCash: (tableId: string, guestId: string, method: 'cash' | 'card-physical') => void;
   markGuestNoOrder: (tableId: string, guestId: string) => void;
   addGuest: (tableId: string, name: string) => void;
+  initializeSeats: (tableId: string, count: number) => void;
+  renameGuest: (tableId: string, guestId: string, newName: string) => void;
   assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
 }
 
