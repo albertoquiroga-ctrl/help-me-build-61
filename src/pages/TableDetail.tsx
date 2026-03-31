@@ -342,17 +342,6 @@ export default function TableDetail() {
                 );
               })}
 
-              {/* Unassigned items */}
-              {(() => {
-                const unassigned: { roundNumber: number; roundStatus: string; item: typeof table.rounds[0]['items'][0]; }[] = [];
-                table.rounds.forEach((round) => {
-                  round.items.forEach((item) => {
-                    if (!item.assignedTo) {
-                      unassigned.push({ roundNumber: round.number, roundStatus: round.status, item });
-                    }
-                  });
-                });
-                if (unassigned.length === 0) return null;
                 const unassignedTotal = unassigned.reduce((sum, u) => sum + u.item.price * u.item.qty, 0);
                 const isExpanded = expandedGuest === '__unassigned__';
                 return (
