@@ -29,6 +29,8 @@ export interface GuestInfo {
   amountPaid: number;
   tipAmount: number;
   paymentStatus: PaymentStatus;
+  orderMethod: OrderMethod;
+  paymentMethod: PaymentMethod;
 }
 
 export interface WaiterTable {
