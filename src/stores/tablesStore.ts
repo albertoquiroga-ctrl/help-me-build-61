@@ -195,13 +195,21 @@ const initialTables: WaiterTable[] = [
   {
     id: '6', number: 6, section: 'Sur',
     guests: [
-      { id: 'g6-1', name: 'Guest 1', amountOwed: 295, amountPaid: 295, tipAmount: 52, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
-      { id: 'g6-2', name: 'Mariana', amountOwed: 245, amountPaid: 245, tipAmount: 45, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g6-1', name: 'Guest 1', amountOwed: 510, amountPaid: 510, tipAmount: 52, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g6-2', name: 'Mariana', amountOwed: 310, amountPaid: 310, tipAmount: 45, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
-      { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 1, price: 120 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 65 * 60000).toISOString() },
-      { number: 2, label: 'Entradas', items: [{ name: 'Guacamole', qty: 1, price: 95 }], status: 'delivered', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
-      { number: 3, label: 'Plato Fuerte', items: [{ name: 'Entrecot a las Brasas', qty: 1, price: 295 }, { name: 'Pasta con Trufa', qty: 1, price: 245 }], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
+      { number: 1, label: 'Bebidas', items: [
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g6-1' },
+        { name: 'Agua de Jamaica', qty: 1, price: 65, assignedTo: 'g6-2' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 65 * 60000).toISOString() },
+      { number: 2, label: 'Entradas', items: [
+        { name: 'Guacamole', qty: 1, price: 95, assignedTo: 'g6-1' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
+      { number: 3, label: 'Plato Fuerte', items: [
+        { name: 'Entrecot a las Brasas', qty: 1, price: 295, assignedTo: 'g6-1' },
+        { name: 'Pasta con Trufa', qty: 1, price: 245, assignedTo: 'g6-2' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
     ],
     status: 'paying', statusText: 'Todos pagaron', timeOpened: 70, tipTotal: 97,
   },
@@ -215,8 +223,18 @@ const initialTables: WaiterTable[] = [
       { id: 'g7-5', name: 'Guest 5', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
     ],
     rounds: [
-      { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 3, price: 120 }, { name: 'Agua de Jamaica', qty: 2, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 25 * 60000).toISOString() },
-      { number: 2, label: 'Entradas', items: [{ name: 'Guacamole', qty: 2, price: 95, assignedTo: 'g7-3' }, { name: 'Nachos con Queso', qty: 1, price: 85, assignedTo: 'g7-1' }, { name: 'Quesadilla de Huitlacoche', qty: 1, price: 110, assignedTo: 'g7-2' }], status: 'pending', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
+      { number: 1, label: 'Bebidas', items: [
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g7-1' },
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g7-4' },
+        { name: 'Margarita Clásica', qty: 1, price: 120, assignedTo: 'g7-5' },
+        { name: 'Agua de Jamaica', qty: 1, price: 65, assignedTo: 'g7-2' },
+        { name: 'Agua de Jamaica', qty: 1, price: 65, assignedTo: 'g7-3' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 25 * 60000).toISOString() },
+      { number: 2, label: 'Entradas', items: [
+        { name: 'Guacamole', qty: 2, price: 95, assignedTo: 'g7-3' },
+        { name: 'Nachos con Queso', qty: 1, price: 85, assignedTo: 'g7-1' },
+        { name: 'Quesadilla de Huitlacoche', qty: 1, price: 110, assignedTo: 'g7-2' },
+      ], status: 'pending', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En orden', timeOpened: 28, tipTotal: 0,
   },
