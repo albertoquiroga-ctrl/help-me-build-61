@@ -26,6 +26,9 @@ export default function TableDetail() {
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
   const [manualOrderGuest, setManualOrderGuest] = useState<{ id: string; name: string } | null>(null);
   const [cashPaymentGuest, setCashPaymentGuest] = useState<string | null>(null);
+  const [showAddGuest, setShowAddGuest] = useState(false);
+  const [newGuestName, setNewGuestName] = useState('');
+  const addGuest = useTablesStore((s) => s.addGuest);
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
