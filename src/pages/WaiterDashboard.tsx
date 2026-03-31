@@ -209,7 +209,7 @@ export default function WaiterDashboard() {
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-w-elevated rounded-t-[16px] border-t border-w-border p-4 pb-8"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-w-elevated rounded-t-[16px] border-t border-w-border p-4 pb-8 max-h-[70vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[14px] font-semibold text-w-text">⚡ Simular evento</h3>
