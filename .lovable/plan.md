@@ -1,37 +1,44 @@
 
 
-# Plan: Mock data realista para canales internos
+# Plan: Vista "Por comensal" en detalle de mesa
 
-## Qué cambia
+## Resumen
 
-Actualizar el mock data en `notificationsStore.ts` para que refleje el uso real de cada canal:
+Agregar una **vista alternativa con tabs** en la sección de rondas del detalle de mesa: "Por rondas" (actual) y "Por comensal". La vista por comensal agrupa todos los items que ordenó cada persona a través de todas las rondas, mostrando su total individual y estado de pago. Esto le da al mesero claridad inmediata sobre qué lleva cada quien.
 
-- **Cocina, Barra, Juice Bar** → notifican que **pedidos específicos están listos** para recoger (vinculados a una mesa), no avisos genéricos de inventario.
-- **Hostess** → avisa que una **mesa ya llegó** físicamente al restaurante (para cubrir el caso donde nadie escanea el QR).
-- **Gerente** → se mantiene como mensajes operativos generales.
+## Cambios
 
-## Cambios en `notificationsStore.ts`
+### `src/pages/TableDetail.tsx`
 
-Reemplazar las notificaciones internas mock (n7-n10) con datos realistas:
+1. Agregar un toggle/tabs encima de la sección de rondas: **"🍽 Rondas"** | **"👤 Por comensal"**
+2. Estado local `viewMode: 'rounds' | 'by-guest'`
+3. Vista "Por comensal":
+   - Para cada guest, una tarjeta colapsable mostrando:
+     - Header: nombre/silla del comensal, total acumulado, badge de pago
+     - Expandido: lista de todos sus items agrupados por ronda (R1, R2...) con nombre, cantidad, precio y status de la ronda
+   - Items sin `assignedTo` se muestran en sección separada "Sin asignar"
+4. La vista actual de rondas queda intacta en el tab "Rondas"
 
-| ID | Canal | Título | Subtítulo | tableId | Estado |
-|---|---|---|---|---|---|
-| n7 | gerente | Llegó grupo VIP de 8 · Mesa 12 | Prioridad alta, atender de inmediato | 12 | activa |
-| n8 | barra | Bebidas listas · Mesa 2 · 3 drinks | 2 Margaritas, 1 Mezcal Oaxaqueño | 2 | resuelta |
-| n9 | hostess | Mesa 7 acaba de llegar · 5 personas | Ningún comensal ha escaneado QR aún | 7 | activa |
-| n10 | cocina | Platos listos · Mesa 4 · R1 · 3 items | Tacos al pastor, Enchiladas, Sopa | 4 | resuelta |
-| n11 | cocina | Platos listos · Mesa 6 · R2 · 2 items | Listo para recoger en barra caliente | 6 | activa |
-| n12 | barra | Drinks listos · Mesa 11 · 2 cocktails | Paloma y Negroni | 11 | activa |
-| n13 | hostess | Mesa 3 llegó · 4 personas · Reservación | Esperando en entrada, asignar mesa | 3 | resuelta |
+### Detalle de UI por comensal
 
-Puntos clave:
-- Las notificaciones de cocina/barra ahora incluyen `tableId` para que el mesero sepa a qué mesa llevar los pedidos.
-- Las de hostess son alertas de llegada con urgencia media/alta (no baja) porque requieren acción inmediata.
-- Se actualiza `unreadCount` para reflejar las activas no resueltas.
+```text
+┌─────────────────────────────────┐
+│ 🪑 Silla 1 · Ana      → $385  │
+│ ✓ Pagado 💵                     │
+├─────────────────────────────────┤
+│  R1: Tacos al Pastor ×2  $120  │
+│  R1: Agua mineral ×1      $45  │
+│  R2: Guacamole ×1        $110  │
+│  R2: Quesadilla ×1      $110  │
+└─────────────────────────────────┘
 
-### Archivo a modificar
+┌─────────────────────────────────┐
+│ ⚠️ Sin asignar          → $85  │
+├─────────────────────────────────┤
+│  R1: Salsa extra ×1       $0   │
+│  R2: Nachos ×1            $85  │
+└─────────────────────────────────┘
+```
 
-| Archivo | Cambio |
-|---|---|
-| `notificationsStore.ts` | Reemplazar mock data n7-n13 con notificaciones realistas por canal |
+No se requieren cambios al store ni a otros componentes.
 
