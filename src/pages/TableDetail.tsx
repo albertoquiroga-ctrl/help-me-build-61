@@ -30,6 +30,7 @@ export default function TableDetail() {
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'rounds' | 'by-guest'>('rounds');
   const [expandedGuest, setExpandedGuest] = useState<string | null>(null);
+  const [showUnpaidBreakdown, setShowUnpaidBreakdown] = useState(false);
   const [manualOrderGuest, setManualOrderGuest] = useState<{ id: string; name: string } | null>(null);
   const [cashPaymentGuest, setCashPaymentGuest] = useState<string | null>(null);
   const [showAddGuest, setShowAddGuest] = useState(false);
@@ -181,12 +182,54 @@ export default function TableDetail() {
                   </button>
                 </div>
               )}
-              <div className="mt-2">
+              <button
+                className="mt-2 w-full text-left"
+                onClick={() => paidPct < 100 && setShowUnpaidBreakdown((v) => !v)}
+              >
                 <div className="w-full h-1.5 bg-w-border rounded-full overflow-hidden">
                   <div className="h-full bg-w-brand rounded-full transition-all" style={{ width: `${paidPct}%` }} />
                 </div>
-                <p className="text-[11px] text-w-text-secondary mt-1">{paidCount} de {table.guests.length} pagaron · {paidPct}%</p>
-              </div>
+                <p className="text-[11px] text-w-text-secondary mt-1">
+                  {paidCount} de {table.guests.length} pagaron · {paidPct}%
+                  {paidPct < 100 && <span className="text-w-brand ml-1">{showUnpaidBreakdown ? '▲' : '▼ Ver pendientes'}</span>}
+                </p>
+              </button>
+
+              {showUnpaidBreakdown && paidPct < 100 && (
+                <div className="mt-2 rounded-[10px] border border-w-warning/30 bg-w-warning/5 p-3 space-y-3">
+                  <p className="text-[11px] font-mono uppercase tracking-wider text-w-warning">Pendientes de pago</p>
+                  {table.guests
+                    .filter((g) => g.paymentStatus !== 'paid' && g.paymentStatus !== 'left')
+                    .map((guest) => {
+                      const guestItems: { roundNumber: number; item: { name: string; qty: number; price: number } }[] = [];
+                      table.rounds.forEach((round) => {
+                        round.items.forEach((item) => {
+                          if (item.assignedTo === guest.id) {
+                            guestItems.push({ roundNumber: round.number, item });
+                          }
+                        });
+                      });
+                      const owes = guestItems.reduce((s, gi) => s + gi.item.price * gi.item.qty, 0);
+                      return (
+                        <div key={guest.id} className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[13px] text-w-text font-medium">🪑 {guestDisplayName(guest)}</span>
+                            <span className="font-mono text-[12px] text-w-priority font-semibold">${owes}</span>
+                          </div>
+                          {guestItems.map((gi, idx) => (
+                            <div key={idx} className="flex justify-between text-[11px] pl-5">
+                              <span className="text-w-text-secondary">R{gi.roundNumber} · {gi.item.name} ×{gi.item.qty}</span>
+                              <span className="font-mono text-w-text-secondary">${gi.item.price * gi.item.qty}</span>
+                            </div>
+                          ))}
+                          {guestItems.length === 0 && (
+                            <p className="text-[11px] text-w-text-secondary pl-5 italic">Sin items asignados</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
             </>
           )}
         </div>
