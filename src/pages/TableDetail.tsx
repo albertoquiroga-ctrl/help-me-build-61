@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Plus, Trash2, Minus, PlusCircle } fr
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTablesStore, guestDisplayName } from '@/stores/tablesStore';
+import { useNotificationsStore } from '@/stores/notificationsStore';
 import type { GuestInfo } from '@/stores/tablesStore';
 import GuestPill from '@/components/waiter/GuestPill';
 import RoundBadge from '@/components/waiter/RoundBadge';
