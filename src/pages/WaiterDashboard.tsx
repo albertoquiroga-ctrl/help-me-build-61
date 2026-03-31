@@ -135,6 +135,22 @@ export default function WaiterDashboard() {
         setShowSimMenu(false);
       },
     },
+    {
+      label: '⚠️ Comensal sin QR en Mesa 7',
+      action: () => {
+        // Mark two guests as needing manual order
+        const markGuestNoOrder = useTablesStore.getState().markGuestNoOrder;
+        markGuestNoOrder('7', 'g7-3');
+        markGuestNoOrder('7', 'g7-5');
+        addNotification({
+          id: `n-${Date.now()}`, type: 'service-call', priority: 'medium', tableId: '7',
+          title: '⚠️ 2 comensales sin QR · Mesa 7', subtitle: 'Captura manual necesaria',
+          timestamp: new Date().toISOString(), dismissed: false, resolved: false,
+        });
+        toast.info('⚠️ Grupo 3 y Grupo 5 no escanearon el QR · Mesa 7');
+        setShowSimMenu(false);
+      },
+    },
   ];
 
   return (
