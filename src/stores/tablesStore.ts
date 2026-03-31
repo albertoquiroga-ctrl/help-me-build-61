@@ -99,9 +99,9 @@ const initialTables: WaiterTable[] = [
   {
     id: '2', number: 2, section: 'Norte',
     guests: [
-      { id: 'g2-1', name: 'Lucía', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending' },
-      { id: 'g2-2', name: 'Pedro', amountOwed: 215, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending' },
-      { id: 'g2-3', name: 'Sofía', amountOwed: 195, amountPaid: 195, tipAmount: 85, paymentStatus: 'paid' },
+      { id: 'g2-1', name: 'Lucía', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g2-2', name: 'Pedro', amountOwed: 215, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g2-3', name: 'Sofía', amountOwed: 195, amountPaid: 195, tipAmount: 85, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
       { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 2, price: 120 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 40 * 60000).toISOString() },
@@ -112,10 +112,10 @@ const initialTables: WaiterTable[] = [
   {
     id: '4', number: 4, section: 'Norte',
     guests: [
-      { id: 'g4-1', name: 'C1', amountOwed: 240, amountPaid: 240, tipAmount: 74, paymentStatus: 'paid' },
-      { id: 'g4-2', name: 'Ana', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending' },
-      { id: 'g4-3', name: 'Carlos', amountOwed: 195, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending' },
-      { id: 'g4-4', name: 'C4', amountOwed: 95, amountPaid: 95, tipAmount: 48, paymentStatus: 'paid' },
+      { id: 'g4-1', name: 'C1', amountOwed: 240, amountPaid: 240, tipAmount: 74, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g4-2', name: 'Ana', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g4-3', name: 'Carlos', amountOwed: 195, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g4-4', name: 'C4', amountOwed: 95, amountPaid: 95, tipAmount: 48, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
       { number: 1, label: 'Bebidas + Entradas', items: [{ name: 'Margarita Clásica', qty: 2, price: 120 }, { name: 'Guacamole', qty: 1, price: 95 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 30 * 60000).toISOString() },
@@ -126,8 +126,8 @@ const initialTables: WaiterTable[] = [
   {
     id: '6', number: 6, section: 'Sur',
     guests: [
-      { id: 'g6-1', name: 'Diego', amountOwed: 295, amountPaid: 295, tipAmount: 52, paymentStatus: 'paid' },
-      { id: 'g6-2', name: 'Mariana', amountOwed: 245, amountPaid: 245, tipAmount: 45, paymentStatus: 'paid' },
+      { id: 'g6-1', name: 'Diego', amountOwed: 295, amountPaid: 295, tipAmount: 52, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
+      { id: 'g6-2', name: 'Mariana', amountOwed: 245, amountPaid: 245, tipAmount: 45, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
       { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 1, price: 120 }, { name: 'Agua de Jamaica', qty: 1, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 65 * 60000).toISOString() },
@@ -139,11 +139,11 @@ const initialTables: WaiterTable[] = [
   {
     id: '7', number: 7, section: 'Terraza',
     guests: [
-      { id: 'g7-1', name: 'Grupo 1', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending' },
-      { id: 'g7-2', name: 'Grupo 2', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending' },
-      { id: 'g7-3', name: 'Grupo 3', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending' },
-      { id: 'g7-4', name: 'Grupo 4', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending' },
-      { id: 'g7-5', name: 'Grupo 5', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending' },
+      { id: 'g7-1', name: 'Grupo 1', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-2', name: 'Grupo 2', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-3', name: 'Grupo 3', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-4', name: 'Grupo 4', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g7-5', name: 'Grupo 5', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
     ],
     rounds: [
       { number: 1, label: 'Bebidas', items: [{ name: 'Margarita Clásica', qty: 3, price: 120 }, { name: 'Agua de Jamaica', qty: 2, price: 65 }], status: 'delivered', createdAt: new Date(Date.now() - 25 * 60000).toISOString() },
@@ -159,8 +159,8 @@ const initialTables: WaiterTable[] = [
   {
     id: '11', number: 11, section: 'Norte',
     guests: [
-      { id: 'g11-1', name: 'Roberto', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'failed' },
-      { id: 'g11-2', name: 'Valentina', amountOwed: 210, amountPaid: 210, tipAmount: 36, paymentStatus: 'paid' },
+      { id: 'g11-1', name: 'Roberto', amountOwed: 185, amountPaid: 0, tipAmount: 0, paymentStatus: 'failed', orderMethod: 'qr', paymentMethod: null },
+      { id: 'g11-2', name: 'Valentina', amountOwed: 210, amountPaid: 210, tipAmount: 36, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
     ],
     rounds: [
       { number: 1, label: 'Completo', items: [{ name: 'Tacos de Asada', qty: 1, price: 160 }, { name: 'Pasta con Trufa', qty: 1, price: 245 }], status: 'delivered', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
@@ -227,4 +227,58 @@ export const useTablesStore = create<TablesState>((set) => ({
     })),
   recalculateStatus: (id) =>
     set((s) => ({ tables: applyDerived(s.tables, id) })),
+  addManualOrder: (tableId, guestId, items) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        // Mark guest as manual order method
+        const guests = t.guests.map((g) =>
+          g.id === guestId
+            ? { ...g, orderMethod: 'manual' as OrderMethod, amountOwed: g.amountOwed + items.reduce((sum, i) => sum + i.price * i.qty, 0) }
+            : g
+        );
+        // Find or create pending round
+        const taggedItems = items.map((i) => ({ ...i, assignedTo: guestId }));
+        const pendingIdx = t.rounds.findIndex((r) => r.status === 'pending');
+        let rounds: Round[];
+        if (pendingIdx >= 0) {
+          rounds = t.rounds.map((r, idx) =>
+            idx === pendingIdx ? { ...r, items: [...r.items, ...taggedItems] } : r
+          );
+        } else {
+          const nextNum = t.rounds.length > 0 ? Math.max(...t.rounds.map((r) => r.number)) + 1 : 1;
+          rounds = [...t.rounds, {
+            number: nextNum, label: `Manual · ${guests.find((g) => g.id === guestId)?.name || 'Comensal'}`,
+            items: taggedItems, status: 'pending' as RoundStatus, createdAt: new Date().toISOString(),
+          }];
+        }
+        return { ...t, guests, rounds };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
+  markGuestPaidCash: (tableId, guestId, method) =>
+    set((s) => {
+      const updated = s.tables.map((t) =>
+        t.id === tableId
+          ? {
+              ...t,
+              guests: t.guests.map((g) =>
+                g.id === guestId
+                  ? { ...g, paymentStatus: 'paid' as PaymentStatus, paymentMethod: method, amountPaid: g.amountOwed }
+                  : g
+              ),
+            }
+          : t
+      );
+      return { tables: applyDerived(updated, tableId) };
+    }),
+  markGuestNoOrder: (tableId, guestId) =>
+    set((s) => {
+      const updated = s.tables.map((t) =>
+        t.id === tableId
+          ? { ...t, guests: t.guests.map((g) => (g.id === guestId ? { ...g, orderMethod: 'manual' as OrderMethod, amountOwed: 0 } : g)) }
+          : t
+      );
+      return { tables: applyDerived(updated, tableId) };
+    }),
 }));
