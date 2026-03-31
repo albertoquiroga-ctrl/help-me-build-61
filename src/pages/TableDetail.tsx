@@ -35,6 +35,8 @@ export default function TableDetail() {
   const initializeSeats = useTablesStore((s) => s.initializeSeats);
   const assignAllSeats = useTablesStore((s) => s.assignAllSeats);
   const assignSeat = useTablesStore((s) => s.assignSeat);
+  const closeTable = useTablesStore((s) => s.closeTable);
+  const resolve = useNotificationsStore((s) => s.resolve);
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
