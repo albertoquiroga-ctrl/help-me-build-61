@@ -107,6 +107,8 @@ interface TablesState {
   assignAllSeats: (tableId: string) => void;
   assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
   removeGuest: (tableId: string, guestId: string) => void;
+  removeItemFromRound: (tableId: string, roundNumber: number, itemIndex: number) => void;
+  editItemInRound: (tableId: string, roundNumber: number, itemIndex: number, updates: Partial<OrderItem>) => void;
 }
 
 function applyDerived(tables: WaiterTable[], id: string): WaiterTable[] {
