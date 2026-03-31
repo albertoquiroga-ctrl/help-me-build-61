@@ -22,7 +22,7 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
   const pillRef = useRef<HTMLSpanElement>(null);
   const renameGuest = useTablesStore((s) => s.renameGuest);
   const assignSeat = useTablesStore((s) => s.assignSeat);
-
+  const removeGuest = useTablesStore((s) => s.removeGuest);
   const isPaid = guest.paymentStatus === 'paid';
   const isLeft = guest.paymentStatus === 'left';
   const isFailed = guest.paymentStatus === 'failed';
