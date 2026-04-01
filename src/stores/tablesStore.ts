@@ -151,7 +151,7 @@ function checkAllPaidAndNotify(tables: WaiterTable[], tableId: string) {
 
 const initialTables: WaiterTable[] = [
   {
-    id: '1', number: 1, section: 'Norte', assignedWaiter: 'Carlos',
+    id: '1', number: 1, section: 'Interior', assignedWaiter: 'Carlos',
     guests: [], rounds: [],
     status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
   },
