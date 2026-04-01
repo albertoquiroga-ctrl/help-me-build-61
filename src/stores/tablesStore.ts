@@ -53,6 +53,7 @@ export interface WaiterTable {
   timeOpened: number; // minutes
   tipTotal: number;
   section?: string;
+  assignedWaiter?: string;
 }
 
 /** Derive status + statusText from table data */
