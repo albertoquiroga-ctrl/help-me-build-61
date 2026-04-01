@@ -22,8 +22,11 @@ export default function WaiterDashboard() {
   const { shiftDuration } = useWaiterSession();
   const todayTotal = useTipsStore((s) => s.todayTotal);
   const navigate = useNavigate();
+  const resolve = useNotificationsStore((s) => s.resolve);
 
   const highestAlert = useNotificationsStore((s) => s.queue.find((n) => !n.dismissed));
+  const loyaltyCheckIn = useNotificationsStore((s) => s.queue.find((n) => n.type === 'check-in' && !n.dismissed && !!n.loyalty));
+  const [showLoyaltyToast, setShowLoyaltyToast] = useState(true);
 
   // Waiter only sees their own tables (simulated as "Carlos" for demo)
   const myTables = tables.filter((t) => t.assignedWaiter === 'Carlos');
