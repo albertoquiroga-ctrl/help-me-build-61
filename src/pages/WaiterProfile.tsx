@@ -1,4 +1,8 @@
 import WaiterBottomNav from '@/components/waiter/WaiterBottomNav';
+import HostessBottomNav from '@/components/hostess/HostessBottomNav';
+import BarBottomNav from '@/components/bar/BarBottomNav';
+import RoleSwitcher from '@/components/RoleSwitcher';
+import { useRoleStore } from '@/stores/roleStore';
 import { useWaiterSession } from '@/stores/waiterSessionStore';
 import { useTipsStore } from '@/stores/tipsStore';
 import { useState } from 'react';
@@ -7,6 +11,7 @@ import { toast } from 'sonner';
 export default function WaiterProfile() {
   const { waiterName, shiftDuration } = useWaiterSession();
   const { todayTotal, propinaModeActive, togglePropinaMode } = useTipsStore();
+  const activeRole = useRoleStore((s) => s.activeRole);
   const [checkInNotifs, setCheckInNotifs] = useState(true);
   const [soundAlerts, setSoundAlerts] = useState(true);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
@@ -17,7 +22,10 @@ export default function WaiterProfile() {
   return (
     <div className="min-h-screen bg-w-bg pb-20">
       <div className="sticky top-0 z-40 bg-w-bg/95 backdrop-blur-md border-b border-w-border px-4 py-3">
-        <h1 className="text-[18px] font-semibold text-w-text">Mi Perfil</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-[18px] font-semibold text-w-text">Mi Perfil</h1>
+          <RoleSwitcher />
+        </div>
       </div>
 
       <div className="px-4 pt-4 space-y-4">
@@ -97,7 +105,7 @@ export default function WaiterProfile() {
         </div>
       )}
 
-      <WaiterBottomNav />
+      {activeRole === 'hostess' ? <HostessBottomNav /> : activeRole === 'bar' ? <BarBottomNav /> : <WaiterBottomNav />}
     </div>
   );
 }
