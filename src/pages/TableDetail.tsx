@@ -715,6 +715,7 @@ export default function TableDetail() {
         {cashGuest && (
           <CashPaymentSheet
             tableId={table.id}
+            tableNumber={table.number}
             guest={cashGuest}
             rounds={table.rounds}
             allGuests={table.guests}

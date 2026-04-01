@@ -112,7 +112,7 @@ interface TablesState {
   renameGuest: (tableId: string, guestId: string, newName: string) => void;
   assignSeat: (tableId: string, guestId: string, seatNumber: number) => void;
   assignAllSeats: (tableId: string) => void;
-  assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
+  assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[], tipAmount?: number) => void;
   removeGuest: (tableId: string, guestId: string) => void;
   removeItemFromRound: (tableId: string, roundNumber: number, itemIndex: number) => void;
   removeRound: (tableId: string, roundNumber: number) => void;
@@ -525,7 +525,7 @@ export const useTablesStore = create<TablesState>((set) => ({
         return { ...t, guests };
       }),
     })),
-  assignItemsAndPay: (tableId, guestId, method, assignments) =>
+  assignItemsAndPay: (tableId, guestId, method, assignments, tipAmount = 0) =>
     set((s) => {
       const updated = s.tables.map((t) => {
         if (t.id !== tableId) return t;
@@ -550,12 +550,13 @@ export const useTablesStore = create<TablesState>((set) => ({
             }
           }
         });
+        const tip = tipAmount || 0;
         const guests = t.guests.map((g) =>
           g.id === guestId
-            ? { ...g, amountOwed: totalOwed, amountPaid: totalOwed, paymentStatus: 'paid' as PaymentStatus, paymentMethod: method }
+            ? { ...g, amountOwed: totalOwed, amountPaid: totalOwed + tip, tipAmount: tip, paymentStatus: 'paid' as PaymentStatus, paymentMethod: method }
             : g
         );
-        return { ...t, rounds, guests };
+        return { ...t, rounds, guests, tipTotal: t.tipTotal + tip };
       });
       const result = applyDerived(updated, tableId);
       checkAllPaidAndNotify(result, tableId);

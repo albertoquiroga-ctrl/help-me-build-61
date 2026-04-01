@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { X, Split, Check } from 'lucide-react';
+import { X, Split, Check, Heart } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTablesStore, guestDisplayName, type GuestInfo, type OrderItem, type Round, type ItemAssignment } from '@/stores/tablesStore';
+import { useTipsStore } from '@/stores/tipsStore';
 import { toast } from 'sonner';
 
 interface FlatItem {
@@ -17,16 +18,19 @@ interface FlatItem {
 
 interface Props {
   tableId: string;
+  tableNumber: number;
   guest: GuestInfo;
   rounds: Round[];
   allGuests: GuestInfo[];
   onDismiss: () => void;
 }
 
-export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, onDismiss }: Props) {
-  const assignItemsAndPay = useTablesStore((s) => s.assignItemsAndPay);
+const TIP_PERCENTAGES = [10, 15, 20];
 
-  // Flatten all items across rounds
+export default function CashPaymentSheet({ tableId, tableNumber, guest, rounds, allGuests, onDismiss }: Props) {
+  const assignItemsAndPay = useTablesStore((s) => s.assignItemsAndPay);
+  const addTip = useTipsStore((s) => s.addTip);
+
   const flatItems = useMemo<FlatItem[]>(() => {
     const items: FlatItem[] = [];
     rounds.forEach((r) => {
@@ -47,7 +51,6 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
     return items;
   }, [rounds, allGuests]);
 
-  // Track selected items: key = "roundNumber-itemIndex"
   const [selected, setSelected] = useState<Set<string>>(() => {
     const initial = new Set<string>();
     flatItems.forEach((fi) => {
@@ -56,8 +59,10 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
     return initial;
   });
 
-  // Track split counts per item key
   const [splits, setSplits] = useState<Record<string, number>>({});
+  const [tipMode, setTipMode] = useState<'none' | 'percent' | 'custom'>('none');
+  const [tipPercent, setTipPercent] = useState<number | null>(null);
+  const [customTip, setCustomTip] = useState('');
 
   const toggleItem = (key: string) => {
     setSelected((prev) => {
@@ -79,7 +84,7 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
     });
   };
 
-  const dynamicTotal = useMemo(() => {
+  const subtotal = useMemo(() => {
     let total = 0;
     flatItems.forEach((fi) => {
       const key = `${fi.roundNumber}-${fi.itemIndex}`;
@@ -91,15 +96,39 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
     return Math.round(total * 100) / 100;
   }, [selected, splits, flatItems]);
 
+  const tipAmount = useMemo(() => {
+    if (tipMode === 'percent' && tipPercent) {
+      return Math.round(subtotal * tipPercent / 100);
+    }
+    if (tipMode === 'custom' && customTip) {
+      return Math.max(0, parseInt(customTip) || 0);
+    }
+    return 0;
+  }, [tipMode, tipPercent, customTip, subtotal]);
+
+  const grandTotal = subtotal + tipAmount;
+
   const handlePay = (method: 'cash' | 'card-physical') => {
     const assignments: ItemAssignment[] = [];
     selected.forEach((key) => {
       const [rn, ii] = key.split('-').map(Number);
       assignments.push({ roundNumber: rn, itemIndex: ii, splitCount: splits[key] || 1 });
     });
-    assignItemsAndPay(tableId, guest.id, method, assignments);
+    assignItemsAndPay(tableId, guest.id, method, assignments, tipAmount);
+
+    if (tipAmount > 0) {
+      addTip({
+        tableNumber,
+        round: 0,
+        amount: tipAmount,
+        timestamp: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+        guestName: guestDisplayName(guest),
+      });
+    }
+
     const label = method === 'cash' ? '💵 Efectivo' : '💳 Tarjeta física';
-    toast.success(`${label} · ${guestDisplayName(guest)} · $${dynamicTotal}`);
+    const tipLabel = tipAmount > 0 ? ` · propina $${tipAmount}` : '';
+    toast.success(`${label} · ${guestDisplayName(guest)} · $${grandTotal}${tipLabel}`);
     onDismiss();
   };
 
@@ -152,14 +181,12 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
                     : 'border-w-border bg-w-surface'
                 }`}
               >
-                {/* Checkbox */}
                 <div className={`w-5 h-5 rounded-[4px] border-2 flex items-center justify-center shrink-0 ${
                   isSelected ? 'border-w-brand bg-w-brand' : 'border-w-text-secondary/40'
                 }`}>
                   {isSelected && <Check size={12} className="text-white" />}
                 </div>
 
-                {/* Item info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[13px] text-w-text truncate">{fi.name} ×{fi.qty}</span>
@@ -179,7 +206,6 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
                   )}
                 </div>
 
-                {/* Price + split */}
                 <div className="flex items-center gap-2 shrink-0">
                   <span className={`font-mono text-[13px] ${isSelected ? 'text-w-text font-medium' : 'text-w-text-secondary'}`}>
                     ${splitCount > 1 ? displayPrice.toFixed(0) : fi.total}
@@ -200,11 +226,89 @@ export default function CashPaymentSheet({ tableId, guest, rounds, allGuests, on
           })}
         </div>
 
-        {/* Footer: total + pay buttons */}
+        {/* Tip section */}
+        {hasSelection && (
+          <div className="shrink-0 border-t border-w-border px-4 pt-3 pb-2 space-y-2">
+            <div className="flex items-center gap-2">
+              <Heart size={14} className="text-w-priority" />
+              <span className="text-[12px] font-medium text-w-text">Propina</span>
+            </div>
+            <div className="flex gap-1.5">
+              {TIP_PERCENTAGES.map((pct) => (
+                <button
+                  key={pct}
+                  onClick={() => {
+                    if (tipMode === 'percent' && tipPercent === pct) {
+                      setTipMode('none');
+                      setTipPercent(null);
+                    } else {
+                      setTipMode('percent');
+                      setTipPercent(pct);
+                      setCustomTip('');
+                    }
+                  }}
+                  className={`flex-1 h-9 rounded-[6px] border text-[12px] font-medium transition-colors ${
+                    tipMode === 'percent' && tipPercent === pct
+                      ? 'border-w-priority/50 bg-w-priority/10 text-w-priority'
+                      : 'border-w-border text-w-text-secondary hover:border-w-text-secondary/50'
+                  }`}
+                >
+                  {pct}% · ${Math.round(subtotal * pct / 100)}
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  if (tipMode === 'custom') {
+                    setTipMode('none');
+                    setCustomTip('');
+                  } else {
+                    setTipMode('custom');
+                    setTipPercent(null);
+                  }
+                }}
+                className={`px-3 h-9 rounded-[6px] border text-[12px] font-medium transition-colors ${
+                  tipMode === 'custom'
+                    ? 'border-w-priority/50 bg-w-priority/10 text-w-priority'
+                    : 'border-w-border text-w-text-secondary hover:border-w-text-secondary/50'
+                }`}
+              >
+                Otro
+              </button>
+            </div>
+            {tipMode === 'custom' && (
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-w-text-secondary">$</span>
+                <input
+                  type="number"
+                  value={customTip}
+                  onChange={(e) => setCustomTip(e.target.value)}
+                  placeholder="Monto de propina"
+                  className="w-full h-10 pl-7 pr-3 rounded-[8px] bg-w-surface border border-w-border text-[13px] text-w-text placeholder:text-w-text-secondary focus:outline-none focus:ring-1 focus:ring-w-priority"
+                  min={0}
+                  autoFocus
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Footer */}
         <div className="shrink-0 border-t border-w-border px-4 pt-3 pb-4 space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[13px] text-w-text font-medium">Total a cobrar</span>
-            <span className="font-mono text-[20px] font-bold text-w-text">${dynamicTotal}</span>
+          <div className="space-y-1 px-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[12px] text-w-text-secondary">Subtotal</span>
+              <span className="font-mono text-[14px] text-w-text">${subtotal}</span>
+            </div>
+            {tipAmount > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] text-w-priority">💝 Propina</span>
+                <span className="font-mono text-[14px] text-w-priority font-medium">${tipAmount}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between pt-1 border-t border-w-border/50">
+              <span className="text-[13px] text-w-text font-medium">Total a cobrar</span>
+              <span className="font-mono text-[20px] font-bold text-w-text">${grandTotal}</span>
+            </div>
           </div>
           <div className="flex gap-2">
             <button
