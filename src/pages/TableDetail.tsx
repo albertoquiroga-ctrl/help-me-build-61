@@ -271,18 +271,6 @@ export default function TableDetail() {
             </motion.div>
           )}
 
-          {/* Ready round → Mark delivered */}
-          {readyRound && (
-            <button
-              onClick={() => {
-                markDelivered(table.id, readyRound.number);
-                toast.success(`✓ Orden entregada · Mesa ${table.number}`);
-              }}
-              className="w-full h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
-            >
-              Marcar como entregado ✓
-            </button>
-          )}
 
           {/* Active rounds (confirmed/cooking/ready) with timers */}
           {table.rounds.filter((r) => r.status !== 'delivered' && r.status !== 'pending').map((activeR) => {
