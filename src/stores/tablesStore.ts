@@ -151,7 +151,12 @@ function checkAllPaidAndNotify(tables: WaiterTable[], tableId: string) {
 
 const initialTables: WaiterTable[] = [
   {
-    id: '2', number: 2, section: 'Norte',
+    id: '1', number: 1, section: 'Norte', assignedWaiter: 'Carlos',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '2', number: 2, section: 'Norte', assignedWaiter: 'Carlos',
     guests: [
       { id: 'g2-1', name: 'Guest 1', amountOwed: 280, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
       { id: 'g2-2', name: 'Pedro', amountOwed: 280, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
