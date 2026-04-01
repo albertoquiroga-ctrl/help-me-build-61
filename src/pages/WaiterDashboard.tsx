@@ -87,6 +87,20 @@ export default function WaiterDashboard() {
         )}
       </div>
 
+      {/* Loyalty check-in toast overlay */}
+      <AnimatePresence>
+        {showLoyaltyToast && loyaltyCheckIn && loyaltyCheckIn.loyalty && (
+          <CheckInToast
+            tableName={`Mesa ${loyaltyCheckIn.tableId}`}
+            loyalty={loyaltyCheckIn.loyalty}
+            onDismiss={() => {
+              setShowLoyaltyToast(false);
+              resolve(loyaltyCheckIn.id, 'Visto ✓');
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       <WaiterBottomNav />
     </div>
   );
