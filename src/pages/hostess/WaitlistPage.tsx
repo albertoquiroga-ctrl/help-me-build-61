@@ -54,14 +54,14 @@ function formatTime12(t: string): string {
 
 const AVG_TURNOVER_MIN = 45;
 
-/** Count active guests per waiter across all tables */
-function getWaiterLoad(tables: { assignedWaiter?: string; status: string; guests: unknown[] }[]) {
+/** Count active tables per waiter */
+function getWaiterLoad(tables: { assignedWaiter?: string; status: string; rounds: unknown[] }[]) {
   const load: Record<string, number> = {};
   for (const t of tables) {
     if (!t.assignedWaiter) continue;
     if (!load[t.assignedWaiter]) load[t.assignedWaiter] = 0;
     if (t.status !== 'empty') {
-      load[t.assignedWaiter] += t.guests.length;
+      load[t.assignedWaiter] += 1;
     }
   }
   return load;
