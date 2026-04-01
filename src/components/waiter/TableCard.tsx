@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import RoundBadge from './RoundBadge';
 import type { WaiterTable } from '@/stores/tablesStore';
+import { useTablesStore } from '@/stores/tablesStore';
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 /** Derive dot color from actual table data */
 function getDotInfo(table: WaiterTable): { color: string; pulse: boolean } {
@@ -31,15 +35,48 @@ interface TableCardProps {
 
 export default function TableCard({ table }: TableCardProps) {
   const navigate = useNavigate();
+  const openTable = useTablesStore((s) => s.openTable);
   const isEmpty = table.status === 'empty';
   const lastRound = table.rounds[table.rounds.length - 1];
   const dot = getDotInfo(table);
+  const [showOpenDialog, setShowOpenDialog] = useState(false);
 
   if (isEmpty) {
     return (
-      <div className="rounded-[10px] border border-dashed border-w-border bg-w-elevated flex items-center justify-center h-[140px]">
-        <span className="text-[13px] text-w-text-secondary">Disponible</span>
-      </div>
+      <>
+        <button
+          onClick={() => setShowOpenDialog(true)}
+          className="rounded-[10px] border border-dashed border-w-border bg-w-elevated flex flex-col items-center justify-center h-[140px] cursor-pointer active:scale-[0.97] transition-transform hover:border-w-brand/50"
+        >
+          <p className="font-mono text-[20px] font-bold text-w-text-secondary/40">{table.number}</p>
+          <span className="text-[13px] text-w-text-secondary mt-1">Disponible</span>
+          <span className="text-[11px] text-w-brand mt-1">Abrir mesa →</span>
+        </button>
+
+        <Dialog open={showOpenDialog} onOpenChange={setShowOpenDialog}>
+          <DialogContent className="max-w-[320px] bg-w-surface border-w-border">
+            <DialogHeader>
+              <DialogTitle className="text-w-text text-center">Abrir Mesa {table.number}</DialogTitle>
+            </DialogHeader>
+            <p className="text-[13px] text-w-text-secondary text-center">¿Cuántos comensales?</p>
+            <div className="flex justify-center gap-2 flex-wrap py-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => {
+                    openTable(table.id, n);
+                    setShowOpenDialog(false);
+                    toast.success(`✓ Mesa ${table.number} abierta · ${n} silla${n > 1 ? 's' : ''}`);
+                  }}
+                  className="w-11 h-11 rounded-[8px] border border-w-border bg-w-bg text-w-text font-semibold text-[14px] active:scale-95 transition-transform hover:border-w-brand hover:text-w-brand"
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
