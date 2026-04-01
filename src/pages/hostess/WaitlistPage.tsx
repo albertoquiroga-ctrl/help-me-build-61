@@ -14,18 +14,23 @@ interface WaitlistEntry {
   type: 'walkin' | 'reservation';
   reservationTime?: string; // HH:mm
   notes?: string;
+  notified?: boolean;
 }
 
 const now = new Date();
-const hh = (h: number, m: number) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+const hh = (h: number, m: number) => {
+  const hh2 = h % 24;
+  const mm2 = Math.max(0, Math.min(59, m));
+  return `${String(hh2).padStart(2, '0')}:${String(mm2).padStart(2, '0')}`;
+};
 const currentHour = now.getHours();
 const currentMin = now.getMinutes();
 
 const initialWaitlist: WaitlistEntry[] = [
-  { id: 'r1', name: 'Familia Hernández', partySize: 5, waitingSince: new Date(Date.now() - 10 * 60000).toISOString(), type: 'reservation', reservationTime: hh(currentHour, currentMin - 10 < 0 ? 0 : currentMin - 10), notes: 'Cumpleaños' },
+  { id: 'r1', name: 'Familia Hernández', partySize: 5, waitingSince: new Date(Date.now() - 10 * 60000).toISOString(), type: 'reservation', reservationTime: hh(currentHour, currentMin - 10), notes: 'Cumpleaños' },
   { id: 'w1', name: 'García', partySize: 4, waitingSince: new Date(Date.now() - 25 * 60000).toISOString(), type: 'walkin' },
   { id: 'w2', name: 'Martínez', partySize: 2, waitingSince: new Date(Date.now() - 12 * 60000).toISOString(), type: 'walkin' },
-  { id: 'r2', name: 'Sr. Domínguez', partySize: 2, waitingSince: new Date(Date.now() - 2 * 60000).toISOString(), type: 'reservation', reservationTime: hh(currentHour, currentMin + 20 > 59 ? 59 : currentMin + 20) },
+  { id: 'r2', name: 'Sr. Domínguez', partySize: 2, waitingSince: new Date(Date.now() - 2 * 60000).toISOString(), type: 'reservation', reservationTime: hh(currentHour, currentMin + 20) },
   { id: 'w3', name: 'López', partySize: 6, waitingSince: new Date(Date.now() - 8 * 60000).toISOString(), type: 'walkin' },
   { id: 'r3', name: 'Sra. Villanueva', partySize: 8, waitingSince: new Date(Date.now() - 1 * 60000).toISOString(), type: 'reservation', reservationTime: hh(currentHour + 1, currentMin), notes: 'Terraza preferida' },
   { id: 'w4', name: 'Rodríguez', partySize: 3, waitingSince: new Date(Date.now() - 3 * 60000).toISOString(), type: 'walkin' },
@@ -40,7 +45,27 @@ function parseTime(t: string): number {
   return h * 60 + m;
 }
 
+function formatTime12(t: string): string {
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
 const AVG_TURNOVER_MIN = 45;
+
+/** Count active guests per waiter across all tables */
+function getWaiterLoad(tables: { assignedWaiter?: string; status: string; guests: unknown[] }[]) {
+  const load: Record<string, number> = {};
+  for (const t of tables) {
+    if (!t.assignedWaiter) continue;
+    if (!load[t.assignedWaiter]) load[t.assignedWaiter] = 0;
+    if (t.status !== 'empty') {
+      load[t.assignedWaiter] += t.guests.length;
+    }
+  }
+  return load;
+}
 
 export default function WaitlistPage() {
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>(initialWaitlist);
@@ -59,39 +84,46 @@ export default function WaitlistPage() {
 
   const emptyTables = tables.filter((t) => t.status === 'empty');
   const nowMinutes = currentHour * 60 + currentMin;
+  const waiterLoad = useMemo(() => getWaiterLoad(tables), [tables]);
 
-  // Sort: past-due reservations first, then walk-ins by wait time, then future reservations
+  // Sort: reservations first (past-due by urgency, then future by time), then walk-ins by longest wait
   const sortedWaitlist = useMemo(() => {
     return [...waitlist].sort((a, b) => {
-      const aIsPastRes = a.type === 'reservation' && a.reservationTime && parseTime(a.reservationTime) <= nowMinutes;
-      const bIsPastRes = b.type === 'reservation' && b.reservationTime && parseTime(b.reservationTime) <= nowMinutes;
-      if (aIsPastRes && !bIsPastRes) return -1;
-      if (!aIsPastRes && bIsPastRes) return 1;
-      if (aIsPastRes && bIsPastRes) return parseTime(a.reservationTime!) - parseTime(b.reservationTime!);
+      // Reservations always above walk-ins
+      if (a.type === 'reservation' && b.type !== 'reservation') return -1;
+      if (a.type !== 'reservation' && b.type === 'reservation') return 1;
 
-      const aIsFutureRes = a.type === 'reservation' && a.reservationTime && parseTime(a.reservationTime) > nowMinutes;
-      const bIsFutureRes = b.type === 'reservation' && b.reservationTime && parseTime(b.reservationTime) > nowMinutes;
-      if (!aIsFutureRes && bIsFutureRes) return -1;
-      if (aIsFutureRes && !bIsFutureRes) return 1;
-      if (aIsFutureRes && bIsFutureRes) return parseTime(a.reservationTime!) - parseTime(b.reservationTime!);
+      // Both reservations: past-due first, then by time
+      if (a.type === 'reservation' && b.type === 'reservation') {
+        const aTime = a.reservationTime ? parseTime(a.reservationTime) : 0;
+        const bTime = b.reservationTime ? parseTime(b.reservationTime) : 0;
+        const aPast = aTime <= nowMinutes;
+        const bPast = bTime <= nowMinutes;
+        if (aPast && !bPast) return -1;
+        if (!aPast && bPast) return 1;
+        return aTime - bTime;
+      }
 
-      // Both walk-ins: by wait time (oldest first)
+      // Both walk-ins: longest wait first
       return new Date(a.waitingSince).getTime() - new Date(b.waitingSince).getTime();
     });
   }, [waitlist, nowMinutes]);
 
-  // Estimate wait time for a position in queue
   function estimateWait(position: number): number {
     const freeCount = Math.max(emptyTables.length, 1);
     return Math.max(5, Math.round((position * AVG_TURNOVER_MIN) / freeCount));
   }
 
-  // Estimate for a new entry (would be last)
   const newEntryEstimate = estimateWait(sortedWaitlist.length + 1);
 
   const handleAssignTable = (tableId: string) => {
     if (!assigningEntry) return;
     setSelectedTableId(tableId);
+  };
+
+  const handleNotify = (entry: WaitlistEntry) => {
+    setWaitlist((w) => w.map((e) => e.id === entry.id ? { ...e, notified: true } : e));
+    toast.success(`📱 SMS enviado a ${entry.name}: "Su mesa estará lista pronto"`);
   };
 
   const handleAddEntry = () => {
@@ -114,6 +146,16 @@ export default function WaitlistPage() {
     setShowAddForm(false);
     toast.success(`${entry.name} agregado a la lista`);
   };
+
+  // Sort empty tables by waiter load (least busy first)
+  const sortedEmptyTables = useMemo(() => {
+    return [...emptyTables].sort((a, b) => {
+      const aLoad = waiterLoad[a.assignedWaiter || ''] || 0;
+      const bLoad = waiterLoad[b.assignedWaiter || ''] || 0;
+      if (aLoad !== bLoad) return aLoad - bLoad;
+      return a.number - b.number;
+    });
+  }, [emptyTables, waiterLoad]);
 
   const selectedTable = tables.find((t) => t.id === selectedTableId);
 
@@ -162,54 +204,74 @@ export default function WaitlistPage() {
             const isReservation = entry.type === 'reservation';
             const isPastDue = isReservation && entry.reservationTime && parseTime(entry.reservationTime) <= nowMinutes;
             const waitEst = estimateWait(idx + 1);
+            const mins = minutesAgo(entry.waitingSince);
 
             return (
               <div
                 key={entry.id}
-                className={`rounded-xl bg-w-surface border p-4 flex items-center justify-between ${
+                className={`rounded-xl border p-4 ${
                   isReservation
                     ? isPastDue
-                      ? 'border-w-warning/50'
-                      : 'border-w-brand/30'
-                    : 'border-w-border'
+                      ? 'bg-w-warning/5 border-w-warning/50'
+                      : 'bg-w-brand/5 border-w-brand/30'
+                    : 'bg-w-surface border-w-border'
                 }`}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-[15px] font-semibold text-w-text">{entry.name}</p>
-                    {isReservation && (
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                        isPastDue
-                          ? 'bg-w-warning/20 text-w-warning'
-                          : 'bg-w-brand/15 text-w-brand'
-                      }`}>
-                        🕐 {entry.reservationTime}
-                      </span>
-                    )}
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-[15px] font-semibold text-w-text">{entry.name}</p>
+                      {isReservation && (
+                        <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md font-semibold ${
+                          isPastDue
+                            ? 'bg-w-warning/20 text-w-warning border border-w-warning/30'
+                            : 'bg-w-brand/15 text-w-brand border border-w-brand/20'
+                        }`}>
+                          📅 RESERVACIÓN · {formatTime12(entry.reservationTime!)}
+                        </span>
+                      )}
+                      {!isReservation && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-w-surface border border-w-border text-w-text-secondary font-medium">
+                          Walk-in
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[12px] text-w-text-secondary mt-1">
+                      {entry.partySize} personas · {mins} min esperando
+                      {entry.notes && <span className="italic"> · {entry.notes}</span>}
+                    </p>
+                    <p className="text-[11px] text-w-brand mt-0.5">~{waitEst} min estimado</p>
                   </div>
-                  <p className="text-[12px] text-w-text-secondary">
-                    {entry.partySize} personas · {minutesAgo(entry.waitingSince)} min esperando
-                    {entry.notes && <span className="text-w-text-secondary/70"> · {entry.notes}</span>}
-                  </p>
-                  <p className="text-[11px] text-w-brand mt-0.5">~{waitEst} min estimado</p>
-                </div>
-                <div className="flex gap-2 items-center ml-2">
-                  {emptyTables.length > 0 ? (
+                  <div className="flex gap-1.5 items-center ml-2 shrink-0">
                     <button
-                      onClick={() => setAssigningEntry(entry)}
-                      className="px-3 py-1.5 rounded-lg bg-w-brand text-white text-[12px] font-medium min-h-[36px]"
+                      onClick={() => handleNotify(entry)}
+                      disabled={entry.notified}
+                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium min-h-[36px] border ${
+                        entry.notified
+                          ? 'bg-w-surface border-w-border text-w-text-secondary cursor-default'
+                          : 'bg-w-surface border-w-border text-w-text hover:border-w-brand/50'
+                      }`}
+                      title="Enviar SMS de notificación"
                     >
-                      Asignar
+                      {entry.notified ? '✓ SMS' : '📱 SMS'}
                     </button>
-                  ) : (
-                    <span className="text-[11px] text-w-text-secondary italic">Sin mesas</span>
-                  )}
-                  <button
-                    onClick={() => setWaitlist((w) => w.filter((e) => e.id !== entry.id))}
-                    className="px-2 py-1.5 rounded-lg text-w-text-secondary text-[12px] min-h-[36px] hover:text-w-error"
-                  >
-                    ✕
-                  </button>
+                    {emptyTables.length > 0 ? (
+                      <button
+                        onClick={() => setAssigningEntry(entry)}
+                        className="px-3 py-1.5 rounded-lg bg-w-brand text-white text-[12px] font-medium min-h-[36px]"
+                      >
+                        Asignar
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-w-text-secondary italic">Sin mesas</span>
+                    )}
+                    <button
+                      onClick={() => setWaitlist((w) => w.filter((e) => e.id !== entry.id))}
+                      className="px-1.5 py-1.5 rounded-lg text-w-text-secondary text-[12px] min-h-[36px] hover:text-w-error"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -217,32 +279,41 @@ export default function WaitlistPage() {
         )}
       </div>
 
-      {/* Table selection — centered */}
+      {/* Table selection — centered, sorted by waiter availability */}
       {assigningEntry && !selectedTableId && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className="bg-w-surface rounded-2xl w-full max-w-md p-4 pb-6">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-1">
               <h2 className="text-[16px] font-semibold text-w-text">
-                Asignar a {assigningEntry.name} ({assigningEntry.partySize} personas)
+                Asignar a {assigningEntry.name}
               </h2>
               <button onClick={() => setAssigningEntry(null)} className="text-w-text-secondary text-[18px]">✕</button>
             </div>
-            {emptyTables.length === 0 ? (
+            <p className="text-[12px] text-w-text-secondary mb-3">{assigningEntry.partySize} personas · Mesas ordenadas por mesero más libre</p>
+            {sortedEmptyTables.length === 0 ? (
               <p className="text-[13px] text-w-text-secondary">No hay mesas disponibles</p>
             ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {emptyTables.sort((a, b) => a.number - b.number).map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => handleAssignTable(t.id)}
-                    className="rounded-xl border border-w-success/30 bg-w-bg p-3 text-center hover:border-w-success/60"
-                  >
-                    <p className="text-[16px] font-bold text-w-text">#{t.number}</p>
-                    {t.assignedWaiter && (
-                      <p className="text-[9px] text-w-text-secondary">{t.assignedWaiter}</p>
-                    )}
-                  </button>
-                ))}
+              <div className="grid grid-cols-3 gap-2">
+                {sortedEmptyTables.map((t, i) => {
+                  const load = waiterLoad[t.assignedWaiter || ''] || 0;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => handleAssignTable(t.id)}
+                      className={`rounded-xl border bg-w-bg p-3 text-center hover:border-w-success/60 ${
+                        i === 0 ? 'border-w-success/60 ring-1 ring-w-success/30' : 'border-w-border'
+                      }`}
+                    >
+                      <p className="text-[16px] font-bold text-w-text">#{t.number}</p>
+                      {t.assignedWaiter && (
+                        <p className="text-[10px] text-w-text-secondary">{t.assignedWaiter}</p>
+                      )}
+                      <p className={`text-[9px] mt-0.5 ${load === 0 ? 'text-w-success' : load <= 4 ? 'text-w-text-secondary' : 'text-w-warning'}`}>
+                        {load === 0 ? 'Libre' : `${load} comensales`}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -277,7 +348,6 @@ export default function WaitlistPage() {
             <DialogTitle className="text-w-text">Agregar a la lista</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {/* Type toggle */}
             <div className="flex gap-2">
               <button
                 onClick={() => setNewType('walkin')}
