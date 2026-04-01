@@ -85,8 +85,8 @@ export default function HostessDashboard() {
           {sortedTables.map((table) => {
             const { status, statusText } = deriveTableStatus(table);
             const isEmpty = status === 'empty';
-            const guestCount = table.guests?.length ?? 0;
-            const allPaid = guestCount > 0 && table.guests.every((g) => g.paymentStatus === 'paid' || g.paymentStatus === 'left');
+            const itemCount = table.rounds.reduce((s, r) => s + r.items.reduce((a, i) => a + i.qty, 0), 0);
+            const allPaid = status === 'paying';
 
             return (
               <button
