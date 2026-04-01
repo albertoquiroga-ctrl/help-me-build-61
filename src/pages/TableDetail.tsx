@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTablesStore, computeTableBill, computeTotalPaid, getItemsByCategory } from '@/stores/tablesStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
 import { useBarStore } from '@/stores/barStore';
+import CheckInToast from '@/components/waiter/overlays/CheckInToast';
 import ManualOrderSheet from '@/components/waiter/ManualOrderSheet';
 import CashPaymentSheet from '@/components/waiter/CashPaymentSheet';
 import CookingTimer from '@/components/waiter/CookingTimer';
