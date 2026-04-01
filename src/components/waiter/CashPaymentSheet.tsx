@@ -25,12 +25,6 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
   const [tipPercent, setTipPercent] = useState<number | null>(null);
   const [customTip, setCustomTip] = useState('');
 
-  if (!table) return null;
-
-  const totalBill = computeTableBill(table);
-  const totalPaid = computeTotalPaid(table);
-  const remaining = Math.max(0, totalBill - totalPaid);
-
   const numAmount = parseInt(amount) || 0;
 
   const tipAmount = useMemo(() => {
@@ -43,6 +37,11 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
     return 0;
   }, [tipMode, tipPercent, customTip, numAmount]);
 
+  if (!table) return null;
+
+  const totalBill = computeTableBill(table);
+  const totalPaid = computeTotalPaid(table);
+  const remaining = Math.max(0, totalBill - totalPaid);
   const grandTotal = numAmount + tipAmount;
 
   const handlePay = (method: 'cash' | 'card-physical') => {
