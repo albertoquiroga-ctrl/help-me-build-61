@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTablesStore, computeTableBill, computeTotalPaid, getItemsByCategory } from '@/stores/tablesStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
 import { useBarStore } from '@/stores/barStore';
+import CheckInToast from '@/components/waiter/overlays/CheckInToast';
 import ManualOrderSheet from '@/components/waiter/ManualOrderSheet';
 import CashPaymentSheet from '@/components/waiter/CashPaymentSheet';
 import CookingTimer from '@/components/waiter/CookingTimer';
@@ -37,8 +38,11 @@ export default function TableDetail() {
   const closeTable = useTablesStore((s) => s.closeTable);
   const [showManualOrder, setShowManualOrder] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showLoyaltyToast, setShowLoyaltyToast] = useState(true);
   const allBarOrders = useBarStore((s) => s.orders);
   const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && (o.status === 'pending' || o.status === 'preparing')), [allBarOrders, id]);
+  const resolve = useNotificationsStore((s) => s.resolve);
+  const loyaltyCheckIn = useNotificationsStore((s) => s.queue.find((n) => n.type === 'check-in' && n.tableId === id && !n.dismissed && !!n.loyalty));
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
@@ -430,6 +434,20 @@ export default function TableDetail() {
             tableId={table.id}
             tableNumber={table.number}
             onDismiss={() => setShowPayment(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Loyalty check-in toast */}
+      <AnimatePresence>
+        {showLoyaltyToast && loyaltyCheckIn && loyaltyCheckIn.loyalty && (
+          <CheckInToast
+            tableName={`Mesa ${table.number}`}
+            loyalty={loyaltyCheckIn.loyalty}
+            onDismiss={() => {
+              setShowLoyaltyToast(false);
+              resolve(loyaltyCheckIn.id, 'Visto ✓');
+            }}
           />
         )}
       </AnimatePresence>

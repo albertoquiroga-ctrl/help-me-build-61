@@ -1,11 +1,8 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
 import WaiterBottomNav from '@/components/waiter/WaiterBottomNav';
 import TableCard from '@/components/waiter/TableCard';
 import RoleSwitcher from '@/components/RoleSwitcher';
 import NotificationCard from '@/components/waiter/NotificationCard';
-import CheckInToast from '@/components/waiter/overlays/CheckInToast';
 import { useTablesStore } from '@/stores/tablesStore';
 import { useWaiterSession } from '@/stores/waiterSessionStore';
 import { useTipsStore } from '@/stores/tipsStore';
@@ -22,11 +19,8 @@ export default function WaiterDashboard() {
   const { shiftDuration } = useWaiterSession();
   const todayTotal = useTipsStore((s) => s.todayTotal);
   const navigate = useNavigate();
-  const resolve = useNotificationsStore((s) => s.resolve);
 
   const highestAlert = useNotificationsStore((s) => s.queue.find((n) => !n.dismissed));
-  const loyaltyCheckIn = useNotificationsStore((s) => s.queue.find((n) => n.type === 'check-in' && !n.dismissed && !!n.loyalty));
-  const [showLoyaltyToast, setShowLoyaltyToast] = useState(true);
 
   // Waiter only sees their own tables (simulated as "Carlos" for demo)
   const myTables = tables.filter((t) => t.assignedWaiter === 'Carlos');
@@ -86,20 +80,6 @@ export default function WaiterDashboard() {
           </div>
         )}
       </div>
-
-      {/* Loyalty check-in toast overlay */}
-      <AnimatePresence>
-        {showLoyaltyToast && loyaltyCheckIn && loyaltyCheckIn.loyalty && (
-          <CheckInToast
-            tableName={`Mesa ${loyaltyCheckIn.tableId}`}
-            loyalty={loyaltyCheckIn.loyalty}
-            onDismiss={() => {
-              setShowLoyaltyToast(false);
-              resolve(loyaltyCheckIn.id, 'Visto ✓');
-            }}
-          />
-        )}
-      </AnimatePresence>
 
       <WaiterBottomNav />
     </div>
