@@ -1,49 +1,34 @@
 
 
-# Plan: Mejoras al módulo de Hostess
+# Plan: Tiempo de espera en cocina con alertas de retraso
 
 ## Resumen
-Expandir el área de Hostess con más mesas, mesero asignado visible, capacidad de cerrar/liberar mesas, formulario para agregar personas a la lista de espera, reservaciones integradas en la lista, y tiempos de espera estimados.
+Agregar a cada ronda con status `cooking` un tiempo estimado de preparación y un cronómetro ascendente visible. Cuando el tiempo real supere el estimado, la ronda se marca en rojo como retrasada, con opción de enviar un recordatorio a cocina.
 
 ## Cambios
 
-### 1. Más mesas en el store (`tablesStore.ts`)
-- Agregar mesas vacías hasta llegar a 15 (actualmente hay ~6). IDs: 1, 3, 5, 8, 10, 12, 13, 14, 15 como mesas vacías adicionales.
-- Agregar campo `assignedWaiter?: string` a `WaiterTable`. Las mesas mock tendrán nombres como "Carlos", "Luis", "María".
+### 1. Store — tiempo estimado por ronda (`tablesStore.ts`)
+- Agregar `estimatedMinutes?: number` y `cookingStartedAt?: string` al tipo `Round`.
+- Las rondas mock con status `cooking` tendrán valores iniciales (ej: estimatedMinutes: 15, cookingStartedAt hace X minutos).
+- Al cambiar una ronda a `cooking` vía `updateRoundStatus`, auto-setear `cookingStartedAt = now` y `estimatedMinutes` default (15 min).
 
-### 2. Dashboard de Hostess — mesero y cerrar mesa (`HostessDashboard.tsx`)
-- Mostrar nombre del mesero asignado debajo del número de mesa en cada card.
-- Mesas con status `paying` + todos pagaron: mostrar botón "Liberar mesa" que llama a `closeTable(id)` y muestra toast.
-- Agregar un estado visual para "Por limpiar" (mesas donde todos pagaron pero no se han cerrado).
+### 2. Indicador de tiempo en TableDetail (`TableDetail.tsx`)
+- En la vista de rondas, para cada ronda `cooking`:
+  - Mostrar cronómetro ascendente (minutos:segundos desde `cookingStartedAt`).
+  - Mostrar tiempo prometido: "Estimado: 15 min".
+  - Si elapsed > estimatedMinutes: borde rojo, texto rojo, badge "⏰ RETRASADO +Xmin".
+- Botón "🔔 Recordar a cocina" que genera una notificación tipo `kitchen-msg` en el store y muestra toast de confirmación.
 
-### 3. Lista de espera — popup fix (`WaitlistPage.tsx`)
-- Cambiar el popup de selección de mesa de `fixed items-end` a `items-center` para que se vea centrado en la pantalla y no quede cortado.
+### 3. Alerta en WaiterDashboard (`WaiterDashboard.tsx`)
+- En las TableCards del mesero, si alguna ronda `cooking` está retrasada, mostrar un indicador rojo pequeño (ej: "⏰ R2 +5min") para que el mesero vea desde el dashboard qué mesas tienen retrasos.
 
-### 4. Agregar personas a la lista de espera (`WaitlistPage.tsx`)
-- Botón flotante "+" o botón en header para abrir un formulario inline o sheet.
-- Campos: nombre, número de personas, notas opcionales (ej: "cumpleaños").
-- Al agregar, se inserta al final de la lista con timestamp actual.
+### 4. Componente CookingTimer (nuevo, `src/components/waiter/CookingTimer.tsx`)
+- Componente reutilizable que recibe `startedAt` y `estimatedMinutes`.
+- Muestra elapsed time con `useEffect` interval.
+- Cambia color: verde (< 70% del tiempo), amarillo (70-100%), rojo (> 100%).
+- Exporta también un hook o prop `isOverdue` para uso externo.
 
-### 5. Reservaciones en la lista de espera (`WaitlistPage.tsx`)
-- Extender `WaitlistEntry` con campos: `type: 'walkin' | 'reservation'`, `reservationTime?: string`.
-- Mock de 2-3 reservaciones con horarios cercanos, intercaladas en la lista.
-- Las reservaciones se ordenan por hora de reserva; los walk-ins por tiempo de espera.
-- La lista se ordena estratégicamente: primero reservaciones cuya hora ya llegó, luego walk-ins por antigüedad, luego reservaciones futuras.
-- Visual: badge "Reservación · 8:30 PM" distinto al de walk-in.
-
-### 6. Tiempos de espera estimados (`WaitlistPage.tsx`)
-- Calcular estimación basada en: número de mesas ocupadas, tiempo promedio de ocupación actual, tamaño del grupo vs capacidad de mesas libres.
-- Fórmula simple: `estimatedWait = (posición en cola) × avgTurnoverTime / mesasLibres` (con mínimo de 5 min).
-- Mostrar "~15 min" en cada entry de la lista.
-- Al agregar nueva persona, mostrar el tiempo estimado antes de confirmar.
-
-## Archivos modificados
-- `src/stores/tablesStore.ts` — agregar `assignedWaiter` al tipo, más mesas mock
-- `src/pages/hostess/HostessDashboard.tsx` — mesero visible, botón liberar mesa
-- `src/pages/hostess/WaitlistPage.tsx` — fix popup, formulario agregar, reservaciones, tiempos estimados
-
-## No incluye
-- Persistencia de reservaciones
-- Notificaciones SMS/WhatsApp al cliente
-- Edición de reservaciones existentes
+## Archivos
+- **Nuevo**: `src/components/waiter/CookingTimer.tsx`
+- **Modificados**: `tablesStore.ts` (tipo Round + mock data), `TableDetail.tsx` (timer + botón recordar), `WaiterDashboard.tsx` (indicador de retraso en cards)
 
