@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import WaiterBottomNav from '@/components/waiter/WaiterBottomNav';
 import TableCard from '@/components/waiter/TableCard';
+import RoleSwitcher from '@/components/RoleSwitcher';
 import NotificationCard from '@/components/waiter/NotificationCard';
 import { useTablesStore } from '@/stores/tablesStore';
 import { useWaiterSession } from '@/stores/waiterSessionStore';
