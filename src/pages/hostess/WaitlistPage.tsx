@@ -293,18 +293,23 @@ export default function WaitlistPage() {
             {sortedEmptyTables.length === 0 ? (
               <p className="text-[13px] text-w-text-secondary">No hay mesas disponibles</p>
             ) : (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {sortedEmptyTables.map((t, i) => {
                   const load = waiterLoad[t.assignedWaiter || ''] || 0;
                   return (
                     <button
                       key={t.id}
                       onClick={() => handleAssignTable(t.id)}
-                      className={`rounded-xl border bg-w-bg p-3 text-center hover:border-w-success/60 ${
+                      className={`rounded-xl border bg-w-bg p-3 text-left hover:border-w-success/60 ${
                         i === 0 ? 'border-w-success/60 ring-1 ring-w-success/30' : 'border-w-border'
                       }`}
                     >
-                      <p className="text-[16px] font-bold text-w-text">#{t.number}</p>
+                      <div className="flex items-baseline justify-between">
+                        <p className="text-[16px] font-bold text-w-text">#{t.number}</p>
+                        {t.section && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-w-brand/10 text-w-brand font-medium">{t.section}</span>
+                        )}
+                      </div>
                       {t.assignedWaiter && (
                         <p className="text-[10px] text-w-text-secondary">{t.assignedWaiter}</p>
                       )}
