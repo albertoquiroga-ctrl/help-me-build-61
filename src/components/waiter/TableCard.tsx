@@ -67,8 +67,23 @@ export default function TableCard({ table }: TableCardProps) {
       <div className={cn('absolute top-2.5 right-2.5 w-2 h-2 rounded-full', dot.color, dot.pulse && 'animate-pulse-dot')} />
       <p className="font-mono text-[20px] font-bold text-w-text text-center">{table.number}</p>
       <p className="text-[12px] text-w-text-secondary text-center mt-0.5">👤 ×{table.guests.length}</p>
-      <div className="flex justify-center mt-1.5">
+      <div className="flex justify-center mt-1.5 gap-1 flex-wrap">
         {lastRound && <RoundBadge round={lastRound.number} />}
+        {(() => {
+          const overdueRound = table.rounds.find((r) => {
+            if (r.status !== 'cooking' || !r.cookingStartedAt || !r.estimatedMinutes) return false;
+            const elapsed = (Date.now() - new Date(r.cookingStartedAt).getTime()) / 1000;
+            return getOverdueMinutes(elapsed, r.estimatedMinutes) > 0;
+          });
+          if (!overdueRound || !overdueRound.cookingStartedAt || !overdueRound.estimatedMinutes) return null;
+          const elapsed = (Date.now() - new Date(overdueRound.cookingStartedAt).getTime()) / 1000;
+          const over = getOverdueMinutes(elapsed, overdueRound.estimatedMinutes);
+          return (
+            <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-error/15 text-w-error font-mono font-semibold animate-pulse">
+              ⏰ R{overdueRound.number} +{over}m
+            </span>
+          );
+        })()}
       </div>
       <div className="mt-auto flex items-end justify-between">
         <span className="text-[11px] text-w-text-secondary leading-tight">{table.statusText}</span>
