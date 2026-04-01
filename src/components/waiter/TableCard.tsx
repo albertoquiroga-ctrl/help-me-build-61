@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import RoundBadge from './RoundBadge';
 import type { WaiterTable } from '@/stores/tablesStore';
 import { useTablesStore } from '@/stores/tablesStore';
+import { useBarStore } from '@/stores/barStore';
 import { toast } from 'sonner';
 import OpenTableDialog from './OpenTableDialog';
 import { getOverdueMinutes } from './CookingTimer';
