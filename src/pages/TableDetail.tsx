@@ -568,7 +568,7 @@ export default function TableDetail() {
           {/* Drink orders in preparation at bar */}
           {(() => {
             const barOrders = useBarStore.getState().orders.filter(
-              (o) => o.tableId === table.id && o.status === 'preparing' && o.preparingStartedAt && o.estimatedMinutes
+              (o) => o.tableId === table.id && (o.status === 'pending' || o.status === 'preparing')
             );
             if (barOrders.length === 0) return null;
             return barOrders.map((drinkO) => (
