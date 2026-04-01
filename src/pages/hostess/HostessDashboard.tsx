@@ -142,10 +142,10 @@ export default function HostessDashboard() {
           open={!!dialogTable}
           onOpenChange={(open) => !open && setDialogTable(null)}
           tableNumber={selectedTable.number}
-          onConfirm={(count) => {
-            openTable(selectedTable.id, count);
+        onConfirm={() => {
+            openTable(selectedTable.id);
             setDialogTable(null);
-            toast.success(`Mesa ${selectedTable.number} abierta · ${count} personas`);
+            toast.success(`Mesa ${selectedTable.number} abierta`);
           }}
         />
       )}

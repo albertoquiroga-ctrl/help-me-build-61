@@ -209,7 +209,7 @@ export default function AlertsQueue() {
         open={!!qrOpenDialog}
         onOpenChange={(open) => !open && setQrOpenDialog(null)}
         tableNumber={qrOpenDialog?.tableNumber ?? 0}
-        subtitle="Un cliente escaneó el QR. ¿Cuántos comensales?"
+        subtitle="Un cliente escaneó el QR"
         onConfirm={handleConfirmQrOpen}
       />
     </div>

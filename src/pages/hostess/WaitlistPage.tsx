@@ -336,8 +336,8 @@ export default function WaitlistPage() {
           }}
           tableNumber={selectedTable.number}
           subtitle={`Para ${assigningEntry.name}`}
-          onConfirm={(count) => {
-            openTable(selectedTable.id, count);
+          onConfirm={() => {
+            openTable(selectedTable.id);
             setWaitlist((w) => w.filter((e) => e.id !== assigningEntry.id));
             toast.success(`Mesa ${selectedTable.number} asignada a ${assigningEntry.name}`);
             setSelectedTableId(null);
