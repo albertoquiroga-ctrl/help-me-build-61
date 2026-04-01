@@ -1,44 +1,29 @@
-
-
-# Plan: Vista "Por comensal" en detalle de mesa
+# Plan: Abrir mesa
 
 ## Resumen
-
-Agregar una **vista alternativa con tabs** en la sección de rondas del detalle de mesa: "Por rondas" (actual) y "Por comensal". La vista por comensal agrupa todos los items que ordenó cada persona a través de todas las rondas, mostrando su total individual y estado de pago. Esto le da al mesero claridad inmediata sobre qué lleva cada quien.
+Las mesas vacías tendrán un botón "Abrir mesa" que pide número de personas y crea los comensales. Si alguien escanea el QR de una mesa vacía, se genera una notificación al mesero para confirmar la apertura.
 
 ## Cambios
 
-### `src/pages/TableDetail.tsx`
+### 1. Store — `openTable` action (`tablesStore.ts`)
+- Nueva acción `openTable(tableId: string, guestCount: number)` que:
+  - Crea N comensales con `Silla 1..N` y estado pending
+  - Cambia status a `active`
+  - Resetea `timeOpened` a 0
 
-1. Agregar un toggle/tabs encima de la sección de rondas: **"🍽 Rondas"** | **"👤 Por comensal"**
-2. Estado local `viewMode: 'rounds' | 'by-guest'`
-3. Vista "Por comensal":
-   - Para cada guest, una tarjeta colapsable mostrando:
-     - Header: nombre/silla del comensal, total acumulado, badge de pago
-     - Expandido: lista de todos sus items agrupados por ronda (R1, R2...) con nombre, cantidad, precio y status de la ronda
-   - Items sin `assignedTo` se muestran en sección separada "Sin asignar"
-4. La vista actual de rondas queda intacta en el tab "Rondas"
+### 2. UI — Abrir mesa desde `TableCard` vacío
+- En el card de mesa vacía (dashboard), agregar botón "Abrir mesa"
+- Al tocarlo se abre un **Dialog** simple pidiendo número de personas (input numérico, 1-20)
+- Al confirmar llama `openTable`
 
-### Detalle de UI por comensal
+### 3. UI — Abrir mesa desde `TableDetail` vacío
+- Si la mesa está vacía, mostrar estado vacío con botón "Abrir mesa" y el mismo dialog
 
-```text
-┌─────────────────────────────────┐
-│ 🪑 Silla 1 · Ana      → $385  │
-│ ✓ Pagado 💵                     │
-├─────────────────────────────────┤
-│  R1: Tacos al Pastor ×2  $120  │
-│  R1: Agua mineral ×1      $45  │
-│  R2: Guacamole ×1        $110  │
-│  R2: Quesadilla ×1      $110  │
-└─────────────────────────────────┘
+### 4. Notificación — Escaneo QR en mesa vacía
+- Agregar datos mock: una notificación tipo `qr-checkin` para simular que alguien escaneó el QR de mesa 9
+- La notificación dice "Cliente escaneó QR · Mesa 9 — ¿Abrir mesa?"
+- Al confirmar desde alertas, abre la mesa con 1 comensal inicial
 
-┌─────────────────────────────────┐
-│ ⚠️ Sin asignar          → $85  │
-├─────────────────────────────────┤
-│  R1: Salsa extra ×1       $0   │
-│  R2: Nachos ×1            $85  │
-└─────────────────────────────────┘
-```
-
-No se requieren cambios al store ni a otros componentes.
-
+## No incluye
+- Rol de hostess separado (un solo rol flexible)
+- Flujo real de QR (solo simulación con datos mock)
