@@ -13,6 +13,8 @@ export interface OrderItem {
   qty: number;
   price: number;
   assignedTo?: string; // guest ID
+  modifiers?: string[]; // e.g. "sin sal", "sin cebolla"
+  extras?: { name: string; price: number }[]; // e.g. "doble jamón +$25"
 }
 
 export interface Round {

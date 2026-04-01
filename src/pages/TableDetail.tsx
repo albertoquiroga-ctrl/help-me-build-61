@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTablesStore, guestDisplayName } from '@/stores/tablesStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
 import { useBarStore, isDrinkItem } from '@/stores/barStore';
-import type { GuestInfo } from '@/stores/tablesStore';
+import type { GuestInfo, OrderItem } from '@/stores/tablesStore';
 import GuestPill from '@/components/waiter/GuestPill';
 import RoundBadge from '@/components/waiter/RoundBadge';
 import ManualOrderSheet from '@/components/waiter/ManualOrderSheet';
@@ -205,7 +205,7 @@ export default function TableDetail() {
                   {table.guests
                     .filter((g) => g.paymentStatus !== 'paid' && g.paymentStatus !== 'left')
                     .map((guest) => {
-                      const guestItems: { roundNumber: number; item: { name: string; qty: number; price: number } }[] = [];
+                      const guestItems: { roundNumber: number; item: OrderItem }[] = [];
                       table.rounds.forEach((round) => {
                         round.items.forEach((item) => {
                           if (item.assignedTo === guest.id) {
@@ -221,9 +221,21 @@ export default function TableDetail() {
                             <span className="font-mono text-[12px] text-w-priority font-semibold">${owes}</span>
                           </div>
                           {guestItems.map((gi, idx) => (
-                            <div key={idx} className="flex justify-between text-[11px] pl-5">
-                              <span className="text-w-text-secondary">R{gi.roundNumber} · {gi.item.name} ×{gi.item.qty}</span>
-                              <span className="font-mono text-w-text-secondary">${gi.item.price * gi.item.qty}</span>
+                            <div key={idx} className="pl-5">
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-w-text-secondary">R{gi.roundNumber} · {gi.item.name} ×{gi.item.qty}</span>
+                                <span className="font-mono text-w-text-secondary">${gi.item.price * gi.item.qty}</span>
+                              </div>
+                              {(gi.item.modifiers?.length || gi.item.extras?.length) ? (
+                                <div className="flex flex-wrap gap-1 mt-0.5 pl-0">
+                                  {gi.item.modifiers?.map((m, mi) => (
+                                    <span key={mi} className="text-[9px] px-1 py-0.5 rounded bg-w-warning/15 text-w-warning">{m}</span>
+                                  ))}
+                                  {gi.item.extras?.map((e, ei) => (
+                                    <span key={ei} className="text-[9px] px-1 py-0.5 rounded bg-w-brand/15 text-w-brand">+{e.name}</span>
+                                  ))}
+                                </div>
+                              ) : null}
                             </div>
                           ))}
                           {guestItems.length === 0 && (
@@ -299,22 +311,34 @@ export default function TableDetail() {
                     {isExpanded && (
                       <div className="px-3 pb-3 border-t border-w-border pt-2 space-y-1.5">
                         {round.items.map((item, i) => (
-                           <div key={i} className="flex justify-between text-[12px]">
-                            <div className="flex items-center gap-1 flex-1 min-w-0">
-                              <span className="text-w-text">
-                                {item.name} ×{item.qty}
-                              </span>
-                              {item.assignedTo ? (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-brand/10 text-w-brand shrink-0">
-                                  {table.guests.find((g) => g.id === item.assignedTo)?.seatLabel || table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
+                           <div key={i} className="text-[12px]">
+                            <div className="flex justify-between">
+                              <div className="flex items-center gap-1 flex-1 min-w-0">
+                                <span className="text-w-text">
+                                  {item.name} ×{item.qty}
                                 </span>
-                              ) : (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-text-secondary/10 text-w-text-secondary shrink-0">
-                                  Sin asignar
-                                </span>
-                              )}
+                                {item.assignedTo ? (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-brand/10 text-w-brand shrink-0">
+                                    {table.guests.find((g) => g.id === item.assignedTo)?.seatLabel || table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-text-secondary/10 text-w-text-secondary shrink-0">
+                                    Sin asignar
+                                  </span>
+                                )}
+                              </div>
+                              <span className="font-mono text-w-text-secondary shrink-0">${item.price * item.qty}</span>
                             </div>
-                            <span className="font-mono text-w-text-secondary shrink-0">${item.price * item.qty}</span>
+                            {(item.modifiers?.length || item.extras?.length) ? (
+                              <div className="flex flex-wrap gap-1 mt-0.5 ml-0">
+                                {item.modifiers?.map((m, mi) => (
+                                  <span key={mi} className="text-[9px] px-1 py-0.5 rounded bg-w-warning/15 text-w-warning">{m}</span>
+                                ))}
+                                {item.extras?.map((e, ei) => (
+                                  <span key={ei} className="text-[9px] px-1 py-0.5 rounded bg-w-brand/15 text-w-brand">+{e.name}</span>
+                                ))}
+                              </div>
+                            ) : null}
                           </div>
                         ))}
                       </div>
@@ -367,12 +391,24 @@ export default function TableDetail() {
                           guestItems.map((gi, idx) => {
                             const rBadge = statusBadge[gi.roundStatus];
                             return (
-                              <div key={idx} className="flex justify-between text-[12px]">
-                                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                  <span className={`text-[9px] px-1.5 py-0.5 rounded-[4px] ${rBadge.bg} ${rBadge.text} shrink-0`}>R{gi.roundNumber}</span>
-                                  <span className="text-w-text">{gi.item.name} ×{gi.item.qty}</span>
+                              <div key={idx} className="text-[12px]">
+                                <div className="flex justify-between">
+                                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded-[4px] ${rBadge.bg} ${rBadge.text} shrink-0`}>R{gi.roundNumber}</span>
+                                    <span className="text-w-text">{gi.item.name} ×{gi.item.qty}</span>
+                                  </div>
+                                  <span className="font-mono text-w-text-secondary shrink-0">${gi.item.price * gi.item.qty}</span>
                                 </div>
-                                <span className="font-mono text-w-text-secondary shrink-0">${gi.item.price * gi.item.qty}</span>
+                                {(gi.item.modifiers?.length || gi.item.extras?.length) ? (
+                                  <div className="flex flex-wrap gap-1 mt-0.5 ml-8">
+                                    {gi.item.modifiers?.map((m, mi) => (
+                                      <span key={mi} className="text-[9px] px-1 py-0.5 rounded bg-w-warning/15 text-w-warning">{m}</span>
+                                    ))}
+                                    {gi.item.extras?.map((e, ei) => (
+                                      <span key={ei} className="text-[9px] px-1 py-0.5 rounded bg-w-brand/15 text-w-brand">+{e.name}</span>
+                                    ))}
+                                  </div>
+                                ) : null}
                               </div>
                             );
                           })
