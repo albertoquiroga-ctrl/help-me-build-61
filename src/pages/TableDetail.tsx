@@ -38,8 +38,11 @@ export default function TableDetail() {
   const closeTable = useTablesStore((s) => s.closeTable);
   const [showManualOrder, setShowManualOrder] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showLoyaltyToast, setShowLoyaltyToast] = useState(true);
   const allBarOrders = useBarStore((s) => s.orders);
   const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && (o.status === 'pending' || o.status === 'preparing')), [allBarOrders, id]);
+  const resolve = useNotificationsStore((s) => s.resolve);
+  const loyaltyCheckIn = useNotificationsStore((s) => s.queue.find((n) => n.type === 'check-in' && n.tableId === id && !n.dismissed && !!n.loyalty));
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
