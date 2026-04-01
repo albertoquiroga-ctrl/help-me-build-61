@@ -29,7 +29,10 @@ export default function WaiterDashboard() {
       <div className="sticky top-0 z-40 bg-w-bg/95 backdrop-blur-md border-b border-w-border px-4 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-[18px] font-semibold text-w-text">Mis Mesas</h1>
-          <span className="font-mono text-[12px] text-w-text-secondary">Turno: {formatDuration(shiftDuration)}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[12px] text-w-text-secondary">Turno: {formatDuration(shiftDuration)}</span>
+            <RoleSwitcher />
+          </div>
         </div>
       </div>
 
