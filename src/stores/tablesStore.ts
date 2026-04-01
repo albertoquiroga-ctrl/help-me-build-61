@@ -562,10 +562,6 @@ export const useTablesStore = create<TablesState>((set) => ({
       checkAllPaidAndNotify(result, tableId);
       return { tables: result };
     }),
-      const result = applyDerived(updated, tableId);
-      checkAllPaidAndNotify(result, tableId);
-      return { tables: result };
-    }),
   removeGuest: (tableId, guestId) =>
     set((s) => {
       const updated = s.tables.map((t) => {
