@@ -33,11 +33,15 @@ const channelLabels: Record<NotifChannel, string> = {
 const channelKeys: ('all' | NotifChannel)[] = ['all', 'mesas', 'gerente', 'cocina', 'barra', 'hostess'];
 
 export default function AlertsQueue() {
-  const { queue, markAllRead } = useNotificationsStore();
+  const { queue, markAllRead, resolve } = useNotificationsStore();
+  const openTable = useTablesStore((s) => s.openTable);
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>('all');
   const [channelFilter, setChannelFilter] = useState<'all' | NotifChannel>('all');
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [qrOpenDialog, setQrOpenDialog] = useState<{ notifId: string; tableId: string; tableNumber: number } | null>(null);
+
+  const tables = useTablesStore((s) => s.tables);
 
   useState(() => { markAllRead(); });
 
