@@ -30,11 +30,7 @@ export default function HostessDashboard() {
   const empty = sortedTables.filter((t) => t.status === 'empty').length;
   const occupied = sortedTables.filter((t) => t.status !== 'empty').length;
 
-  const readyToClean = sortedTables.filter((t) => {
-    if (t.status === 'empty') return false;
-    if (t.guests.length === 0) return false;
-    return t.guests.every((g) => g.paymentStatus === 'paid' || g.paymentStatus === 'left');
-  });
+  const readyToClean = sortedTables.filter((t) => t.status === 'paying');
 
   return (
     <div className="min-h-screen bg-w-bg pb-20">
