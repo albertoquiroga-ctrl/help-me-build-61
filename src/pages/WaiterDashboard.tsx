@@ -74,7 +74,7 @@ export default function WaiterDashboard() {
         ) : (
           /* Table grid */
           <div className="grid grid-cols-2 gap-2.5">
-            {tables.map((table) => (
+            {myTables.map((table) => (
               <TableCard key={table.id} table={table} />
             ))}
           </div>
