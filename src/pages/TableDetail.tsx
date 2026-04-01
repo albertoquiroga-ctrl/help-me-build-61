@@ -557,13 +557,8 @@ export default function TableDetail() {
             </motion.div>
           ))}
 
-          {/* Drink orders in preparation at bar */}
-          {(() => {
-            const barOrders = useBarStore.getState().orders.filter(
-              (o) => o.tableId === table.id && (o.status === 'pending' || o.status === 'preparing')
-            );
-            if (barOrders.length === 0) return null;
-            return barOrders.map((drinkO) => (
+          {/* Drink orders at bar */}
+          {barDrinkOrders.length > 0 && barDrinkOrders.map((drinkO) => (
               <motion.div
                 key={`drink-${drinkO.id}`}
                 initial={{ opacity: 0, y: 8 }}
