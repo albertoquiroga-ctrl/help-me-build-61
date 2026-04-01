@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import type { GuestInfo } from '@/stores/tablesStore';
 import { guestDisplayName } from '@/stores/tablesStore';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useTablesStore } from '@/stores/tablesStore';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
@@ -12,25 +12,21 @@ interface GuestPillProps {
   editable?: boolean;
 }
 
-type EditMode = null | 'name' | 'seat';
-
 export default function GuestPill({ guest, tableId, editable = false }: GuestPillProps) {
-  const [editMode, setEditMode] = useState<EditMode>(null);
+  const [editMode, setEditMode] = useState(false);
   const [editValue, setEditValue] = useState('');
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const pillRef = useRef<HTMLSpanElement>(null);
   const renameGuest = useTablesStore((s) => s.renameGuest);
-  const assignSeat = useTablesStore((s) => s.assignSeat);
   const removeGuest = useTablesStore((s) => s.removeGuest);
   const isPaid = guest.paymentStatus === 'paid';
   const isLeft = guest.paymentStatus === 'left';
   const isFailed = guest.paymentStatus === 'failed';
   const hasNoOrder = guest.orderMethod === 'manual' && guest.amountOwed === 0;
 
-  const hasSeat = !!guest.seatLabel;
   const isQR = guest.orderMethod === 'qr';
-  const methodIcon = hasSeat ? '🪑' : isQR ? '📱' : '👤';
+  const methodIcon = isQR ? '📱' : '👤';
 
   const displayName = guestDisplayName(guest);
 
@@ -49,18 +45,10 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
 
   const handleSubmit = () => {
     const trimmed = editValue.trim();
-    if (trimmed && tableId) {
-      if (editMode === 'name' && trimmed !== guest.name) {
-        renameGuest(tableId, guest.id, trimmed);
-      }
-      if (editMode === 'seat') {
-        const num = parseInt(trimmed, 10);
-        if (!isNaN(num) && num > 0) {
-          assignSeat(tableId, guest.id, num);
-        }
-      }
+    if (trimmed && tableId && trimmed !== guest.name) {
+      renameGuest(tableId, guest.id, trimmed);
     }
-    setEditMode(null);
+    setEditMode(false);
     setShowMenu(false);
   };
 
@@ -71,12 +59,9 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
         value={editValue}
         onChange={(e) => setEditValue(e.target.value)}
         onBlur={handleSubmit}
-        onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); if (e.key === 'Escape') { setEditMode(null); setShowMenu(false); } }}
-        placeholder={editMode === 'seat' ? '# silla' : 'Nombre'}
-        className={cn(
-          'inline-flex items-center px-2.5 py-1 rounded-[6px] border border-w-brand bg-w-surface font-mono text-[11px] text-w-text focus:outline-none',
-          editMode === 'seat' ? 'w-16 text-center' : 'w-28'
-        )}
+        onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); if (e.key === 'Escape') { setEditMode(false); setShowMenu(false); } }}
+        placeholder="Nombre"
+        className="inline-flex items-center px-2.5 py-1 rounded-[6px] border border-w-brand bg-w-surface font-mono text-[11px] text-w-text focus:outline-none w-28"
       />
     );
   }
@@ -100,7 +85,6 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
                   : 'bg-w-priority/10 border-w-priority/30 text-w-priority'
         )}>
         {methodIcon} {displayName}
-        {!hasSeat && <span className="text-[9px] opacity-60">⊘</span>}
         {hasNoOrder
           ? ' · ⚠️ Sin pedido'
           : isPaid
@@ -117,16 +101,10 @@ export default function GuestPill({ guest, tableId, editable = false }: GuestPil
             style={{ top: menuPos.top, left: menuPos.left }}
           >
             <button
-              onClick={() => { setEditValue(guest.name); setEditMode('name'); }}
+              onClick={() => { setEditValue(guest.name); setEditMode(true); }}
               className="w-full text-left px-3 py-2.5 text-[12px] text-w-text hover:bg-w-surface transition-colors"
             >
               ✏️ Renombrar
-            </button>
-            <button
-              onClick={() => { setEditValue(guest.seatNumber?.toString() || ''); setEditMode('seat'); }}
-              className="w-full text-left px-3 py-2.5 text-[12px] text-w-text hover:bg-w-surface transition-colors"
-            >
-              🪑 {hasSeat ? 'Cambiar silla' : 'Asignar silla'}
             </button>
             {guest.orderMethod === 'manual' && guest.amountOwed === 0 && guest.paymentStatus === 'pending' && (
               <button
