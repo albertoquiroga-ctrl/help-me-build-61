@@ -112,7 +112,7 @@ interface TablesState {
   renameGuest: (tableId: string, guestId: string, newName: string) => void;
   assignSeat: (tableId: string, guestId: string, seatNumber: number) => void;
   assignAllSeats: (tableId: string) => void;
-  assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[]) => void;
+  assignItemsAndPay: (tableId: string, guestId: string, method: 'cash' | 'card-physical', assignments: ItemAssignment[], tipAmount?: number) => void;
   removeGuest: (tableId: string, guestId: string) => void;
   removeItemFromRound: (tableId: string, roundNumber: number, itemIndex: number) => void;
   removeRound: (tableId: string, roundNumber: number) => void;
