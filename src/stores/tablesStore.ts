@@ -222,7 +222,7 @@ const initialTables: WaiterTable[] = [
     status: 'paying', statusText: 'Todos pagaron', timeOpened: 70, tipTotal: 97,
   },
   {
-    id: '7', number: 7, section: 'Terraza',
+    id: '7', number: 7, section: 'Terraza', assignedWaiter: 'Luis',
     guests: [
       { id: 'g7-1', name: 'Guest 1', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
       { id: 'g7-2', name: 'Guest 2', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
