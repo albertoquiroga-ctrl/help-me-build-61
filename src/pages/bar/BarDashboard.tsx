@@ -195,19 +195,22 @@ function OrderCard({
   actionColor: string;
 }) {
   return (
-    <div className="rounded-xl bg-w-surface border border-w-border p-3 flex items-center justify-between">
-      <div>
-        <p className="text-[14px] font-medium text-w-text">{order.itemName} ×{order.qty}</p>
-        <p className="text-[11px] text-w-text-secondary">
-          Mesa {order.tableNumber} · R{order.roundNumber} · {minutesAgo(order.createdAt)} min
-        </p>
+    <div className="rounded-xl bg-w-surface border border-w-border p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[14px] font-medium text-w-text">{order.itemName} ×{order.qty}</p>
+          <p className="text-[11px] text-w-text-secondary">
+            Mesa {order.tableNumber} · R{order.roundNumber}
+          </p>
+        </div>
+        <button
+          onClick={onAction}
+          className={`px-3 py-1.5 rounded-lg ${actionColor} text-white text-[12px] font-medium min-h-[36px]`}
+        >
+          {actionLabel}
+        </button>
       </div>
-      <button
-        onClick={onAction}
-        className={`px-3 py-1.5 rounded-lg ${actionColor} text-white text-[12px] font-medium min-h-[36px]`}
-      >
-        {actionLabel}
-      </button>
+      <CookingTimer startedAt={order.createdAt} estimatedMinutes={5} />
     </div>
   );
 }
