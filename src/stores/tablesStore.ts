@@ -53,6 +53,7 @@ export interface WaiterTable {
   timeOpened: number; // minutes
   tipTotal: number;
   section?: string;
+  assignedWaiter?: string;
 }
 
 /** Derive status + statusText from table data */
@@ -150,7 +151,12 @@ function checkAllPaidAndNotify(tables: WaiterTable[], tableId: string) {
 
 const initialTables: WaiterTable[] = [
   {
-    id: '2', number: 2, section: 'Norte',
+    id: '1', number: 1, section: 'Norte', assignedWaiter: 'Carlos',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '2', number: 2, section: 'Norte', assignedWaiter: 'Carlos',
     guests: [
       { id: 'g2-1', name: 'Guest 1', amountOwed: 280, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
       { id: 'g2-2', name: 'Pedro', amountOwed: 280, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
@@ -171,7 +177,7 @@ const initialTables: WaiterTable[] = [
     status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 85,
   },
   {
-    id: '4', number: 4, section: 'Norte',
+    id: '4', number: 4, section: 'Norte', assignedWaiter: 'María',
     guests: [
       { id: 'g4-1', name: 'Guest 1', amountOwed: 415, amountPaid: 415, tipAmount: 74, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
       { id: 'g4-2', name: 'Ana', amountOwed: 415, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
@@ -195,7 +201,7 @@ const initialTables: WaiterTable[] = [
     status: 'active', statusText: 'En cocina', timeOpened: 32, tipTotal: 122,
   },
   {
-    id: '6', number: 6, section: 'Sur',
+    id: '6', number: 6, section: 'Sur', assignedWaiter: 'Carlos',
     guests: [
       { id: 'g6-1', name: 'Guest 1', amountOwed: 510, amountPaid: 510, tipAmount: 52, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
       { id: 'g6-2', name: 'Mariana', amountOwed: 310, amountPaid: 310, tipAmount: 45, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
@@ -216,7 +222,7 @@ const initialTables: WaiterTable[] = [
     status: 'paying', statusText: 'Todos pagaron', timeOpened: 70, tipTotal: 97,
   },
   {
-    id: '7', number: 7, section: 'Terraza',
+    id: '7', number: 7, section: 'Terraza', assignedWaiter: 'Luis',
     guests: [
       { id: 'g7-1', name: 'Guest 1', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
       { id: 'g7-2', name: 'Guest 2', amountOwed: 0, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'manual', paymentMethod: null },
@@ -241,12 +247,52 @@ const initialTables: WaiterTable[] = [
     status: 'active', statusText: 'En orden', timeOpened: 28, tipTotal: 0,
   },
   {
-    id: '9', number: 9, section: 'Sur',
+    id: '3', number: 3, section: 'Norte', assignedWaiter: 'Carlos',
     guests: [], rounds: [],
     status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
   },
   {
-    id: '11', number: 11, section: 'Norte',
+    id: '5', number: 5, section: 'Sur', assignedWaiter: 'María',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '8', number: 8, section: 'Sur', assignedWaiter: 'María',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '9', number: 9, section: 'Sur', assignedWaiter: 'Luis',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '10', number: 10, section: 'Terraza', assignedWaiter: 'Luis',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '12', number: 12, section: 'Terraza', assignedWaiter: 'María',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '13', number: 13, section: 'Norte', assignedWaiter: 'Luis',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '14', number: 14, section: 'Sur', assignedWaiter: 'Carlos',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '15', number: 15, section: 'Terraza', assignedWaiter: 'Luis',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '11', number: 11, section: 'Norte', assignedWaiter: 'María',
     guests: [
       { id: 'g11-1', name: 'Guest 1', amountOwed: 160, amountPaid: 0, tipAmount: 0, paymentStatus: 'failed', orderMethod: 'manual', paymentMethod: null },
       { id: 'g11-2', name: 'Valentina', amountOwed: 245, amountPaid: 245, tipAmount: 36, paymentStatus: 'paid', orderMethod: 'qr', paymentMethod: 'qr' },
