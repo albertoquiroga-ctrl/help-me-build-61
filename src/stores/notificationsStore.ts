@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type NotifPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type NotifType = 'new-order' | 'order-ready' | 'check-in' | 'service-call' | 'table-close' | 'payment-failed' | 'early-exit' | 'manager-msg' | 'kitchen-msg' | 'bar-msg' | 'host-msg';
+export type NotifType = 'new-order' | 'order-ready' | 'check-in' | 'service-call' | 'table-close' | 'payment-failed' | 'early-exit' | 'manager-msg' | 'kitchen-msg' | 'bar-msg' | 'host-msg' | 'qr-open-request';
 export type NotifChannel = 'mesas' | 'gerente' | 'cocina' | 'barra' | 'hostess';
 
 export interface WaiterNotification {
@@ -48,6 +48,7 @@ const initialNotifications: WaiterNotification[] = [
   { id: 'n11', type: 'kitchen-msg', priority: 'high', tableId: '6', title: 'Platos listos · Mesa 6 · R2 · 2 items', subtitle: 'Listo para recoger en barra caliente', channel: 'cocina', timestamp: new Date(Date.now() - 3 * 60000).toISOString(), dismissed: false, resolved: false },
   { id: 'n12', type: 'bar-msg', priority: 'medium', tableId: '11', title: 'Drinks listos · Mesa 11 · 2 cocktails', subtitle: 'Paloma y Negroni', channel: 'barra', timestamp: new Date(Date.now() - 6 * 60000).toISOString(), dismissed: false, resolved: false },
   { id: 'n13', type: 'host-msg', priority: 'medium', tableId: '3', title: 'Mesa 3 llegó · 4 personas · Reservación', subtitle: 'Esperando en entrada, asignar mesa', channel: 'hostess', timestamp: new Date(Date.now() - 18 * 60000).toISOString(), dismissed: true, resolved: true, resolution: 'Asignada ✓' },
+  { id: 'n14', type: 'qr-open-request', priority: 'high', tableId: '9', title: 'QR escaneado · Mesa 9', subtitle: 'Un cliente quiere abrir la mesa', channel: 'mesas', timestamp: new Date(Date.now() - 1 * 60000).toISOString(), dismissed: false, resolved: false, data: { requestedGuests: 1 } },
 ];
 
 export const useNotificationsStore = create<NotificationsState>((set) => ({

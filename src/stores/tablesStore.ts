@@ -90,6 +90,7 @@ export interface ItemAssignment {
 
 interface TablesState {
   tables: WaiterTable[];
+  openTable: (id: string, guestCount: number) => void;
   updateTable: (id: string, updates: Partial<WaiterTable>) => void;
   addRound: (id: string, round: Round) => void;
   updateRoundStatus: (tableId: string, roundNumber: number, status: RoundStatus) => void;
@@ -262,6 +263,26 @@ const initialTables: WaiterTable[] = [
 
 export const useTablesStore = create<TablesState>((set) => ({
   tables: initialTables,
+  openTable: (id, guestCount) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== id) return t;
+        const newGuests: GuestInfo[] = Array.from({ length: guestCount }, (_, i) => ({
+          id: `g${id}-s${i + 1}-${Date.now()}`,
+          name: `Guest ${i + 1}`,
+          seatLabel: `Silla ${i + 1}`,
+          seatNumber: i + 1,
+          amountOwed: 0,
+          amountPaid: 0,
+          tipAmount: 0,
+          paymentStatus: 'pending' as PaymentStatus,
+          orderMethod: 'manual' as OrderMethod,
+          paymentMethod: null,
+        }));
+        return { ...t, guests: newGuests, rounds: [], timeOpened: 0, status: 'active' as TableStatus, statusText: 'Mesa abierta' };
+      });
+      return { tables: updated };
+    }),
   updateTable: (id, updates) =>
     set((s) => {
       const updated = s.tables.map((t) => (t.id === id ? { ...t, ...updates } : t));

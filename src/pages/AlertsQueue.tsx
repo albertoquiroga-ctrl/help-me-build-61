@@ -4,6 +4,9 @@ import { Volume2, VolumeX } from 'lucide-react';
 import WaiterBottomNav from '@/components/waiter/WaiterBottomNav';
 import NotificationCard from '@/components/waiter/NotificationCard';
 import { useNotificationsStore, type NotifChannel } from '@/stores/notificationsStore';
+import { useTablesStore } from '@/stores/tablesStore';
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type Filter = 'all' | 'active' | 'resolved';
 
@@ -30,11 +33,15 @@ const channelLabels: Record<NotifChannel, string> = {
 const channelKeys: ('all' | NotifChannel)[] = ['all', 'mesas', 'gerente', 'cocina', 'barra', 'hostess'];
 
 export default function AlertsQueue() {
-  const { queue, markAllRead } = useNotificationsStore();
+  const { queue, markAllRead, resolve } = useNotificationsStore();
+  const openTable = useTablesStore((s) => s.openTable);
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>('all');
   const [channelFilter, setChannelFilter] = useState<'all' | NotifChannel>('all');
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [qrOpenDialog, setQrOpenDialog] = useState<{ notifId: string; tableId: string; tableNumber: number } | null>(null);
+
+  const tables = useTablesStore((s) => s.tables);
 
   useState(() => { markAllRead(); });
 
@@ -52,9 +59,23 @@ export default function AlertsQueue() {
   ];
 
   const handleAlertClick = (n: typeof queue[0]) => {
+    if (n.type === 'qr-open-request' && !n.resolved) {
+      const t = tables.find((t) => t.id === n.tableId);
+      if (t) setQrOpenDialog({ notifId: n.id, tableId: n.tableId, tableNumber: t.number });
+      return;
+    }
     if (n.tableId) {
       navigate(`/waiter/table/${n.tableId}`);
     }
+  };
+
+  const handleConfirmQrOpen = (guestCount: number) => {
+    if (!qrOpenDialog) return;
+    openTable(qrOpenDialog.tableId, guestCount);
+    resolve(qrOpenDialog.notifId, 'Mesa abierta ✓');
+    toast.success(`✓ Mesa ${qrOpenDialog.tableNumber} abierta · ${guestCount} silla${guestCount > 1 ? 's' : ''}`);
+    setQrOpenDialog(null);
+    navigate(`/waiter/table/${qrOpenDialog.tableId}`);
   };
 
   const hasSpeechSupport = typeof window !== 'undefined' && 'speechSynthesis' in window;
@@ -162,6 +183,28 @@ export default function AlertsQueue() {
       </div>
 
       <WaiterBottomNav />
+
+      <Dialog open={!!qrOpenDialog} onOpenChange={(open) => !open && setQrOpenDialog(null)}>
+        <DialogContent className="max-w-[320px] bg-w-surface border-w-border">
+          <DialogHeader>
+            <DialogTitle className="text-w-text text-center">
+              Abrir Mesa {qrOpenDialog?.tableNumber}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-[13px] text-w-text-secondary text-center">Un cliente escaneó el QR. ¿Cuántos comensales?</p>
+          <div className="flex justify-center gap-2 flex-wrap py-2">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <button
+                key={n}
+                onClick={() => handleConfirmQrOpen(n)}
+                className="w-11 h-11 rounded-[8px] border border-w-border bg-w-bg text-w-text font-semibold text-[14px] active:scale-95 transition-transform hover:border-w-brand hover:text-w-brand"
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
