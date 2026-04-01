@@ -391,12 +391,24 @@ export default function TableDetail() {
                           guestItems.map((gi, idx) => {
                             const rBadge = statusBadge[gi.roundStatus];
                             return (
-                              <div key={idx} className="flex justify-between text-[12px]">
-                                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                  <span className={`text-[9px] px-1.5 py-0.5 rounded-[4px] ${rBadge.bg} ${rBadge.text} shrink-0`}>R{gi.roundNumber}</span>
-                                  <span className="text-w-text">{gi.item.name} ×{gi.item.qty}</span>
+                              <div key={idx} className="text-[12px]">
+                                <div className="flex justify-between">
+                                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded-[4px] ${rBadge.bg} ${rBadge.text} shrink-0`}>R{gi.roundNumber}</span>
+                                    <span className="text-w-text">{gi.item.name} ×{gi.item.qty}</span>
+                                  </div>
+                                  <span className="font-mono text-w-text-secondary shrink-0">${gi.item.price * gi.item.qty}</span>
                                 </div>
-                                <span className="font-mono text-w-text-secondary shrink-0">${gi.item.price * gi.item.qty}</span>
+                                {(gi.item.modifiers?.length || gi.item.extras?.length) ? (
+                                  <div className="flex flex-wrap gap-1 mt-0.5 ml-8">
+                                    {gi.item.modifiers?.map((m, mi) => (
+                                      <span key={mi} className="text-[9px] px-1 py-0.5 rounded bg-w-warning/15 text-w-warning">{m}</span>
+                                    ))}
+                                    {gi.item.extras?.map((e, ei) => (
+                                      <span key={ei} className="text-[9px] px-1 py-0.5 rounded bg-w-brand/15 text-w-brand">+{e.name}</span>
+                                    ))}
+                                  </div>
+                                ) : null}
                               </div>
                             );
                           })
