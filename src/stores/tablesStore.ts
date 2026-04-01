@@ -90,6 +90,7 @@ export interface ItemAssignment {
 
 interface TablesState {
   tables: WaiterTable[];
+  openTable: (id: string, guestCount: number) => void;
   updateTable: (id: string, updates: Partial<WaiterTable>) => void;
   addRound: (id: string, round: Round) => void;
   updateRoundStatus: (tableId: string, roundNumber: number, status: RoundStatus) => void;
