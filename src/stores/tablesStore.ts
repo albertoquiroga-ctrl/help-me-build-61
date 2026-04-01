@@ -174,7 +174,7 @@ const initialTables: WaiterTable[] = [
         { name: 'Tacos de Asada', qty: 1, price: 160, assignedTo: 'g2-1' },
         { name: 'Tacos de Asada', qty: 1, price: 160, assignedTo: 'g2-2' },
         { name: 'Ensalada Mixta', qty: 1, price: 130, assignedTo: 'g2-3' },
-      ], status: 'cooking', createdAt: new Date(Date.now() - 8 * 60000).toISOString() },
+      ], status: 'cooking', createdAt: new Date(Date.now() - 8 * 60000).toISOString(), estimatedMinutes: 15, cookingStartedAt: new Date(Date.now() - 18 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 85,
   },
