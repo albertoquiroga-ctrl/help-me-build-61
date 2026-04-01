@@ -11,6 +11,8 @@ export interface DrinkOrder {
   qty: number;
   status: DrinkPrepStatus;
   createdAt: string;
+  estimatedMinutes?: number;
+  preparingStartedAt?: string;
 }
 
 // Known drink names to filter from rounds
@@ -22,6 +24,7 @@ export const DRINK_NAMES = [
   'Jugo de naranja', 'Jugo verde', 'Smoothie',
   'Refresco', 'Coca-Cola', 'Sprite',
   'Michelada', 'Sangría', 'Tequila', 'Mezcal',
+  'Agua de Jamaica', 'Negroni',
 ];
 
 export function isDrinkItem(name: string): boolean {
@@ -39,8 +42,14 @@ export const useBarStore = create<BarState>((set) => ({
   setOrders: (orders) => set({ orders }),
   updateStatus: (orderId, status) =>
     set((state) => ({
-      orders: state.orders.map((o) =>
-        o.id === orderId ? { ...o, status } : o
-      ),
+      orders: state.orders.map((o) => {
+        if (o.id !== orderId) return o;
+        const extra: Partial<DrinkOrder> = {};
+        if (status === 'preparing' && !o.preparingStartedAt) {
+          extra.preparingStartedAt = new Date().toISOString();
+          extra.estimatedMinutes = o.estimatedMinutes ?? 5;
+        }
+        return { ...o, status, ...extra };
+      }),
     })),
 }));

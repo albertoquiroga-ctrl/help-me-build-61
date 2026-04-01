@@ -4,6 +4,7 @@ import RoleSwitcher from '@/components/RoleSwitcher';
 import { useTablesStore } from '@/stores/tablesStore';
 import { useBarStore, isDrinkItem, type DrinkOrder } from '@/stores/barStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
+import CookingTimer, { getOverdueMinutes } from '@/components/waiter/CookingTimer';
 
 function minutesAgo(iso: string) {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -23,7 +24,6 @@ export default function BarDashboard() {
         round.items.forEach((item, idx) => {
           if (isDrinkItem(item.name)) {
             const id = `${table.id}-r${round.number}-i${idx}`;
-            // Preserve existing status if already tracked
             const existing = orders.find((o) => o.id === id);
             drinkOrders.push({
               id,
@@ -34,6 +34,8 @@ export default function BarDashboard() {
               qty: item.qty,
               status: existing?.status ?? 'pending',
               createdAt: round.createdAt,
+              estimatedMinutes: existing?.estimatedMinutes,
+              preparingStartedAt: existing?.preparingStartedAt,
             });
           }
         });
@@ -64,7 +66,16 @@ export default function BarDashboard() {
   };
 
   const pending = orders.filter((o) => o.status === 'pending');
-  const preparing = orders.filter((o) => o.status === 'preparing');
+  const preparing = orders.filter((o) => o.status === 'preparing').sort((a, b) => {
+    // Overdue first
+    const aOver = a.preparingStartedAt && a.estimatedMinutes
+      ? getOverdueMinutes((Date.now() - new Date(a.preparingStartedAt).getTime()) / 1000, a.estimatedMinutes)
+      : 0;
+    const bOver = b.preparingStartedAt && b.estimatedMinutes
+      ? getOverdueMinutes((Date.now() - new Date(b.preparingStartedAt).getTime()) / 1000, b.estimatedMinutes)
+      : 0;
+    return bOver - aOver;
+  });
   const ready = orders.filter((o) => o.status === 'ready');
 
   return (
@@ -118,9 +129,30 @@ export default function BarDashboard() {
               <section>
                 <h2 className="text-[13px] font-semibold text-w-brand mb-2">En preparación</h2>
                 <div className="space-y-2">
-                  {preparing.map((o) => (
-                    <OrderCard key={o.id} order={o} onAction={() => handleReady(o)} actionLabel="Listo" actionColor="bg-w-success" />
-                  ))}
+                  {preparing.map((o) => {
+                    const isOverdue = o.preparingStartedAt && o.estimatedMinutes
+                      ? getOverdueMinutes((Date.now() - new Date(o.preparingStartedAt).getTime()) / 1000, o.estimatedMinutes) > 0
+                      : false;
+                    return (
+                      <div key={o.id} className={`rounded-xl bg-w-surface border p-3 space-y-2 ${isOverdue ? 'border-w-error/50 bg-w-error/5' : 'border-w-border'}`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[14px] font-medium text-w-text">{o.itemName} ×{o.qty}</p>
+                            <p className="text-[11px] text-w-text-secondary">Mesa {o.tableNumber} · R{o.roundNumber}</p>
+                          </div>
+                          <button
+                            onClick={() => handleReady(o)}
+                            className="px-3 py-1.5 rounded-lg bg-w-success text-white text-[12px] font-medium min-h-[36px]"
+                          >
+                            Listo ✓
+                          </button>
+                        </div>
+                        {o.preparingStartedAt && o.estimatedMinutes && (
+                          <CookingTimer startedAt={o.preparingStartedAt} estimatedMinutes={o.estimatedMinutes} />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             )}
