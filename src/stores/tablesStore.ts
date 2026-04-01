@@ -347,7 +347,15 @@ export const useTablesStore = create<TablesState>((set) => ({
     set((s) => {
       const updated = s.tables.map((t) =>
         t.id === tableId
-          ? { ...t, rounds: t.rounds.map((r) => (r.number === roundNumber ? { ...r, status } : r)) }
+          ? { ...t, rounds: t.rounds.map((r) => {
+              if (r.number !== roundNumber) return r;
+              const extra: Partial<Round> = {};
+              if (status === 'cooking' && !r.cookingStartedAt) {
+                extra.cookingStartedAt = new Date().toISOString();
+                extra.estimatedMinutes = r.estimatedMinutes ?? 15;
+              }
+              return { ...r, status, ...extra };
+            }) }
           : t
       );
       return { tables: applyDerived(updated, tableId) };
