@@ -5,33 +5,25 @@ import RoundBadge from './RoundBadge';
 import type { WaiterTable } from '@/stores/tablesStore';
 import { useTablesStore } from '@/stores/tablesStore';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import OpenTableDialog from './OpenTableDialog';
 
-/** Derive dot color from actual table data */
 function getDotInfo(table: WaiterTable): { color: string; pulse: boolean } {
   const hasFailedPayment = table.guests.some((g) => g.paymentStatus === 'failed');
   if (hasFailedPayment) return { color: 'bg-w-error', pulse: true };
-
   const hasPendingRound = table.rounds.some((r) => r.status === 'pending');
   if (hasPendingRound) return { color: 'bg-w-warning', pulse: true };
-
   const hasReadyRound = table.rounds.some((r) => r.status === 'ready');
   if (hasReadyRound) return { color: 'bg-w-success', pulse: true };
-
   const hasCookingRound = table.rounds.some((r) => r.status === 'cooking');
   if (hasCookingRound) return { color: 'bg-w-warning', pulse: false };
-
   const allDelivered = table.rounds.length > 0 && table.rounds.every((r) => r.status === 'delivered');
   const somePaying = table.guests.some((g) => g.paymentStatus === 'paid');
   if (allDelivered && somePaying) return { color: 'bg-w-brand', pulse: false };
   if (allDelivered) return { color: 'bg-w-success', pulse: false };
-
   return { color: 'bg-w-text-secondary', pulse: false };
 }
 
-interface TableCardProps {
-  table: WaiterTable;
-}
+interface TableCardProps { table: WaiterTable; }
 
 export default function TableCard({ table }: TableCardProps) {
   const navigate = useNavigate();
@@ -52,30 +44,16 @@ export default function TableCard({ table }: TableCardProps) {
           <span className="text-[13px] text-w-text-secondary mt-1">Disponible</span>
           <span className="text-[11px] text-w-brand mt-1">Abrir mesa →</span>
         </button>
-
-        <Dialog open={showOpenDialog} onOpenChange={setShowOpenDialog}>
-          <DialogContent className="max-w-[320px] bg-w-surface border-w-border">
-            <DialogHeader>
-              <DialogTitle className="text-w-text text-center">Abrir Mesa {table.number}</DialogTitle>
-            </DialogHeader>
-            <p className="text-[13px] text-w-text-secondary text-center">¿Cuántos comensales?</p>
-            <div className="flex justify-center gap-2 flex-wrap py-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                <button
-                  key={n}
-                  onClick={() => {
-                    openTable(table.id, n);
-                    setShowOpenDialog(false);
-                    toast.success(`✓ Mesa ${table.number} abierta · ${n} silla${n > 1 ? 's' : ''}`);
-                  }}
-                  className="w-11 h-11 rounded-[8px] border border-w-border bg-w-bg text-w-text font-semibold text-[14px] active:scale-95 transition-transform hover:border-w-brand hover:text-w-brand"
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
+        <OpenTableDialog
+          open={showOpenDialog}
+          onOpenChange={setShowOpenDialog}
+          tableNumber={table.number}
+          onConfirm={(n) => {
+            openTable(table.id, n);
+            setShowOpenDialog(false);
+            toast.success(`✓ Mesa ${table.number} abierta · ${n} silla${n > 1 ? 's' : ''}`);
+          }}
+        />
       </>
     );
   }
@@ -85,20 +63,12 @@ export default function TableCard({ table }: TableCardProps) {
       onClick={() => navigate(`/waiter/table/${table.id}`)}
       className="rounded-[10px] border border-w-border bg-w-surface p-3 relative cursor-pointer active:scale-[0.97] transition-transform h-[140px] flex flex-col"
     >
-      {/* Status dot */}
-      <div className={cn(
-        'absolute top-2.5 right-2.5 w-2 h-2 rounded-full',
-        dot.color,
-        dot.pulse && 'animate-pulse-dot'
-      )} />
-
+      <div className={cn('absolute top-2.5 right-2.5 w-2 h-2 rounded-full', dot.color, dot.pulse && 'animate-pulse-dot')} />
       <p className="font-mono text-[20px] font-bold text-w-text text-center">{table.number}</p>
       <p className="text-[12px] text-w-text-secondary text-center mt-0.5">👤 ×{table.guests.length}</p>
-
       <div className="flex justify-center mt-1.5">
         {lastRound && <RoundBadge round={lastRound.number} />}
       </div>
-
       <div className="mt-auto flex items-end justify-between">
         <span className="text-[11px] text-w-text-secondary leading-tight">{table.statusText}</span>
         <span className="font-mono text-[11px] text-w-text-secondary">
