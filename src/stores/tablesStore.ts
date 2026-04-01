@@ -282,7 +282,7 @@ const initialTables: WaiterTable[] = [
     status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
   },
   {
-    id: '14', number: 14, section: 'Sur', assignedWaiter: 'Carlos',
+    id: '14', number: 14, section: 'Área de fumar', assignedWaiter: 'Carlos',
     guests: [], rounds: [],
     status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
   },
