@@ -6,6 +6,7 @@ import type { WaiterTable } from '@/stores/tablesStore';
 import { useTablesStore } from '@/stores/tablesStore';
 import { toast } from 'sonner';
 import OpenTableDialog from './OpenTableDialog';
+import { getOverdueMinutes } from './CookingTimer';
 
 function getDotInfo(table: WaiterTable): { color: string; pulse: boolean } {
   const hasFailedPayment = table.guests.some((g) => g.paymentStatus === 'failed');
