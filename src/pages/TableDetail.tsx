@@ -9,6 +9,7 @@ import GuestPill from '@/components/waiter/GuestPill';
 import RoundBadge from '@/components/waiter/RoundBadge';
 import ManualOrderSheet from '@/components/waiter/ManualOrderSheet';
 import CashPaymentSheet from '@/components/waiter/CashPaymentSheet';
+import CookingTimer from '@/components/waiter/CookingTimer';
 import { toast } from 'sonner';
 
 const statusBadge: Record<string, { bg: string; text: string; label: string }> = {
