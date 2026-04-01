@@ -21,7 +21,10 @@ export default function WaiterDashboard() {
   const navigate = useNavigate();
 
   const highestAlert = useNotificationsStore((s) => s.queue.find((n) => !n.dismissed));
-  const activeTables = tables.filter((t) => t.status !== 'empty');
+
+  // Waiter only sees their own tables (simulated as "Carlos" for demo)
+  const myTables = tables.filter((t) => t.assignedWaiter === 'Carlos');
+  const activeTables = myTables.filter((t) => t.status !== 'empty');
 
   return (
     <div className="min-h-screen bg-w-bg pb-20">
@@ -71,7 +74,7 @@ export default function WaiterDashboard() {
         ) : (
           /* Table grid */
           <div className="grid grid-cols-2 gap-2.5">
-            {tables.map((table) => (
+            {myTables.map((table) => (
               <TableCard key={table.id} table={table} />
             ))}
           </div>
