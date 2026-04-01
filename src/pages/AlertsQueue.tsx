@@ -4,6 +4,9 @@ import { Volume2, VolumeX } from 'lucide-react';
 import WaiterBottomNav from '@/components/waiter/WaiterBottomNav';
 import NotificationCard from '@/components/waiter/NotificationCard';
 import { useNotificationsStore, type NotifChannel } from '@/stores/notificationsStore';
+import { useTablesStore } from '@/stores/tablesStore';
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type Filter = 'all' | 'active' | 'resolved';
 
