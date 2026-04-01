@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTablesStore, guestDisplayName } from '@/stores/tablesStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
+import { useBarStore, isDrinkItem } from '@/stores/barStore';
 import type { GuestInfo } from '@/stores/tablesStore';
 import GuestPill from '@/components/waiter/GuestPill';
 import RoundBadge from '@/components/waiter/RoundBadge';
