@@ -335,7 +335,8 @@ export default function WaitlistPage() {
             }
           }}
           tableNumber={selectedTable.number}
-          subtitle={`Para ${assigningEntry.name}`}
+          subtitle={`Para ${assigningEntry.name} · ${assigningEntry.partySize} personas`}
+          showGuestCount
           onConfirm={() => {
             openTable(selectedTable.id);
             setWaitlist((w) => w.filter((e) => e.id !== assigningEntry.id));
