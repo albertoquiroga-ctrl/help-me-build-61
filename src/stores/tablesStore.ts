@@ -525,7 +525,7 @@ export const useTablesStore = create<TablesState>((set) => ({
         return { ...t, guests };
       }),
     })),
-  assignItemsAndPay: (tableId, guestId, method, assignments) =>
+  assignItemsAndPay: (tableId, guestId, method, assignments, tipAmount = 0) =>
     set((s) => {
       const updated = s.tables.map((t) => {
         if (t.id !== tableId) return t;
@@ -550,13 +550,18 @@ export const useTablesStore = create<TablesState>((set) => ({
             }
           }
         });
+        const tip = tipAmount || 0;
         const guests = t.guests.map((g) =>
           g.id === guestId
-            ? { ...g, amountOwed: totalOwed, amountPaid: totalOwed, paymentStatus: 'paid' as PaymentStatus, paymentMethod: method }
+            ? { ...g, amountOwed: totalOwed, amountPaid: totalOwed + tip, tipAmount: tip, paymentStatus: 'paid' as PaymentStatus, paymentMethod: method }
             : g
         );
-        return { ...t, rounds, guests };
+        return { ...t, rounds, guests, tipTotal: t.tipTotal + tip };
       });
+      const result = applyDerived(updated, tableId);
+      checkAllPaidAndNotify(result, tableId);
+      return { tables: result };
+    }),
       const result = applyDerived(updated, tableId);
       checkAllPaidAndNotify(result, tableId);
       return { tables: result };
