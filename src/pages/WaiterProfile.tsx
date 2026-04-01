@@ -1,4 +1,8 @@
 import WaiterBottomNav from '@/components/waiter/WaiterBottomNav';
+import HostessBottomNav from '@/components/hostess/HostessBottomNav';
+import BarBottomNav from '@/components/bar/BarBottomNav';
+import RoleSwitcher from '@/components/RoleSwitcher';
+import { useRoleStore } from '@/stores/roleStore';
 import { useWaiterSession } from '@/stores/waiterSessionStore';
 import { useTipsStore } from '@/stores/tipsStore';
 import { useState } from 'react';
