@@ -30,11 +30,7 @@ export default function HostessDashboard() {
   const empty = sortedTables.filter((t) => t.status === 'empty').length;
   const occupied = sortedTables.filter((t) => t.status !== 'empty').length;
 
-  const readyToClean = sortedTables.filter((t) => {
-    if (t.status === 'empty') return false;
-    if (t.guests.length === 0) return false;
-    return t.guests.every((g) => g.paymentStatus === 'paid' || g.paymentStatus === 'left');
-  });
+  const readyToClean = sortedTables.filter((t) => t.status === 'paying');
 
   return (
     <div className="min-h-screen bg-w-bg pb-20">
@@ -89,8 +85,8 @@ export default function HostessDashboard() {
           {sortedTables.map((table) => {
             const { status, statusText } = deriveTableStatus(table);
             const isEmpty = status === 'empty';
-            const guestCount = table.guests?.length ?? 0;
-            const allPaid = guestCount > 0 && table.guests.every((g) => g.paymentStatus === 'paid' || g.paymentStatus === 'left');
+            const itemCount = table.rounds.reduce((s, r) => s + r.items.reduce((a, i) => a + i.qty, 0), 0);
+            const allPaid = status === 'paying';
 
             return (
               <button
@@ -131,7 +127,7 @@ export default function HostessDashboard() {
                   </button>
                 ) : (
                   <>
-                    <p className="text-[11px] text-w-text-secondary mt-1">{guestCount} 👤</p>
+                    <p className="text-[11px] text-w-text-secondary mt-1">{itemCount > 0 ? `🍽 ${itemCount}` : '—'}</p>
                     <p className="text-[10px] text-w-text-secondary">{statusText}</p>
                   </>
                 )}
@@ -146,10 +142,10 @@ export default function HostessDashboard() {
           open={!!dialogTable}
           onOpenChange={(open) => !open && setDialogTable(null)}
           tableNumber={selectedTable.number}
-          onConfirm={(count) => {
-            openTable(selectedTable.id, count);
+        onConfirm={() => {
+            openTable(selectedTable.id);
             setDialogTable(null);
-            toast.success(`Mesa ${selectedTable.number} abierta · ${count} personas`);
+            toast.success(`Mesa ${selectedTable.number} abierta`);
           }}
         />
       )}
