@@ -159,6 +159,7 @@ export default function AlertsQueue() {
           filtered.map((n) => {
             const isInternal = ['manager-msg', 'kitchen-msg', 'bar-msg', 'host-msg'].includes(n.type);
             const icon = isInternal && n.channel ? channelIcons[n.channel] : priorityIcons[n.priority];
+            const hasLoyalty = n.type === 'check-in' && !!n.loyalty;
             return (
               <NotificationCard
                 key={n.id}
@@ -168,6 +169,26 @@ export default function AlertsQueue() {
                 className={n.resolved ? 'opacity-60' : ''}
                 onClick={n.tableId ? () => handleAlertClick(n) : undefined}
               >
+                {hasLoyalty && n.loyalty && !n.resolved && (
+                  <div className="mt-2 space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                        n.loyalty.tier === 'gold' ? 'bg-amber-500/20 text-amber-400'
+                        : n.loyalty.tier === 'silver' ? 'bg-gray-400/20 text-gray-300'
+                        : 'bg-orange-700/20 text-orange-400'
+                      }`}>{n.loyalty.tier}</span>
+                      <span className="text-[10px] text-w-text-secondary">{n.loyalty.visits} visitas · Gasto prom: ${n.loyalty.avgSpend}</span>
+                    </div>
+                    <p className="text-[11px] text-amber-300/90 bg-amber-500/10 rounded-[6px] px-2.5 py-1.5 border border-amber-500/15">
+                      💡 {n.loyalty.suggestion}
+                    </p>
+                    <div className="flex gap-1 flex-wrap">
+                      {n.loyalty.favoriteItems.map((item, i) => (
+                        <span key={i} className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-surface border border-w-border text-w-text-secondary">⭐ {item}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between mt-1.5">
                   <span className="font-mono text-[10px] text-w-text-secondary">
                     {new Date(n.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
