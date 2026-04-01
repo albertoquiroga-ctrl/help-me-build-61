@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronDown, ChevronUp, Plus, Trash2, Minus, PlusCircle } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useTablesStore, guestDisplayName } from '@/stores/tablesStore';
+import { useTablesStore, guestDisplayName, computeTableBill, computeTotalPaid } from '@/stores/tablesStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
 import { useBarStore, isDrinkItem } from '@/stores/barStore';
 import type { GuestInfo, OrderItem } from '@/stores/tablesStore';
@@ -32,15 +32,12 @@ export default function TableDetail() {
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'rounds' | 'by-guest'>('rounds');
   const [expandedGuest, setExpandedGuest] = useState<string | null>(null);
-  const [showUnpaidBreakdown, setShowUnpaidBreakdown] = useState(false);
   const [manualOrderGuest, setManualOrderGuest] = useState<{ id: string; name: string } | null>(null);
-  const [cashPaymentGuest, setCashPaymentGuest] = useState<string | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
   const [showAddGuest, setShowAddGuest] = useState(false);
-  const [newSeatNumber, setNewSeatNumber] = useState('');
+  const [newGuestName, setNewGuestName] = useState('');
   const addGuest = useTablesStore((s) => s.addGuest);
-  const initializeSeats = useTablesStore((s) => s.initializeSeats);
-  const assignAllSeats = useTablesStore((s) => s.assignAllSeats);
-  const assignSeat = useTablesStore((s) => s.assignSeat);
+  const initializeGuests = useTablesStore((s) => s.initializeGuests);
   const closeTable = useTablesStore((s) => s.closeTable);
   const resolve = useNotificationsStore((s) => s.resolve);
   const allBarOrders = useBarStore((s) => s.orders);
@@ -48,30 +45,20 @@ export default function TableDetail() {
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
-  const paidCount = table.guests.filter((g) => g.paymentStatus === 'paid' || g.paymentStatus === 'left').length;
-  const paidPct = table.guests.length > 0 ? Math.round((paidCount / table.guests.length) * 100) : 0;
+  const totalBill = computeTableBill(table);
+  const totalPaid = computeTotalPaid(table);
+  const remaining = Math.max(0, totalBill - totalPaid);
+  const paidPct = totalBill > 0 ? Math.min(100, Math.round((totalPaid / totalBill) * 100)) : 0;
+  const fullyPaid = totalBill > 0 && totalPaid >= totalBill;
+
   const readyRound = table.rounds.find((r) => r.status === 'ready');
   const cookingRound = table.rounds.find((r) => r.status === 'cooking');
   const pendingRound = table.rounds.find((r) => r.status === 'pending');
   const allDelivered = table.rounds.length > 0 && table.rounds.every((r) => r.status === 'delivered');
-  const noPaying = table.guests.every((g) => g.paymentStatus === 'pending');
 
-  // Guests without orders (manual method + $0 owed)
-  const guestsWithoutOrder = table.guests.filter((g) => g.orderMethod === 'manual' && g.amountOwed === 0 && g.paymentStatus === 'pending');
-  // Guests who need in-person payment (any unpaid guest)
-  const guestsNeedingCashPayment = table.guests.filter(
-    (g) => g.paymentStatus !== 'paid' && g.paymentStatus !== 'left'
-  );
-  // Guests without seat assignment
-  const guestsWithoutSeat = table.guests.filter((g) => !g.seatLabel);
-  const allPaid = table.guests.length > 0 && table.guests.every((g) => g.paymentStatus === 'paid' || g.paymentStatus === 'left');
-  const totalBilled = table.guests.reduce((sum, g) => sum + g.amountPaid, 0);
-  const totalTips = table.tipTotal || table.guests.reduce((sum, g) => sum + g.tipAmount, 0);
-
-  const cashGuest = cashPaymentGuest ? table.guests.find((g) => g.id === cashPaymentGuest) : null;
+  const totalTips = table.tipTotal;
 
   const handleCloseTable = () => {
-    // Resolve any table-close notification
     const notifStore = useNotificationsStore.getState();
     const closeNotif = notifStore.queue.find((n) => n.type === 'table-close' && n.tableId === table.id && !n.resolved);
     if (closeNotif) notifStore.resolve(closeNotif.id, 'Mesa cerrada ✓');
@@ -81,20 +68,9 @@ export default function TableDetail() {
   };
 
   const handleAddGuest = () => {
-    const seatNum = parseInt(newSeatNumber.trim(), 10);
-    if (isNaN(seatNum) || seatNum < 1) return;
-    // Create guest and assign seat in one step
-    const guestId = `g${table.id}-m${Date.now()}`;
-    addGuest(table.id, '');
-    // Find the just-added guest (last one) and assign seat
-    // We use a slight workaround: addGuest creates with auto name, then we assign seat
-    setTimeout(() => {
-      const current = useTablesStore.getState().tables.find((t) => t.id === table.id);
-      const lastGuest = current?.guests[current.guests.length - 1];
-      if (lastGuest) assignSeat(table.id, lastGuest.id, seatNum);
-    }, 0);
-    toast.success(`✓ Silla ${seatNum} agregada`);
-    setNewSeatNumber('');
+    addGuest(table.id, newGuestName.trim());
+    toast.success(`✓ Comensal agregado`);
+    setNewGuestName('');
     setShowAddGuest(false);
   };
 
@@ -116,7 +92,7 @@ export default function TableDetail() {
         <div>
           <p className="text-[11px] font-mono uppercase tracking-wider text-w-text-secondary mb-2">Comensales</p>
 
-          {/* Seat initialization for empty tables */}
+          {/* Guest initialization for empty tables */}
           {table.guests.length === 0 && (
             <div className="rounded-[10px] border border-dashed border-w-border bg-w-surface p-4 text-center space-y-3">
               <p className="text-[13px] text-w-text">¿Cuántos comensales?</p>
@@ -125,8 +101,8 @@ export default function TableDetail() {
                   <button
                     key={n}
                     onClick={() => {
-                      initializeSeats(table.id, n);
-                      toast.success(`✓ ${n} silla${n > 1 ? 's' : ''} creada${n > 1 ? 's' : ''}`);
+                      initializeGuests(table.id, n);
+                      toast.success(`✓ ${n} comensal${n > 1 ? 'es' : ''} agregado${n > 1 ? 's' : ''}`);
                     }}
                     className="w-10 h-10 rounded-[8px] border border-w-border bg-w-bg text-w-text font-semibold text-[14px] active:scale-95 transition-transform hover:border-w-brand hover:text-w-brand"
                   >
@@ -152,98 +128,49 @@ export default function TableDetail() {
               </div>
               {showAddGuest && (
                 <div className="flex gap-2 mt-1 items-center">
-                  <span className="text-[12px] text-w-text-secondary shrink-0">🪑 Silla #</span>
                   <input
                     autoFocus
-                    type="number"
-                    min="1"
-                    value={newSeatNumber}
-                    onChange={(e) => setNewSeatNumber(e.target.value)}
+                    type="text"
+                    value={newGuestName}
+                    onChange={(e) => setNewGuestName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddGuest()}
-                    placeholder="Ej: 5"
-                    className="w-16 h-9 rounded-[6px] border border-w-border bg-w-surface px-3 text-[13px] text-w-text text-center placeholder:text-w-text-secondary/50 focus:outline-none focus:border-w-brand"
+                    placeholder="Nombre (opcional)"
+                    className="flex-1 h-9 rounded-[6px] border border-w-border bg-w-surface px-3 text-[13px] text-w-text placeholder:text-w-text-secondary/50 focus:outline-none focus:border-w-brand"
                   />
                   <button onClick={handleAddGuest} className="px-3 h-9 rounded-[6px] bg-w-brand text-white text-[12px] font-semibold">Agregar</button>
-                  <button onClick={() => { setShowAddGuest(false); setNewSeatNumber(''); }} className="px-2 h-9 rounded-[6px] text-w-text-secondary text-[12px]">✕</button>
+                  <button onClick={() => { setShowAddGuest(false); setNewGuestName(''); }} className="px-2 h-9 rounded-[6px] text-w-text-secondary text-[12px]">✕</button>
                 </div>
               )}
 
-              {/* Seat assignment banner */}
-              {guestsWithoutSeat.length > 0 && table.guests.length > 0 && (
-                <div className="mt-2 rounded-[8px] border border-dashed border-w-brand/40 bg-w-brand/5 p-2.5 flex items-center justify-between">
-                  <div>
-                    <p className="text-[12px] text-w-brand font-medium">🪑 {guestsWithoutSeat.length} sin posición</p>
-                    <p className="text-[10px] text-w-text-secondary">Asigna sillas para facilitar el cobro</p>
+              {/* Payment progress — money-based */}
+              {totalBill > 0 && (
+                <div className="mt-2">
+                  <div className="w-full h-2 bg-w-border rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{
+                        width: `${paidPct}%`,
+                        background: fullyPaid ? 'hsl(var(--w-success))' : 'hsl(var(--w-brand))',
+                      }}
+                    />
                   </div>
-                  <button
-                    onClick={() => {
-                      assignAllSeats(table.id);
-                      toast.success('✓ Posiciones asignadas');
-                    }}
-                    className="px-3 py-1.5 rounded-[6px] bg-w-brand text-white text-[11px] font-semibold min-h-[32px] active:scale-[0.98] transition-transform"
-                  >
-                    Asignar todas
-                  </button>
+                  <p className="text-[11px] text-w-text-secondary mt-1">
+                    <span className="font-mono font-semibold text-w-text">${totalPaid}</span> de <span className="font-mono">${totalBill}</span> pagado · {paidPct}%
+                    {remaining > 0 && <span className="text-w-priority ml-1">· Resta ${remaining}</span>}
+                  </p>
                 </div>
               )}
-              <button
-                className="mt-2 w-full text-left"
-                onClick={() => paidPct < 100 && setShowUnpaidBreakdown((v) => !v)}
-              >
-                <div className="w-full h-1.5 bg-w-border rounded-full overflow-hidden">
-                  <div className="h-full bg-w-brand rounded-full transition-all" style={{ width: `${paidPct}%` }} />
-                </div>
-                <p className="text-[11px] text-w-text-secondary mt-1">
-                  {paidCount} de {table.guests.length} pagaron · {paidPct}%
-                  {paidPct < 100 && <span className="text-w-brand ml-1">{showUnpaidBreakdown ? '▲' : '▼ Ver pendientes'}</span>}
-                </p>
-              </button>
 
-              {showUnpaidBreakdown && paidPct < 100 && (
-                <div className="mt-2 rounded-[10px] border border-w-warning/30 bg-w-warning/5 p-3 space-y-3">
-                  <p className="text-[11px] font-mono uppercase tracking-wider text-w-warning">Pendientes de pago</p>
-                  {table.guests
-                    .filter((g) => g.paymentStatus !== 'paid' && g.paymentStatus !== 'left')
-                    .map((guest) => {
-                      const guestItems: { roundNumber: number; item: OrderItem }[] = [];
-                      table.rounds.forEach((round) => {
-                        round.items.forEach((item) => {
-                          if (item.assignedTo === guest.id) {
-                            guestItems.push({ roundNumber: round.number, item });
-                          }
-                        });
-                      });
-                      const owes = guestItems.reduce((s, gi) => s + gi.item.price * gi.item.qty, 0);
-                      return (
-                        <div key={guest.id} className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[13px] text-w-text font-medium">🪑 {guestDisplayName(guest)}</span>
-                            <span className="font-mono text-[12px] text-w-priority font-semibold">${owes}</span>
-                          </div>
-                          {guestItems.map((gi, idx) => (
-                            <div key={idx} className="pl-5">
-                              <div className="flex justify-between text-[11px]">
-                                <span className="text-w-text-secondary">R{gi.roundNumber} · {gi.item.name} ×{gi.item.qty}</span>
-                                <span className="font-mono text-w-text-secondary">${gi.item.price * gi.item.qty}</span>
-                              </div>
-                              {(gi.item.modifiers?.length || gi.item.extras?.length) ? (
-                                <div className="flex flex-wrap gap-1 mt-0.5 pl-0">
-                                  {gi.item.modifiers?.map((m, mi) => (
-                                    <span key={mi} className="text-[9px] px-1 py-0.5 rounded bg-w-warning/15 text-w-warning">{m}</span>
-                                  ))}
-                                  {gi.item.extras?.map((e, ei) => (
-                                    <span key={ei} className="text-[9px] px-1 py-0.5 rounded bg-w-brand/15 text-w-brand">+{e.name}</span>
-                                  ))}
-                                </div>
-                              ) : null}
-                            </div>
-                          ))}
-                          {guestItems.length === 0 && (
-                            <p className="text-[11px] text-w-text-secondary pl-5 italic">Sin items asignados</p>
-                          )}
-                        </div>
-                      );
-                    })}
+              {/* QR payments from app */}
+              {table.payments.filter((p) => p.method === 'qr').length > 0 && (
+                <div className="mt-2 rounded-[8px] border border-w-success/30 bg-w-success/5 p-2.5">
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-w-success mb-1">📱 Pagos desde la app</p>
+                  {table.payments.filter((p) => p.method === 'qr').map((p) => (
+                    <div key={p.id} className="flex items-center justify-between text-[11px]">
+                      <span className="text-w-text">{p.guestName || 'Comensal'}</span>
+                      <span className="font-mono text-w-success font-medium">${p.amount}{p.tipAmount > 0 ? ` +$${p.tipAmount} propina` : ''}</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </>
@@ -317,13 +244,9 @@ export default function TableDetail() {
                                 <span className="text-w-text">
                                   {item.name} ×{item.qty}
                                 </span>
-                                {item.assignedTo ? (
+                                {item.assignedTo && (
                                   <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-brand/10 text-w-brand shrink-0">
-                                    {table.guests.find((g) => g.id === item.assignedTo)?.seatLabel || table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
-                                  </span>
-                                ) : (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-w-text-secondary/10 text-w-text-secondary shrink-0">
-                                    Sin asignar
+                                    {table.guests.find((g) => g.id === item.assignedTo)?.name || ''}
                                   </span>
                                 )}
                               </div>
@@ -374,7 +297,7 @@ export default function TableDetail() {
                       className="w-full flex items-center justify-between p-3 min-h-[44px]"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-[13px]">🪑</span>
+                        <span className="text-[13px]">{guest.orderMethod === 'qr' ? '📱' : '👤'}</span>
                         <span className="text-[13px] text-w-text font-medium">{guestDisplayName(guest)}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -440,7 +363,6 @@ export default function TableDetail() {
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-w-warning/15 text-w-warning font-medium">Pendiente</span>
               </div>
 
-              {/* Items grouped by guest */}
               <div className="space-y-2">
                 {pendingRound.items.map((item, idx) => {
                   const assignedGuest = item.assignedTo ? table.guests.find((g) => g.id === item.assignedTo) : null;
@@ -527,7 +449,7 @@ export default function TableDetail() {
                 <button
                   onClick={() => {
                     useTablesStore.getState().removeRound(table.id, pendingRound.number);
-                    toast.warning(`Ronda R${pendingRound.number} rechazada · Mesa ${table.number} — el comensal puede volver a ordenar`);
+                    toast.warning(`Ronda R${pendingRound.number} rechazada`);
                   }}
                   className="flex-1 h-12 rounded-[8px] border border-w-error text-w-error font-semibold text-[14px] active:scale-[0.98] transition-transform"
                 >
@@ -636,7 +558,7 @@ export default function TableDetail() {
               </motion.div>
           ))}
 
-          {allDelivered && noPaying && table.guests.length > 0 && (
+          {allDelivered && totalPaid === 0 && table.guests.length > 0 && (
             <button
               onClick={() => toast.info('💳 Sugerencia de cuenta enviada a los comensales')}
               className="w-full h-12 rounded-[8px] border border-w-brand text-w-brand font-semibold text-[14px] active:scale-[0.98] transition-transform"
@@ -645,28 +567,18 @@ export default function TableDetail() {
             </button>
           )}
 
-          {/* In-person payment section */}
-          {guestsNeedingCashPayment.length > 0 && (
-            <div className="rounded-[10px] border border-w-border bg-w-surface p-3 space-y-2">
-              <p className="text-[10px] font-mono uppercase tracking-wider text-w-text-secondary">💰 Cobro presencial</p>
-              {guestsNeedingCashPayment.map((g) => (
-                <div key={g.id} className="flex items-center justify-between min-h-[36px]">
-                  <div>
-                    <span className="text-[13px] text-w-text">{guestDisplayName(g)}</span>
-                    <span className="font-mono text-[12px] text-w-text-secondary ml-2">${g.amountOwed}</span>
-                  </div>
-                  <button
-                    onClick={() => setCashPaymentGuest(g.id)}
-                    className="px-3 py-1.5 rounded-[6px] bg-w-success text-white text-[11px] font-semibold min-h-[32px] active:scale-[0.98] transition-transform"
-                  >
-                    Cobrar en mesa
-                  </button>
-                </div>
-              ))}
-            </div>
+          {/* Payment button */}
+          {totalBill > 0 && !fullyPaid && (
+            <button
+              onClick={() => setShowPayment(true)}
+              className="w-full h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
+            >
+              💰 Registrar pago · Resta ${remaining}
+            </button>
           )}
+
           {/* Close table section */}
-          {allPaid && (
+          {fullyPaid && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -675,7 +587,7 @@ export default function TableDetail() {
               <div className="text-center space-y-1">
                 <p className="text-[16px] font-semibold text-w-success">🧹 Todo pagado · Levantar muertos</p>
                 <p className="text-[12px] text-w-text-secondary">
-                  Total: <span className="font-mono font-bold text-w-text">${totalBilled} MXN</span>
+                  Total: <span className="font-mono font-bold text-w-text">${totalPaid} MXN</span>
                   {totalTips > 0 && <> · Propinas: <span className="font-mono font-bold text-w-tip">${totalTips} MXN</span></>}
                 </p>
               </div>
@@ -710,16 +622,13 @@ export default function TableDetail() {
         )}
       </AnimatePresence>
 
-      {/* Cash Payment Sheet */}
+      {/* Payment Sheet */}
       <AnimatePresence>
-        {cashGuest && (
+        {showPayment && (
           <CashPaymentSheet
             tableId={table.id}
             tableNumber={table.number}
-            guest={cashGuest}
-            rounds={table.rounds}
-            allGuests={table.guests}
-            onDismiss={() => setCashPaymentGuest(null)}
+            onDismiss={() => setShowPayment(false)}
           />
         )}
       </AnimatePresence>
