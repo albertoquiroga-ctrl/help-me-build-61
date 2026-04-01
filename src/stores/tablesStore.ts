@@ -156,7 +156,7 @@ const initialTables: WaiterTable[] = [
     status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
   },
   {
-    id: '2', number: 2, section: 'Norte', assignedWaiter: 'Carlos',
+    id: '2', number: 2, section: 'Interior', assignedWaiter: 'Carlos',
     guests: [
       { id: 'g2-1', name: 'Guest 1', amountOwed: 280, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
       { id: 'g2-2', name: 'Pedro', amountOwed: 280, amountPaid: 0, tipAmount: 0, paymentStatus: 'pending', orderMethod: 'qr', paymentMethod: null },
