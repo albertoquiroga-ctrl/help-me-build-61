@@ -247,7 +247,47 @@ const initialTables: WaiterTable[] = [
     status: 'active', statusText: 'En orden', timeOpened: 28, tipTotal: 0,
   },
   {
-    id: '9', number: 9, section: 'Sur',
+    id: '3', number: 3, section: 'Norte', assignedWaiter: 'Carlos',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '5', number: 5, section: 'Sur', assignedWaiter: 'María',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '8', number: 8, section: 'Sur', assignedWaiter: 'María',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '9', number: 9, section: 'Sur', assignedWaiter: 'Luis',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '10', number: 10, section: 'Terraza', assignedWaiter: 'Luis',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '12', number: 12, section: 'Terraza', assignedWaiter: 'María',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '13', number: 13, section: 'Norte', assignedWaiter: 'Luis',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '14', number: 14, section: 'Sur', assignedWaiter: 'Carlos',
+    guests: [], rounds: [],
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+  },
+  {
+    id: '15', number: 15, section: 'Terraza', assignedWaiter: 'Luis',
     guests: [], rounds: [],
     status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
   },
