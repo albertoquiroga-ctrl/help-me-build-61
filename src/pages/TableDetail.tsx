@@ -221,9 +221,21 @@ export default function TableDetail() {
                             <span className="font-mono text-[12px] text-w-priority font-semibold">${owes}</span>
                           </div>
                           {guestItems.map((gi, idx) => (
-                            <div key={idx} className="flex justify-between text-[11px] pl-5">
-                              <span className="text-w-text-secondary">R{gi.roundNumber} · {gi.item.name} ×{gi.item.qty}</span>
-                              <span className="font-mono text-w-text-secondary">${gi.item.price * gi.item.qty}</span>
+                            <div key={idx} className="pl-5">
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-w-text-secondary">R{gi.roundNumber} · {gi.item.name} ×{gi.item.qty}</span>
+                                <span className="font-mono text-w-text-secondary">${gi.item.price * gi.item.qty}</span>
+                              </div>
+                              {(gi.item.modifiers?.length || gi.item.extras?.length) ? (
+                                <div className="flex flex-wrap gap-1 mt-0.5 pl-0">
+                                  {gi.item.modifiers?.map((m, mi) => (
+                                    <span key={mi} className="text-[9px] px-1 py-0.5 rounded bg-w-warning/15 text-w-warning">{m}</span>
+                                  ))}
+                                  {gi.item.extras?.map((e, ei) => (
+                                    <span key={ei} className="text-[9px] px-1 py-0.5 rounded bg-w-brand/15 text-w-brand">+{e.name}</span>
+                                  ))}
+                                </div>
+                              ) : null}
                             </div>
                           ))}
                           {guestItems.length === 0 && (
