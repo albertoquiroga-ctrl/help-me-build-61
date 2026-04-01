@@ -105,7 +105,7 @@ export default function WaiterProfile() {
         </div>
       )}
 
-      <WaiterBottomNav />
+      {activeRole === 'hostess' ? <HostessBottomNav /> : activeRole === 'bar' ? <BarBottomNav /> : <WaiterBottomNav />}
     </div>
   );
 }
