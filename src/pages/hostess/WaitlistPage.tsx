@@ -104,7 +104,7 @@ export default function WaitlistPage() {
         return aTime - bTime;
       }
 
-      // Both walk-ins: longest wait first
+      // Both walk-ins: longest wait first (oldest timestamp = smallest value = first)
       return new Date(a.waitingSince).getTime() - new Date(b.waitingSince).getTime();
     });
   }, [waitlist, nowMinutes]);
