@@ -43,6 +43,7 @@ export default function TableDetail() {
   const assignSeat = useTablesStore((s) => s.assignSeat);
   const closeTable = useTablesStore((s) => s.closeTable);
   const resolve = useNotificationsStore((s) => s.resolve);
+  const barDrinkOrders = useBarStore((s) => s.orders.filter((o) => o.tableId === id && (o.status === 'pending' || o.status === 'preparing')));
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
