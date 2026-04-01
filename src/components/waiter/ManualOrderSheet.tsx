@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Minus, Plus, ChevronRight, Pencil } from 'lucide-react';
+import { X, Search, Minus, Plus, Pencil } from 'lucide-react';
 import { useTablesStore, type OrderItem } from '@/stores/tablesStore';
 import { toast } from 'sonner';
 
@@ -8,8 +8,6 @@ interface MenuItem {
   name: string;
   price: number;
   category: string;
-  availableModifiers?: string[];
-  availableExtras?: { name: string; price: number }[];
 }
 
 const COMMON_MODIFIERS = ['Sin sal', 'Sin cebolla', 'Sin pepinillos', 'Sin picante', 'Sin gluten', 'Sin lácteos', 'Extra cocido', 'Término medio', 'Término 3/4', 'Bien cocido'];
@@ -50,12 +48,10 @@ interface CartItem {
 
 interface Props {
   tableId: string;
-  guestId: string;
-  guestName: string;
   onDismiss: () => void;
 }
 
-export default function ManualOrderSheet({ tableId, guestId, guestName, onDismiss }: Props) {
+export default function ManualOrderSheet({ tableId, onDismiss }: Props) {
   const addManualOrder = useTablesStore((s) => s.addManualOrder);
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState<Record<string, CartItem>>({});
@@ -150,13 +146,13 @@ export default function ManualOrderSheet({ tableId, guestId, guestName, onDismis
         name,
         qty: ci.qty,
         price: m.price + ci.extras.reduce((s, e) => s + e.price, 0),
-        assignedTo: guestId,
+        category: m.category,
         modifiers: allModifiers.length > 0 ? allModifiers : undefined,
         extras: ci.extras.length > 0 ? ci.extras : undefined,
       };
     });
-    addManualOrder(tableId, guestId, items);
-    toast.success(`✏️ ${itemCount} items agregados para ${guestName}`);
+    addManualOrder(tableId, items);
+    toast.success(`✏️ ${itemCount} items agregados`);
     onDismiss();
   };
 
@@ -178,10 +174,7 @@ export default function ManualOrderSheet({ tableId, guestId, guestName, onDismis
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 pb-2 border-b border-w-border">
-          <div>
-            <h3 className="text-[14px] font-semibold text-w-text">✏️ Capturar orden</h3>
-            <p className="text-[12px] text-w-text-secondary">{guestName}</p>
-          </div>
+          <h3 className="text-[14px] font-semibold text-w-text">📝 Capturar orden</h3>
           <button onClick={onDismiss} className="w-11 h-11 flex items-center justify-center">
             <X size={18} className="text-w-text-secondary" />
           </button>
@@ -269,7 +262,7 @@ export default function ManualOrderSheet({ tableId, guestId, guestName, onDismis
               onClick={handleSubmit}
               className="w-full h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform"
             >
-              Agregar a la ronda ✓
+              Agregar a la orden ✓
             </button>
           </div>
         )}
@@ -301,7 +294,6 @@ export default function ManualOrderSheet({ tableId, guestId, guestName, onDismis
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-5">
-                {/* Modifiers */}
                 <div>
                   <p className="text-[11px] font-mono uppercase tracking-wider text-w-text-secondary mb-2">🚫 Modificadores</p>
                   <div className="flex flex-wrap gap-2">
@@ -324,7 +316,6 @@ export default function ManualOrderSheet({ tableId, guestId, guestName, onDismis
                   </div>
                 </div>
 
-                {/* Extras */}
                 <div>
                   <p className="text-[11px] font-mono uppercase tracking-wider text-w-text-secondary mb-2">➕ Extras</p>
                   <div className="space-y-1.5">
@@ -348,7 +339,6 @@ export default function ManualOrderSheet({ tableId, guestId, guestName, onDismis
                   </div>
                 </div>
 
-                {/* Custom note */}
                 <div>
                   <p className="text-[11px] font-mono uppercase tracking-wider text-w-text-secondary mb-2">📝 Nota especial</p>
                   <textarea
