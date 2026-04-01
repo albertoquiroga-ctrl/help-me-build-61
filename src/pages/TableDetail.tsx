@@ -284,44 +284,74 @@ export default function TableDetail() {
             </button>
           )}
 
-          {/* Cooking rounds */}
-          {table.rounds.filter((r) => r.status === 'cooking').map((cookingR) => (
-            <motion.div
-              key={`cooking-${cookingR.number}`}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-[10px] border border-w-warning/30 bg-w-warning/5 p-3 space-y-2"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-[14px]">🔥</span>
-                <span className="text-[13px] font-semibold text-w-text">En cocina</span>
-              </div>
-              {cookingR.cookingStartedAt && cookingR.estimatedMinutes && (
-                <CookingTimer startedAt={cookingR.cookingStartedAt} estimatedMinutes={cookingR.estimatedMinutes} />
-              )}
-              <button
-                onClick={() => {
-                  const notifStore = useNotificationsStore.getState();
-                  notifStore.addNotification({
-                    id: `reminder-${table.id}-r${cookingR.number}-${Date.now()}`,
-                    type: 'kitchen-msg',
-                    priority: 'high',
-                    tableId: table.id,
-                    title: `🔔 Recordatorio · Mesa ${table.number}`,
-                    subtitle: `El mesero solicita actualización de la orden`,
-                    channel: 'cocina',
-                    timestamp: new Date().toISOString(),
-                    dismissed: false,
-                    resolved: false,
-                  });
-                  toast.success('🔔 Recordatorio enviado a cocina');
-                }}
-                className="w-full h-10 rounded-[8px] border border-w-warning text-w-warning font-semibold text-[12px] active:scale-[0.98] transition-transform"
+          {/* Active rounds (confirmed/cooking/ready) with timers */}
+          {table.rounds.filter((r) => r.status !== 'delivered' && r.status !== 'pending').map((activeR) => {
+            const isCooking = activeR.status === 'cooking';
+            const isReady = activeR.status === 'ready';
+            const isConfirmed = activeR.status === 'confirmed';
+            const badge = statusBadge[activeR.status];
+            const borderColor = isReady ? 'border-w-success/30' : isCooking ? 'border-w-warning/30' : 'border-w-brand/30';
+            const bgColor = isReady ? 'bg-w-success/5' : isCooking ? 'bg-w-warning/5' : 'bg-w-brand/5';
+            const icon = isReady ? '✅' : isCooking ? '🔥' : '📤';
+
+            return (
+              <motion.div
+                key={`active-${activeR.number}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`rounded-[10px] border ${borderColor} ${bgColor} p-3 space-y-2`}
               >
-                🔔 Recordar a cocina
-              </button>
-            </motion.div>
-          ))}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px]">{icon}</span>
+                    <span className="text-[13px] font-semibold text-w-text">{activeR.label || 'Orden'}</span>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-[6px] ${badge.bg} ${badge.text}`}>{badge.label}</span>
+                </div>
+                {/* Timer from createdAt — always visible */}
+                <CookingTimer
+                  startedAt={activeR.cookingStartedAt || activeR.createdAt}
+                  estimatedMinutes={activeR.estimatedMinutes ?? 15}
+                />
+                <div className="flex gap-2">
+                  {isReady && (
+                    <button
+                      onClick={() => {
+                        markDelivered(table.id, activeR.number);
+                        toast.success(`✓ Orden entregada · Mesa ${table.number}`);
+                      }}
+                      className="flex-1 h-10 rounded-[8px] bg-w-success text-white font-semibold text-[12px] active:scale-[0.98] transition-transform"
+                    >
+                      ✓ Marcar entregado
+                    </button>
+                  )}
+                  {(isCooking || isConfirmed) && (
+                    <button
+                      onClick={() => {
+                        const notifStore = useNotificationsStore.getState();
+                        notifStore.addNotification({
+                          id: `reminder-${table.id}-r${activeR.number}-${Date.now()}`,
+                          type: 'kitchen-msg',
+                          priority: 'high',
+                          tableId: table.id,
+                          title: `🔔 Recordatorio · Mesa ${table.number}`,
+                          subtitle: `El mesero solicita actualización de la orden`,
+                          channel: 'cocina',
+                          timestamp: new Date().toISOString(),
+                          dismissed: false,
+                          resolved: false,
+                        });
+                        toast.success('🔔 Recordatorio enviado a cocina');
+                      }}
+                      className="flex-1 h-10 rounded-[8px] border border-w-warning text-w-warning font-semibold text-[12px] active:scale-[0.98] transition-transform"
+                    >
+                      🔔 Recordar a cocina
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
 
           {/* Drink orders at bar */}
           {barDrinkOrders.length > 0 && barDrinkOrders.map((drinkO) => (
