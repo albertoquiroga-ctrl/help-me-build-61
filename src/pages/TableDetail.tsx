@@ -292,7 +292,7 @@ export default function TableDetail() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-[14px]">{icon}</span>
-                    <span className="text-[13px] font-semibold text-w-text">{activeR.label || 'Orden'}</span>
+                    <span className="text-[13px] font-semibold text-w-text">{activeR.items.map((i) => `${i.name}${i.qty > 1 ? ` ×${i.qty}` : ''}`).join(', ')}</span>
                   </div>
                   <span className={`text-[10px] px-2 py-0.5 rounded-[6px] ${badge.bg} ${badge.text}`}>{badge.label}</span>
                 </div>
