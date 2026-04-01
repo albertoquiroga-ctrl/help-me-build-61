@@ -3,7 +3,7 @@ import RoleSwitcher from '@/components/RoleSwitcher';
 import OpenTableDialog from '@/components/waiter/OpenTableDialog';
 import { useTablesStore } from '@/stores/tablesStore';
 import { deriveTableStatus } from '@/stores/tablesStore';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
 export default function HostessDashboard() {
@@ -11,16 +11,25 @@ export default function HostessDashboard() {
   const openTable = useTablesStore((s) => s.openTable);
   const closeTable = useTablesStore((s) => s.closeTable);
   const [dialogTable, setDialogTable] = useState<string | null>(null);
+  const [zoneFilter, setZoneFilter] = useState<string>('Todas');
 
   const selectedTable = tables.find((t) => t.id === dialogTable);
 
+  // Get unique zones
+  const zones = useMemo(() => {
+    const set = new Set(tables.map((t) => t.section).filter(Boolean));
+    return ['Todas', ...Array.from(set).sort()];
+  }, [tables]);
+
   // Sort tables by number
-  const sortedTables = [...tables].sort((a, b) => a.number - b.number);
+  const sortedTables = useMemo(() => {
+    const filtered = zoneFilter === 'Todas' ? tables : tables.filter((t) => t.section === zoneFilter);
+    return [...filtered].sort((a, b) => a.number - b.number);
+  }, [tables, zoneFilter]);
 
   const empty = sortedTables.filter((t) => t.status === 'empty').length;
   const occupied = sortedTables.filter((t) => t.status !== 'empty').length;
 
-  // "Por limpiar" = all guests paid but table not yet closed
   const readyToClean = sortedTables.filter((t) => {
     if (t.status === 'empty') return false;
     if (t.guests.length === 0) return false;
@@ -38,6 +47,23 @@ export default function HostessDashboard() {
       </div>
 
       <div className="px-4 pt-3">
+        {/* Zone filter pills */}
+        <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 -mx-1 px-1">
+          {zones.map((zone) => (
+            <button
+              key={zone}
+              onClick={() => setZoneFilter(zone)}
+              className={`px-3 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap transition-colors border ${
+                zoneFilter === zone
+                  ? 'bg-w-brand text-white border-w-brand'
+                  : 'bg-w-surface border-w-border text-w-text-secondary hover:border-w-brand/40'
+              }`}
+            >
+              {zone}
+            </button>
+          ))}
+        </div>
+
         {/* Summary */}
         <div className="flex gap-2 mb-4">
           <div className="flex-1 rounded-xl bg-w-surface border border-w-border p-3 text-center">
@@ -84,6 +110,9 @@ export default function HostessDashboard() {
                 }`}
               >
                 <p className="text-[20px] font-bold text-w-text">#{table.number}</p>
+                {table.section && (
+                  <p className="text-[9px] text-w-brand/70 font-medium">{table.section}</p>
+                )}
                 {table.assignedWaiter && (
                   <p className="text-[10px] text-w-text-secondary">{table.assignedWaiter}</p>
                 )}
