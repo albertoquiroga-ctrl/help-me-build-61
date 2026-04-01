@@ -59,9 +59,23 @@ export default function AlertsQueue() {
   ];
 
   const handleAlertClick = (n: typeof queue[0]) => {
+    if (n.type === 'qr-open-request' && !n.resolved) {
+      const t = tables.find((t) => t.id === n.tableId);
+      if (t) setQrOpenDialog({ notifId: n.id, tableId: n.tableId, tableNumber: t.number });
+      return;
+    }
     if (n.tableId) {
       navigate(`/waiter/table/${n.tableId}`);
     }
+  };
+
+  const handleConfirmQrOpen = (guestCount: number) => {
+    if (!qrOpenDialog) return;
+    openTable(qrOpenDialog.tableId, guestCount);
+    resolve(qrOpenDialog.notifId, 'Mesa abierta ✓');
+    toast.success(`✓ Mesa ${qrOpenDialog.tableNumber} abierta · ${guestCount} silla${guestCount > 1 ? 's' : ''}`);
+    setQrOpenDialog(null);
+    navigate(`/waiter/table/${qrOpenDialog.tableId}`);
   };
 
   const hasSpeechSupport = typeof window !== 'undefined' && 'speechSynthesis' in window;
