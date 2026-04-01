@@ -127,7 +127,7 @@ export default function HostessDashboard() {
                   </button>
                 ) : (
                   <>
-                    <p className="text-[11px] text-w-text-secondary mt-1">{guestCount} 👤</p>
+                    <p className="text-[11px] text-w-text-secondary mt-1">{itemCount > 0 ? `🍽 ${itemCount}` : '—'}</p>
                     <p className="text-[10px] text-w-text-secondary">{statusText}</p>
                   </>
                 )}
