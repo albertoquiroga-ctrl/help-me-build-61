@@ -21,6 +21,8 @@ export interface Round {
   items: OrderItem[];
   status: RoundStatus;
   createdAt: string;
+  estimatedMinutes?: number;
+  cookingStartedAt?: string;
 }
 
 export interface GuestInfo {
@@ -172,7 +174,7 @@ const initialTables: WaiterTable[] = [
         { name: 'Tacos de Asada', qty: 1, price: 160, assignedTo: 'g2-1' },
         { name: 'Tacos de Asada', qty: 1, price: 160, assignedTo: 'g2-2' },
         { name: 'Ensalada Mixta', qty: 1, price: 130, assignedTo: 'g2-3' },
-      ], status: 'cooking', createdAt: new Date(Date.now() - 8 * 60000).toISOString() },
+      ], status: 'cooking', createdAt: new Date(Date.now() - 8 * 60000).toISOString(), estimatedMinutes: 15, cookingStartedAt: new Date(Date.now() - 18 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 85,
   },
@@ -196,7 +198,7 @@ const initialTables: WaiterTable[] = [
         { name: 'Entrecot a las Brasas', qty: 1, price: 295, assignedTo: 'g4-2' },
         { name: 'Pasta con Trufa', qty: 1, price: 245, assignedTo: 'g4-3' },
         { name: 'Ensalada Mixta', qty: 1, price: 130, assignedTo: 'g4-4' },
-      ], status: 'cooking', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
+      ], status: 'cooking', createdAt: new Date(Date.now() - 5 * 60000).toISOString(), estimatedMinutes: 20, cookingStartedAt: new Date(Date.now() - 5 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En cocina', timeOpened: 32, tipTotal: 122,
   },
@@ -345,7 +347,15 @@ export const useTablesStore = create<TablesState>((set) => ({
     set((s) => {
       const updated = s.tables.map((t) =>
         t.id === tableId
-          ? { ...t, rounds: t.rounds.map((r) => (r.number === roundNumber ? { ...r, status } : r)) }
+          ? { ...t, rounds: t.rounds.map((r) => {
+              if (r.number !== roundNumber) return r;
+              const extra: Partial<Round> = {};
+              if (status === 'cooking' && !r.cookingStartedAt) {
+                extra.cookingStartedAt = new Date().toISOString();
+                extra.estimatedMinutes = r.estimatedMinutes ?? 15;
+              }
+              return { ...r, status, ...extra };
+            }) }
           : t
       );
       return { tables: applyDerived(updated, tableId) };

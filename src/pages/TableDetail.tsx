@@ -9,6 +9,7 @@ import GuestPill from '@/components/waiter/GuestPill';
 import RoundBadge from '@/components/waiter/RoundBadge';
 import ManualOrderSheet from '@/components/waiter/ManualOrderSheet';
 import CashPaymentSheet from '@/components/waiter/CashPaymentSheet';
+import CookingTimer from '@/components/waiter/CookingTimer';
 import { toast } from 'sonner';
 
 const statusBadge: Record<string, { bg: string; text: string; label: string }> = {
@@ -295,6 +296,9 @@ export default function TableDetail() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`text-[10px] px-2 py-0.5 rounded-[6px] ${badge.bg} ${badge.text}`}>{badge.label}</span>
+                        {round.status === 'cooking' && round.cookingStartedAt && round.estimatedMinutes && (
+                          <CookingTimer startedAt={round.cookingStartedAt} estimatedMinutes={round.estimatedMinutes} compact />
+                        )}
                         {isExpanded ? <ChevronUp size={14} className="text-w-text-secondary" /> : <ChevronDown size={14} className="text-w-text-secondary" />}
                       </div>
                     </button>
@@ -516,12 +520,49 @@ export default function TableDetail() {
             </button>
           )}
 
-          {/* Cooking → info only */}
-          {!pendingRound && !readyRound && cookingRound && (
-            <div className="rounded-[8px] border border-w-warning/30 bg-w-warning/5 p-3 text-center">
-              <p className="text-[13px] text-w-warning font-medium">🔥 R{cookingRound.number} en cocina</p>
-            </div>
-          )}
+          {/* Cooking rounds → timer + reminder */}
+          {table.rounds.filter((r) => r.status === 'cooking').map((cookingR) => (
+            <motion.div
+              key={`cooking-${cookingR.number}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-[10px] border border-w-warning/30 bg-w-warning/5 p-3 space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-[14px]">🔥</span>
+                  <span className="text-[13px] font-semibold text-w-text">R{cookingR.number} en cocina</span>
+                  <RoundBadge round={cookingR.number} />
+                </div>
+              </div>
+              {cookingR.cookingStartedAt && cookingR.estimatedMinutes && (
+                <CookingTimer startedAt={cookingR.cookingStartedAt} estimatedMinutes={cookingR.estimatedMinutes} />
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const notifStore = useNotificationsStore.getState();
+                    notifStore.addNotification({
+                      id: `reminder-${table.id}-r${cookingR.number}-${Date.now()}`,
+                      type: 'kitchen-msg',
+                      priority: 'high',
+                      tableId: table.id,
+                      title: `🔔 Recordatorio · Mesa ${table.number} · R${cookingR.number}`,
+                      subtitle: `El mesero solicita actualización de la orden`,
+                      channel: 'cocina',
+                      timestamp: new Date().toISOString(),
+                      dismissed: false,
+                      resolved: false,
+                    });
+                    toast.success(`🔔 Recordatorio enviado a cocina · R${cookingR.number}`);
+                  }}
+                  className="flex-1 h-10 rounded-[8px] border border-w-warning text-w-warning font-semibold text-[12px] active:scale-[0.98] transition-transform"
+                >
+                  🔔 Recordar a cocina
+                </button>
+              </div>
+            </motion.div>
+          ))}
 
           {/* All delivered + nobody paying → Suggest bill */}
           {allDelivered && noPaying && table.guests.length > 0 && (
