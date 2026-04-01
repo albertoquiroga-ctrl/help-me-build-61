@@ -6,7 +6,7 @@ import NotificationCard from '@/components/waiter/NotificationCard';
 import { useNotificationsStore, type NotifChannel } from '@/stores/notificationsStore';
 import { useTablesStore } from '@/stores/tablesStore';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import OpenTableDialog from '@/components/waiter/OpenTableDialog';
 
 type Filter = 'all' | 'active' | 'resolved';
 
