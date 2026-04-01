@@ -69,11 +69,11 @@ export default function AlertsQueue() {
     }
   };
 
-  const handleConfirmQrOpen = (guestCount: number) => {
+  const handleConfirmQrOpen = () => {
     if (!qrOpenDialog) return;
-    openTable(qrOpenDialog.tableId, guestCount);
+    openTable(qrOpenDialog.tableId);
     resolve(qrOpenDialog.notifId, 'Mesa abierta ✓');
-    toast.success(`✓ Mesa ${qrOpenDialog.tableNumber} abierta · ${guestCount} silla${guestCount > 1 ? 's' : ''}`);
+    toast.success(`✓ Mesa ${qrOpenDialog.tableNumber} abierta`);
     setQrOpenDialog(null);
     navigate(`/waiter/table/${qrOpenDialog.tableId}`);
   };
