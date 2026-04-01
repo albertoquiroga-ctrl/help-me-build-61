@@ -205,7 +205,7 @@ export default function TableDetail() {
                   {table.guests
                     .filter((g) => g.paymentStatus !== 'paid' && g.paymentStatus !== 'left')
                     .map((guest) => {
-                      const guestItems: { roundNumber: number; item: { name: string; qty: number; price: number } }[] = [];
+                      const guestItems: { roundNumber: number; item: OrderItem }[] = [];
                       table.rounds.forEach((round) => {
                         round.items.forEach((item) => {
                           if (item.assignedTo === guest.id) {
