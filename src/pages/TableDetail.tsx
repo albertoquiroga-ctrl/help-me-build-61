@@ -437,6 +437,20 @@ export default function TableDetail() {
           />
         )}
       </AnimatePresence>
+
+      {/* Loyalty check-in toast */}
+      <AnimatePresence>
+        {showLoyaltyToast && loyaltyCheckIn && loyaltyCheckIn.loyalty && (
+          <CheckInToast
+            tableName={`Mesa ${table.number}`}
+            loyalty={loyaltyCheckIn.loyalty}
+            onDismiss={() => {
+              setShowLoyaltyToast(false);
+              resolve(loyaltyCheckIn.id, 'Visto ✓');
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
