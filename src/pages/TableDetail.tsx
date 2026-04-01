@@ -588,7 +588,6 @@ export default function TableDetail() {
                   </span>
                 </div>
                 <CookingTimer startedAt={drinkO.createdAt} estimatedMinutes={5} />
-                )}
                 <button
                   onClick={() => {
                     const notifStore = useNotificationsStore.getState();
