@@ -568,7 +568,7 @@ export default function TableDetail() {
           {/* Drink orders in preparation at bar */}
           {(() => {
             const barOrders = useBarStore.getState().orders.filter(
-              (o) => o.tableId === table.id && o.status === 'preparing' && o.preparingStartedAt && o.estimatedMinutes
+              (o) => o.tableId === table.id && (o.status === 'pending' || o.status === 'preparing')
             );
             if (barOrders.length === 0) return null;
             return barOrders.map((drinkO) => (
@@ -583,11 +583,11 @@ export default function TableDetail() {
                     <span className="text-[14px]">🍸</span>
                     <span className="text-[13px] font-semibold text-w-text">{drinkO.itemName} ×{drinkO.qty}</span>
                   </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-w-brand/15 text-w-brand">En barra</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-[6px] ${drinkO.status === 'preparing' ? 'bg-w-brand/15 text-w-brand' : 'bg-w-warning/15 text-w-warning'}`}>
+                    {drinkO.status === 'preparing' ? 'Preparando' : 'Pendiente en barra'}
+                  </span>
                 </div>
-                {drinkO.preparingStartedAt && drinkO.estimatedMinutes && (
-                  <CookingTimer startedAt={drinkO.preparingStartedAt} estimatedMinutes={drinkO.estimatedMinutes} />
-                )}
+                <CookingTimer startedAt={drinkO.createdAt} estimatedMinutes={5} />
                 <button
                   onClick={() => {
                     const notifStore = useNotificationsStore.getState();
