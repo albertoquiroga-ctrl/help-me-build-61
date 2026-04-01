@@ -21,6 +21,8 @@ export interface Round {
   items: OrderItem[];
   status: RoundStatus;
   createdAt: string;
+  estimatedMinutes?: number;
+  cookingStartedAt?: string;
 }
 
 export interface GuestInfo {
