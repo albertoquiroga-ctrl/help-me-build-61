@@ -565,7 +565,54 @@ export default function TableDetail() {
             </motion.div>
           ))}
 
-          {/* All delivered + nobody paying → Suggest bill */}
+          {/* Drink orders in preparation at bar */}
+          {(() => {
+            const barOrders = useBarStore.getState().orders.filter(
+              (o) => o.tableId === table.id && o.status === 'preparing' && o.preparingStartedAt && o.estimatedMinutes
+            );
+            if (barOrders.length === 0) return null;
+            return barOrders.map((drinkO) => (
+              <motion.div
+                key={`drink-${drinkO.id}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-[10px] border border-w-brand/30 bg-w-brand/5 p-3 space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px]">🍸</span>
+                    <span className="text-[13px] font-semibold text-w-text">{drinkO.itemName} ×{drinkO.qty}</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-w-brand/15 text-w-brand">En barra</span>
+                </div>
+                {drinkO.preparingStartedAt && drinkO.estimatedMinutes && (
+                  <CookingTimer startedAt={drinkO.preparingStartedAt} estimatedMinutes={drinkO.estimatedMinutes} />
+                )}
+                <button
+                  onClick={() => {
+                    const notifStore = useNotificationsStore.getState();
+                    notifStore.addNotification({
+                      id: `bar-reminder-${drinkO.id}-${Date.now()}`,
+                      type: 'bar-msg',
+                      priority: 'high',
+                      tableId: table.id,
+                      title: `🔔 Recordatorio · Mesa ${table.number} · ${drinkO.itemName}`,
+                      subtitle: `El mesero solicita actualización de la bebida`,
+                      channel: 'barra',
+                      timestamp: new Date().toISOString(),
+                      dismissed: false,
+                      resolved: false,
+                    });
+                    toast.success(`🔔 Recordatorio enviado a barra · ${drinkO.itemName}`);
+                  }}
+                  className="w-full h-10 rounded-[8px] border border-w-brand text-w-brand font-semibold text-[12px] active:scale-[0.98] transition-transform"
+                >
+                  🔔 Recordar a barra
+                </button>
+              </motion.div>
+            ));
+          })()}
+
           {allDelivered && noPaying && table.guests.length > 0 && (
             <button
               onClick={() => toast.info('💳 Sugerencia de cuenta enviada a los comensales')}

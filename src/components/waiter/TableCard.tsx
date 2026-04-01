@@ -85,6 +85,23 @@ export default function TableCard({ table }: TableCardProps) {
             </span>
           );
         })()}
+        {(() => {
+          const barOrders = useBarStore.getState().orders.filter(
+            (o) => o.tableId === table.id && o.status === 'preparing' && o.preparingStartedAt && o.estimatedMinutes
+          );
+          const overdueDrink = barOrders.find((o) => {
+            const elapsed = (Date.now() - new Date(o.preparingStartedAt!).getTime()) / 1000;
+            return getOverdueMinutes(elapsed, o.estimatedMinutes!) > 0;
+          });
+          if (!overdueDrink) return null;
+          const elapsed = (Date.now() - new Date(overdueDrink.preparingStartedAt!).getTime()) / 1000;
+          const over = getOverdueMinutes(elapsed, overdueDrink.estimatedMinutes!);
+          return (
+            <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-error/15 text-w-error font-mono font-semibold animate-pulse">
+              🍸 +{over}m
+            </span>
+          );
+        })()}
       </div>
       <div className="mt-auto flex items-end justify-between">
         <span className="text-[11px] text-w-text-secondary leading-tight">{table.statusText}</span>
