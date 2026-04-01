@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type NotifPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type NotifType = 'new-order' | 'order-ready' | 'check-in' | 'service-call' | 'table-close' | 'payment-failed' | 'early-exit' | 'manager-msg' | 'kitchen-msg' | 'bar-msg' | 'host-msg';
+export type NotifType = 'new-order' | 'order-ready' | 'check-in' | 'service-call' | 'table-close' | 'payment-failed' | 'early-exit' | 'manager-msg' | 'kitchen-msg' | 'bar-msg' | 'host-msg' | 'qr-open-request';
 export type NotifChannel = 'mesas' | 'gerente' | 'cocina' | 'barra' | 'hostess';
 
 export interface WaiterNotification {
