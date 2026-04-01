@@ -236,30 +236,21 @@ export default function TableDetail() {
           )}
         </div>
 
-        {/* Order Verification Section */}
-        {guestsWithoutOrder.length > 0 && (
-          <div className="rounded-[10px] border border-w-warning/30 bg-w-warning/5 p-3 space-y-2">
-            <p className="text-[11px] font-mono uppercase tracking-wider text-w-warning">⚠️ Verificar pedidos</p>
-            {table.guests.map((g) => {
-              const hasOrder = !(g.orderMethod === 'manual' && g.amountOwed === 0 && g.paymentStatus === 'pending');
-              return (
-                <div key={g.id} className="flex items-center justify-between min-h-[36px]">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[12px]">{hasOrder ? '✅' : '⚠️'}</span>
-                    <span className="text-[13px] text-w-text">{guestDisplayName(g)}</span>
-                    <span className="text-[11px] text-w-text-secondary">{hasOrder ? 'Pidió por QR' : 'Sin pedido'}</span>
-                  </div>
-                  {!hasOrder && (
-                    <button
-                      onClick={() => setManualOrderGuest({ id: g.id, name: guestDisplayName(g) })}
-                      className="px-3 py-1.5 rounded-[6px] bg-w-brand text-white text-[11px] font-semibold min-h-[32px] active:scale-[0.98] transition-transform"
-                    >
-                      + Capturar orden
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+        {/* Manual order capture — always available */}
+        {table.guests.length > 0 && (
+          <div className="rounded-[10px] border border-w-border bg-w-surface p-3 space-y-2">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-w-text-secondary">📝 Capturar orden</p>
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+              {table.guests.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => setManualOrderGuest({ id: g.id, name: guestDisplayName(g) })}
+                  className="shrink-0 px-2.5 py-1.5 rounded-[6px] border border-dashed border-w-brand/40 text-w-brand text-[11px] font-medium active:scale-95 transition-transform min-h-[32px]"
+                >
+                  + {guestDisplayName(g)}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
