@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 export default function WaiterProfile() {
   const { waiterName, shiftDuration } = useWaiterSession();
   const { todayTotal, propinaModeActive, togglePropinaMode } = useTipsStore();
+  const activeRole = useRoleStore((s) => s.activeRole);
   const [checkInNotifs, setCheckInNotifs] = useState(true);
   const [soundAlerts, setSoundAlerts] = useState(true);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
