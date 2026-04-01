@@ -597,8 +597,7 @@ export default function TableDetail() {
                   🔔 Recordar a barra
                 </button>
               </motion.div>
-            ));
-          })()}
+          ))}
 
           {allDelivered && noPaying && table.guests.length > 0 && (
             <button
