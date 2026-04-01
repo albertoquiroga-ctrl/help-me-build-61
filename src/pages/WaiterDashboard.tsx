@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import WaiterBottomNav from '@/components/waiter/WaiterBottomNav';
 import TableCard from '@/components/waiter/TableCard';
 import RoleSwitcher from '@/components/RoleSwitcher';
 import NotificationCard from '@/components/waiter/NotificationCard';
+import CheckInToast from '@/components/waiter/overlays/CheckInToast';
 import { useTablesStore } from '@/stores/tablesStore';
 import { useWaiterSession } from '@/stores/waiterSessionStore';
 import { useTipsStore } from '@/stores/tipsStore';
