@@ -183,6 +183,28 @@ export default function AlertsQueue() {
       </div>
 
       <WaiterBottomNav />
+
+      <Dialog open={!!qrOpenDialog} onOpenChange={(open) => !open && setQrOpenDialog(null)}>
+        <DialogContent className="max-w-[320px] bg-w-surface border-w-border">
+          <DialogHeader>
+            <DialogTitle className="text-w-text text-center">
+              Abrir Mesa {qrOpenDialog?.tableNumber}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-[13px] text-w-text-secondary text-center">Un cliente escaneó el QR. ¿Cuántos comensales?</p>
+          <div className="flex justify-center gap-2 flex-wrap py-2">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <button
+                key={n}
+                onClick={() => handleConfirmQrOpen(n)}
+                className="w-11 h-11 rounded-[8px] border border-w-border bg-w-bg text-w-text font-semibold text-[14px] active:scale-95 transition-transform hover:border-w-brand hover:text-w-brand"
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
