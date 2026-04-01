@@ -198,7 +198,7 @@ const initialTables: WaiterTable[] = [
         { name: 'Entrecot a las Brasas', qty: 1, price: 295, assignedTo: 'g4-2' },
         { name: 'Pasta con Trufa', qty: 1, price: 245, assignedTo: 'g4-3' },
         { name: 'Ensalada Mixta', qty: 1, price: 130, assignedTo: 'g4-4' },
-      ], status: 'cooking', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
+      ], status: 'cooking', createdAt: new Date(Date.now() - 5 * 60000).toISOString(), estimatedMinutes: 20, cookingStartedAt: new Date(Date.now() - 5 * 60000).toISOString() },
     ],
     status: 'active', statusText: 'En cocina', timeOpened: 32, tipTotal: 122,
   },
