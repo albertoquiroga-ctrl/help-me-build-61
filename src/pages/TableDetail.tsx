@@ -296,6 +296,9 @@ export default function TableDetail() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`text-[10px] px-2 py-0.5 rounded-[6px] ${badge.bg} ${badge.text}`}>{badge.label}</span>
+                        {round.status === 'cooking' && round.cookingStartedAt && round.estimatedMinutes && (
+                          <CookingTimer startedAt={round.cookingStartedAt} estimatedMinutes={round.estimatedMinutes} compact />
+                        )}
                         {isExpanded ? <ChevronUp size={14} className="text-w-text-secondary" /> : <ChevronDown size={14} className="text-w-text-secondary" />}
                       </div>
                     </button>
