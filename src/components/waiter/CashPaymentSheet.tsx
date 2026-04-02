@@ -27,6 +27,10 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
   const [customTip, setCustomTip] = useState('');
 
   // Voucher photo step state
+  const [billOpen, setBillOpen] = useState(false);
+  const [billReceived, setBillReceived] = useState<number | null>(null);
+
+  // Voucher photo step state
   const [voucherStep, setVoucherStep] = useState(false);
   const [lastPaymentId, setLastPaymentId] = useState<string | null>(null);
   const [voucherPreview, setVoucherPreview] = useState<string | null>(null);
