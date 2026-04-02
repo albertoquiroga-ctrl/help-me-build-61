@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, Camera, CheckCircle, SkipForward, Banknote, ChevronDown } from 'lucide-react';
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { useTablesStore, computeTableBill, computeTotalPaid } from '@/stores/tablesStore';
 import { useTipsStore } from '@/stores/tipsStore';
 import { toast } from 'sonner';
+import SlideToConfirm from './SlideToConfirm';
 
 interface Props {
   tableId: string;
@@ -24,6 +25,7 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
   const addTip = useTipsStore((s) => s.addTip);
 
   const [amount, setAmount] = useState('');
+  const [payKey, setPayKey] = useState(0);
   const [tipMode, setTipMode] = useState<'none' | 'percent' | 'custom'>('none');
   const [tipPercent, setTipPercent] = useState<number | null>(null);
   const [customTip, setCustomTip] = useState('');
@@ -428,21 +430,25 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
                     <span className="font-mono text-[20px] font-bold text-w-text">${grandTotal}</span>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handlePay('cash')}
+                <div className="space-y-2">
+                  <SlideToConfirm
+                    label="Efectivo"
+                    icon="💵"
+                    onConfirm={() => handlePay('cash')}
                     disabled={numAmount <= 0}
-                    className="flex-1 h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform disabled:opacity-40"
-                  >
-                    💵 Efectivo ✓
-                  </button>
-                  <button
-                    onClick={() => handlePay('card-physical')}
+                    trackColor="bg-w-success/15"
+                    thumbColor="bg-w-success"
+                    key={`cash-${payKey}`}
+                  />
+                  <SlideToConfirm
+                    label="Tarjeta"
+                    icon="💳"
+                    onConfirm={() => handlePay('card-physical')}
                     disabled={numAmount <= 0}
-                    className="flex-1 h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform disabled:opacity-40"
-                  >
-                    💳 Tarjeta ✓
-                  </button>
+                    trackColor="bg-w-brand/15"
+                    thumbColor="bg-w-brand"
+                    key={`card-${payKey}`}
+                  />
                 </div>
               </div>
             </motion.div>
