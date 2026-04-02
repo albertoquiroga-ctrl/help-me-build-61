@@ -1,14 +1,10 @@
 import { useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { X, TrendingUp, Sparkles } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 import TimerBar from '@/components/waiter/TimerBar';
+import type { SmartSuggestionData } from '@/lib/smartSuggestions';
 
-export interface SmartSuggestionData {
-  id: string;
-  icon: string;
-  text: string;
-  reason: string;
-}
+export type { SmartSuggestionData };
 
 interface SmartSuggestionProps {
   suggestion: SmartSuggestionData;

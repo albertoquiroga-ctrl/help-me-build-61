@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import type { WaiterTable, Round } from '@/stores/tablesStore';
@@ -7,6 +7,7 @@ import { useBarStore } from '@/stores/barStore';
 import { toast } from 'sonner';
 import OpenTableDialog from './OpenTableDialog';
 import { getOverdueMinutes } from './CookingTimer';
+import { generateSmartSuggestions } from '@/lib/smartSuggestions';
 
 const CATEGORY_BASE_MINUTES: Record<string, number> = {
   'Bebidas': 5,
@@ -51,6 +52,10 @@ export default function TableCard({ table }: TableCardProps) {
   const totalBill = computeTableBill(table);
   const totalPaid = computeTotalPaid(table);
   const itemCount = table.rounds.reduce((s, r) => s + r.items.reduce((a, i) => a + i.qty, 0), 0);
+
+  // Smart suggestions for this table
+  const suggestions = useMemo(() => generateSmartSuggestions(table), [table]);
+  const topSuggestion = suggestions.length > 0 ? suggestions[0] : null;
 
   // Recalculate status every 30s so the timer text stays fresh
   useEffect(() => {
@@ -157,6 +162,12 @@ export default function TableCard({ table }: TableCardProps) {
           </span>
         )}
       </div>
+      {topSuggestion && (
+        <div className="flex items-center gap-1 mt-1 px-0.5">
+          <span className="text-[9px]">{topSuggestion.icon}</span>
+          <span className="text-[9px] text-w-brand font-medium truncate leading-tight">{topSuggestion.text}</span>
+        </div>
+      )}
       <div className="mt-auto flex items-end justify-between">
         <span className="text-[11px] text-w-text-secondary leading-tight">{table.statusText}</span>
         <span className="font-mono text-[11px] text-w-text-secondary">
