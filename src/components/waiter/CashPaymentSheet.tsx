@@ -4,7 +4,6 @@ import { useState, useMemo, useRef, useCallback } from 'react';
 import { useTablesStore, computeTableBill, computeTotalPaid } from '@/stores/tablesStore';
 import { useTipsStore } from '@/stores/tipsStore';
 import { toast } from 'sonner';
-import SlideToConfirm from './SlideToConfirm';
 
 interface Props {
   tableId: string;
