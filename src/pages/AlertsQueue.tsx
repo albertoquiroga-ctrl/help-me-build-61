@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, Sparkles } from 'lucide-react';
 import WaiterBottomNav from '@/components/waiter/WaiterBottomNav';
 import NotificationCard from '@/components/waiter/NotificationCard';
 import { useNotificationsStore, type NotifChannel } from '@/stores/notificationsStore';
 import { useTablesStore } from '@/stores/tablesStore';
 import { toast } from 'sonner';
 import OpenTableDialog from '@/components/waiter/OpenTableDialog';
+import { generateSmartSuggestions } from '@/lib/smartSuggestions';
 
 type Filter = 'all' | 'active' | 'resolved';
 
