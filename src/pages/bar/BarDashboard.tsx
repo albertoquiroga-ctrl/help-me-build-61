@@ -194,15 +194,7 @@ export default function BarDashboard() {
                 <h2 className="text-[13px] font-semibold text-w-success mb-2">Listos para recoger</h2>
                 <div className="space-y-2">
                   {ready.map((g) => (
-                    <div key={g.key} className="rounded-xl bg-w-surface border border-w-success/30 p-3 flex items-center justify-between opacity-70">
-                      <div>
-                        <p className="text-[14px] font-medium text-w-text">{g.itemName} ×{g.totalQty}</p>
-                        <p className="text-[11px] text-w-text-secondary">
-                          {g.tables.map((t) => `Mesa ${t.tableNumber}`).join(', ')}
-                        </p>
-                      </div>
-                      <span className="text-[11px] text-w-success font-medium">✓ Listo</span>
-                    </div>
+                    <ReadyGroupCard key={g.key} group={g} />
                   ))}
                 </div>
               </section>
