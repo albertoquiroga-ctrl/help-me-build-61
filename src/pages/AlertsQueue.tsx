@@ -42,6 +42,7 @@ export default function AlertsQueue() {
   const [channelFilter, setChannelFilter] = useState<'all' | NotifChannel>('all');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [qrOpenDialog, setQrOpenDialog] = useState<{ notifId: string; tableId: string; tableNumber: number } | null>(null);
+  const [smartOpen, setSmartOpen] = useState(false);
 
   const tables = useTablesStore((s) => s.tables);
 
