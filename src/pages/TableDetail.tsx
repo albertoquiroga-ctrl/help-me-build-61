@@ -345,7 +345,9 @@ export default function TableDetail() {
               });
             });
 
-            return Object.entries(categoryGroups).map(([cat, group]) => {
+            return Object.entries(categoryGroups)
+              .filter(([, group]) => group.items.some((i) => !i.delivered))
+              .map(([cat, group]) => {
               const isCooking = group.status === 'cooking';
               const isReady = group.status === 'ready';
               const isConfirmed = group.status === 'confirmed';
