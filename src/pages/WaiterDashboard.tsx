@@ -62,23 +62,23 @@ export default function WaiterDashboard() {
           />
         )}
 
-        {/* Zero state */}
-        {activeTables.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <p className="text-[48px] mb-3">☕</p>
-            <p className="text-[18px] font-semibold text-w-text">Tu turno acaba de empezar</p>
-            <p className="text-[13px] text-w-text-secondary mt-1 text-center max-w-[240px]">
-              Las mesas asignadas aparecerán aquí conforme los comensales escaneen su QR.
+        {/* Zero state hint */}
+        {activeTables.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-10">
+            <p className="text-[36px] mb-2">☕</p>
+            <p className="text-[15px] font-semibold text-w-text">Sin mesas activas</p>
+            <p className="text-[12px] text-w-text-secondary mt-1 text-center max-w-[240px]">
+              Abre una mesa para empezar a tomar órdenes.
             </p>
           </div>
-        ) : (
-          /* Table grid */
-          <div className="grid grid-cols-2 gap-2.5">
-            {myTables.map((table) => (
-              <TableCard key={table.id} table={table} />
-            ))}
-          </div>
         )}
+
+        {/* Table grid — always visible */}
+        <div className="grid grid-cols-2 gap-2.5">
+          {myTables.map((table) => (
+            <TableCard key={table.id} table={table} />
+          ))}
+        </div>
       </div>
 
       <WaiterBottomNav />
