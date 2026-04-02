@@ -205,6 +205,7 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
                 <p className="text-[10px] text-w-text-secondary mt-1 text-right font-mono">{paidPct}% cubierto</p>
               </div>
 
+              <div className="overflow-y-auto flex-1 min-h-0">
               {/* Amount input */}
               <div className="px-4 pb-3 space-y-2">
                 <div className="relative">
