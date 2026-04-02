@@ -225,8 +225,9 @@ const initialTables: WaiterTable[] = [
     ],
     payments: [
       { id: 'p2-1', amount: 195, tipAmount: 85, method: 'qr', guestName: 'Laura', timestamp: new Date(Date.now() - 10 * 60000).toISOString() },
+      { id: 'p2-2', amount: 130, tipAmount: 20, method: 'card-physical', guestName: 'Miguel', timestamp: new Date(Date.now() - 8 * 60000).toISOString() },
     ],
-    status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 85,
+    status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 105,
   },
   {
     id: '4', number: 4, section: 'Barra', assignedWaiter: 'María',
