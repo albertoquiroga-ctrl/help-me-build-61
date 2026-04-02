@@ -5,7 +5,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTablesStore, computeTableBill, computeTotalPaid, getItemsByCategory } from '@/stores/tablesStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
 import { useBarStore } from '@/stores/barStore';
-import CheckInToast from '@/components/waiter/overlays/CheckInToast';
+import LoyaltyBanner from '@/components/waiter/LoyaltyBanner';
+import SmartSuggestion from '@/components/waiter/SmartSuggestion';
+import type { SmartSuggestionData } from '@/components/waiter/SmartSuggestion';
 import ManualOrderSheet from '@/components/waiter/ManualOrderSheet';
 import CashPaymentSheet from '@/components/waiter/CashPaymentSheet';
 import CookingTimer from '@/components/waiter/CookingTimer';
@@ -47,11 +49,60 @@ export default function TableDetail() {
   const closeTable = useTablesStore((s) => s.closeTable);
   const [showManualOrder, setShowManualOrder] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
-  const [showLoyaltyToast, setShowLoyaltyToast] = useState(true);
   const allBarOrders = useBarStore((s) => s.orders);
   const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && (o.status === 'pending' || o.status === 'preparing')), [allBarOrders, id]);
-  const resolve = useNotificationsStore((s) => s.resolve);
-  const loyaltyCheckIn = useNotificationsStore((s) => s.queue.find((n) => n.type === 'check-in' && n.tableId === id && !n.dismissed && !!n.loyalty));
+
+  // Smart suggestions based on behavioral patterns
+  const smartSuggestions = useMemo(() => {
+    if (!table) return [];
+    const suggestions: SmartSuggestionData[] = [];
+    const deliveredItems = table.rounds.filter(r => r.status === 'delivered').flatMap(r => r.items);
+    const allItems = table.rounds.flatMap(r => r.items);
+    const hasBeverage = deliveredItems.some(i => i.category === 'Bebidas');
+    const hasEntrada = deliveredItems.some(i => i.category === 'Entradas');
+    const hasPlatoFuerte = deliveredItems.some(i => i.category === 'Platos Fuertes');
+    const hasPostre = allItems.some(i => i.category === 'Postres');
+    const allDeliveredCheck = table.rounds.length > 0 && table.rounds.every(r => r.status === 'delivered');
+
+    // Suggest second round of drinks if they ordered drinks and main course is cooking
+    const cookingMain = table.rounds.some(r => (r.status === 'cooking' || r.status === 'confirmed') && r.items.some(i => i.category === 'Platos Fuertes'));
+    if (hasBeverage && cookingMain) {
+      const loyaltyFav = table.loyaltyGuest?.favoriteItems.find(f => deliveredItems.some(d => d.category === 'Bebidas'));
+      suggestions.push({
+        id: 'second-drink',
+        icon: '🍹',
+        text: loyaltyFav ? `¿Otra ${loyaltyFav}? Mientras esperan plato fuerte` : 'Buen momento para ofrecer segunda ronda de bebidas',
+        reason: 'Plato fuerte en preparación · Bebidas ya entregadas',
+      });
+    }
+
+    // Suggest dessert if main course delivered and no dessert ordered
+    if (hasPlatoFuerte && !hasPostre && allDeliveredCheck) {
+      const loyaltyDessert = table.loyaltyGuest?.favoriteItems.find(f => f.toLowerCase().includes('flan') || f.toLowerCase().includes('pastel') || f.toLowerCase().includes('postre'));
+      suggestions.push({
+        id: 'dessert',
+        icon: '🍮',
+        text: loyaltyDessert ? `Ofrécele ${loyaltyDessert} — es su favorito` : '¿Postre? Todo entregado, buen timing',
+        reason: 'Platos fuertes entregados · Sin postre en la cuenta',
+      });
+    }
+
+    // Time-based: table open > 20 min with no orders
+    if (table.timeOpened > 20 && table.rounds.length === 0) {
+      suggestions.push({
+        id: 'no-order',
+        icon: '💡',
+        text: 'Llevan rato sin pedir — pásate a ver si necesitan algo',
+        reason: `${table.timeOpened} min sin órdenes`,
+      });
+    }
+
+    return suggestions;
+  }, [table]);
+
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
+  const visibleSuggestions = smartSuggestions.filter(s => !dismissedSuggestions.has(s.id));
+  const handleDismissSuggestion = (id: string) => setDismissedSuggestions(prev => new Set(prev).add(id));
 
   if (!table) return <div className="min-h-screen bg-w-bg flex items-center justify-center text-w-text-secondary">Mesa no encontrada</div>;
 
@@ -122,6 +173,18 @@ export default function TableDetail() {
             ))}
           </div>
         )}
+
+        {/* Loyalty guest banner (persistent) */}
+        {table.loyaltyGuest && (
+          <LoyaltyBanner guest={table.loyaltyGuest} />
+        )}
+
+        {/* Smart suggestions (behavioral, dismissible) */}
+        <AnimatePresence>
+          {visibleSuggestions.map((s) => (
+            <SmartSuggestion key={s.id} suggestion={s} onDismiss={handleDismissSuggestion} />
+          ))}
+        </AnimatePresence>
 
         {/* Capture order button */}
         <button
@@ -502,19 +565,6 @@ export default function TableDetail() {
         )}
       </AnimatePresence>
 
-      {/* Loyalty check-in toast */}
-      <AnimatePresence>
-        {showLoyaltyToast && loyaltyCheckIn && loyaltyCheckIn.loyalty && (
-          <CheckInToast
-            tableName={`Mesa ${table.number}`}
-            loyalty={loyaltyCheckIn.loyalty}
-            onDismiss={() => {
-              setShowLoyaltyToast(false);
-              resolve(loyaltyCheckIn.id, 'Visto ✓');
-            }}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

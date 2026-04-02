@@ -33,6 +33,16 @@ export interface PaymentRecord {
   timestamp: string;
 }
 
+/** Loyalty guest seated at this table (persistent, not notification-based) */
+export interface LoyaltyGuest {
+  name: string;
+  tier: 'gold' | 'silver' | 'bronze';
+  visits: number;
+  favoriteItems: string[];
+  lastVisit: string;
+  avgSpend: number;
+}
+
 export interface WaiterTable {
   id: string;
   number: number;
@@ -44,6 +54,7 @@ export interface WaiterTable {
   tipTotal: number;
   section?: string;
   assignedWaiter?: string;
+  loyaltyGuest?: LoyaltyGuest;
 }
 
 /** Compute total bill from all rounds */
@@ -197,6 +208,14 @@ const initialTables: WaiterTable[] = [
   },
   {
     id: '4', number: 4, section: 'Barra', assignedWaiter: 'María',
+    loyaltyGuest: {
+      name: 'Andrea Ríos',
+      tier: 'gold',
+      visits: 12,
+      favoriteItems: ['Margarita de Tamarindo', 'Tacos al Pastor', 'Flan Napolitano'],
+      lastVisit: '3 días',
+      avgSpend: 420,
+    },
     rounds: [
       { number: 1, label: 'Bebidas + Entradas', items: [
         { name: 'Margarita Clásica', qty: 2, price: 120, category: 'Bebidas' },

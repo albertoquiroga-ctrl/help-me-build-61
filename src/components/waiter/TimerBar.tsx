@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 interface TimerBarProps {
   totalSeconds: number;
   onExpire?: () => void;
-  color?: 'warning' | 'success' | 'error';
+  color?: 'warning' | 'success' | 'error' | 'brand';
   showCountdown?: boolean;
   countdownSize?: 'sm' | 'lg';
 }
@@ -26,11 +26,13 @@ export default function TimerBar({ totalSeconds, onExpire, color = 'warning', sh
     warning: 'bg-w-warning',
     success: 'bg-w-success',
     error: 'bg-w-error',
+    brand: 'bg-w-brand',
   };
   const textColorMap = {
     warning: 'text-w-warning',
     success: 'text-w-success',
     error: 'text-w-error',
+    brand: 'text-w-brand',
   };
 
   return (
