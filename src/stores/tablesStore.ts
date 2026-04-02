@@ -379,7 +379,7 @@ export const useTablesStore = create<TablesState>((set) => ({
         if (t.id !== id) return t;
         return { ...t, rounds: [], payments: [], timeOpened: 0, status: 'active' as TableStatus, statusText: 'Mesa abierta', tipTotal: 0 };
       });
-      return { tables: updated };
+      return { tables: applyDerived(updated, id) };
     }),
   updateTable: (id, updates) =>
     set((s) => {
