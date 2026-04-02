@@ -141,6 +141,7 @@ export function deriveTableStatus(table: WaiterTable): { status: TableStatus; st
   if (allDelivered && totalPaid > 0) return { status: 'paying', statusText: 'Pagando' };
   if (allDelivered) return { status: 'active', statusText: 'Todo entregado' };
 
+  if (table.rounds.length === 0 && table.status === 'empty') return { status: 'empty', statusText: 'Disponible' };
   if (table.rounds.length === 0) return { status: 'active', statusText: 'Mesa abierta' };
 
   return { status: 'active', statusText: 'En orden' };
