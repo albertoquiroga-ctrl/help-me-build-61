@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Volume2, VolumeX, Sparkles } from 'lucide-react';
 import WaiterBottomNav from '@/components/waiter/WaiterBottomNav';
