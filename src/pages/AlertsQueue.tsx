@@ -155,7 +155,45 @@ export default function AlertsQueue() {
       </div>
 
       <div className="px-4 pt-3 space-y-2">
-        {filtered.length === 0 ? (
+        {/* Situational smart suggestions */}
+        {smartSuggestions.length > 0 && (
+          <section className="mb-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sparkles size={13} className="text-w-brand" />
+              <h2 className="text-[13px] font-semibold text-w-brand">Check-ins inteligentes</h2>
+              <span className="text-[10px] text-w-text-secondary ml-auto">{smartSuggestions.length} sugerencias</span>
+            </div>
+            <div className="space-y-1.5">
+              {smartSuggestions.map((s) => (
+                <div
+                  key={s.id}
+                  onClick={() => navigate(`/waiter/table/${s.tableId}`)}
+                  className="rounded-[10px] border border-w-brand/20 bg-gradient-to-r from-w-brand/5 to-w-surface p-2.5 cursor-pointer active:scale-[0.98] transition-transform"
+                >
+                  <div className="flex items-start gap-2">
+                    <span className="text-[14px]">{s.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-semibold text-w-text-secondary">Mesa {s.tableNumber}</span>
+                      </div>
+                      <p className="text-[12px] font-medium text-w-text leading-snug mt-0.5">{s.text}</p>
+                      <p className="text-[10px] text-w-text-secondary mt-0.5">{s.reason}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Separator if both sections exist */}
+        {smartSuggestions.length > 0 && filtered.length > 0 && (
+          <div className="border-t border-w-border/50 pt-2">
+            <h2 className="text-[13px] font-semibold text-w-text-secondary mb-2">Notificaciones</h2>
+          </div>
+        )}
+
+        {filtered.length === 0 && smartSuggestions.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-[32px] mb-2">😌</p>
             <p className="text-[16px] font-semibold text-w-text">Todo tranquilo por ahora</p>
