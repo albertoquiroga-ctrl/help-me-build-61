@@ -44,6 +44,11 @@ export default function AlertsQueue() {
 
   const tables = useTablesStore((s) => s.tables);
 
+  // Generate situational smart suggestions across all active tables
+  const smartSuggestions = useMemo(() => {
+    return tables.flatMap(t => generateSmartSuggestions(t));
+  }, [tables]);
+
   useState(() => { markAllRead(); });
 
   const filtered = queue.filter((n) => {
