@@ -162,6 +162,7 @@ interface TablesState {
   removeItemFromRound: (tableId: string, roundNumber: number, itemIndex: number) => void;
   removeRound: (tableId: string, roundNumber: number) => void;
   editItemInRound: (tableId: string, roundNumber: number, itemIndex: number, updates: Partial<OrderItem>) => void;
+  attachVoucher: (tableId: string, paymentId: string, photoDataUrl: string) => void;
 }
 
 function applyDerived(tables: WaiterTable[], id: string): WaiterTable[] {
