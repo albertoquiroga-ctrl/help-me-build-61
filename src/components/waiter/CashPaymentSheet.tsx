@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Camera, CheckCircle, SkipForward } from 'lucide-react';
+import { X, Heart, Camera, CheckCircle, SkipForward, Banknote, ChevronDown } from 'lucide-react';
 import { useState, useMemo, useRef } from 'react';
 import { useTablesStore, computeTableBill, computeTotalPaid } from '@/stores/tablesStore';
 import { useTipsStore } from '@/stores/tipsStore';
@@ -15,6 +15,8 @@ const TIP_PERCENTAGES = [10, 15, 20];
 
 const QUICK_AMOUNTS = [50, 100, 200, 500];
 
+const BILL_DENOMINATIONS = [200, 500, 1000];
+
 export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Props) {
   const table = useTablesStore((s) => s.tables.find((t) => t.id === tableId));
   const recordPayment = useTablesStore((s) => s.recordPayment);
@@ -25,6 +27,10 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
   const [tipMode, setTipMode] = useState<'none' | 'percent' | 'custom'>('none');
   const [tipPercent, setTipPercent] = useState<number | null>(null);
   const [customTip, setCustomTip] = useState('');
+
+  // Voucher photo step state
+  const [billOpen, setBillOpen] = useState(false);
+  const [billReceived, setBillReceived] = useState<number | null>(null);
 
   // Voucher photo step state
   const [voucherStep, setVoucherStep] = useState(false);
@@ -242,9 +248,82 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
                     </button>
                   )}
                 </div>
+
+                {/* Bill calculator - "Quédate con el cambio" */}
+                <div className="border-t border-w-border/50 pt-2">
+                  <button
+                    onClick={() => { setBillOpen(!billOpen); if (billOpen) setBillReceived(null); }}
+                    className="flex items-center gap-1.5 text-[12px] text-w-text-secondary hover:text-w-text transition-colors"
+                  >
+                    <Banknote size={14} />
+                    <span>💵 ¿Billete grande? Quédate con el cambio</span>
+                    <ChevronDown size={12} className={`transition-transform ${billOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {billOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <p className="text-[11px] text-w-text-secondary mt-2 mb-1.5">
+                          El cliente paga <span className="font-semibold text-w-text">${numAmount || remaining}</span> con...
+                        </p>
+                        <div className="flex gap-1.5">
+                          {BILL_DENOMINATIONS.filter((d) => d > (numAmount || remaining)).map((denom) => (
+                            <button
+                              key={denom}
+                              onClick={() => {
+                                const payAmount = numAmount || remaining;
+                                if (payAmount <= 0) {
+                                  setAmount(String(remaining));
+                                }
+                                const effectivePay = payAmount > 0 ? payAmount : remaining;
+                                if (denom > effectivePay) {
+                                  if (effectivePay <= 0) return;
+                                  setAmount(String(effectivePay));
+                                  const change = denom - effectivePay;
+                                  setTipMode('custom');
+                                  setTipPercent(null);
+                                  setCustomTip(String(change));
+                                  setBillReceived(denom);
+                                }
+                              }}
+                              className={`flex-1 h-9 rounded-[6px] border text-[12px] font-medium transition-colors ${
+                                billReceived === denom
+                                  ? 'border-w-success/50 bg-w-success/10 text-w-success'
+                                  : 'border-w-border text-w-text-secondary hover:border-w-text-secondary/50'
+                              }`}
+                            >
+                              ${denom}
+                            </button>
+                          ))}
+                        </div>
+                        {billReceived && (
+                          <div className="mt-2 px-2 py-1.5 rounded-[6px] bg-w-success/5 border border-w-success/20">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="text-w-text-secondary">Pago</span>
+                              <span className="font-mono font-medium text-w-text">${numAmount}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="text-w-priority">💝 Propina</span>
+                              <span className="font-mono font-medium text-w-priority">${billReceived - numAmount}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] pt-1 border-t border-w-success/20 mt-1">
+                              <span className="text-w-text-secondary">Billete recibido</span>
+                              <span className="font-mono font-semibold text-w-success">${billReceived}</span>
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
-              {/* Tip section */}
+
               {numAmount > 0 && (
                 <div className="shrink-0 border-t border-w-border px-4 pt-3 pb-2 space-y-2">
                   <div className="flex items-center gap-2">
