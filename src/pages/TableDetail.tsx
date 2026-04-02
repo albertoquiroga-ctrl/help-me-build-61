@@ -27,6 +27,15 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Otros': '🍽',
 };
 
+/** Base estimated minutes per category (the "slowest item" baseline) */
+const CATEGORY_BASE_MINUTES: Record<string, number> = {
+  'Bebidas': 5,
+  'Entradas': 10,
+  'Platos Fuertes': 20,
+  'Postres': 12,
+  'Otros': 15,
+};
+
 export default function TableDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
