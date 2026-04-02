@@ -208,16 +208,26 @@ export default function BarDashboard() {
   );
 }
 
-/** Table breakdown row */
-function TableBreakdown({ tables }: { tables: GroupedDrink['tables'] }) {
+/** Table breakdown row with individual timers */
+function TableBreakdown({ tables, orders, showTimers }: { tables: GroupedDrink['tables']; orders?: DrinkOrder[]; showTimers?: boolean }) {
   return (
-    <div className="border-t border-w-border/50 pt-2 mt-1 space-y-1">
-      {tables.sort((a, b) => a.tableNumber - b.tableNumber).map((t) => (
-        <div key={t.tableNumber} className="flex items-center justify-between px-1">
-          <span className="text-[12px] text-w-text">Mesa {t.tableNumber}</span>
-          <span className="text-[12px] font-medium text-w-text-secondary">×{t.qty}</span>
-        </div>
-      ))}
+    <div className="border-t border-w-border/50 pt-2 mt-1 space-y-1.5">
+      {tables.sort((a, b) => a.tableNumber - b.tableNumber).map((t) => {
+        const tableOrder = orders?.find((o) => o.tableNumber === t.tableNumber);
+        return (
+          <div key={t.tableNumber} className="px-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[12px] text-w-text">Mesa {t.tableNumber}</span>
+              <span className="text-[12px] font-medium text-w-text-secondary">×{t.qty}</span>
+            </div>
+            {showTimers && tableOrder && (
+              <div className="mt-0.5">
+                <CookingTimer startedAt={tableOrder.createdAt} estimatedMinutes={5} />
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
