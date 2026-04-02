@@ -408,6 +408,8 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
                 </div>
               )}
 
+              </div>
+
               {/* Footer */}
               <div className="shrink-0 border-t border-w-border px-4 pt-3 pb-4 space-y-3">
                 <div className="space-y-1 px-1">
