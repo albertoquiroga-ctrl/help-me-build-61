@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import BarBottomNav from '@/components/bar/BarBottomNav';
 import RoleSwitcher from '@/components/RoleSwitcher';
 import { useTablesStore } from '@/stores/tablesStore';
