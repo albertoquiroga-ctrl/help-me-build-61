@@ -26,11 +26,13 @@ export default function TimerBar({ totalSeconds, onExpire, color = 'warning', sh
     warning: 'bg-w-warning',
     success: 'bg-w-success',
     error: 'bg-w-error',
+    brand: 'bg-w-brand',
   };
   const textColorMap = {
     warning: 'text-w-warning',
     success: 'text-w-success',
     error: 'text-w-error',
+    brand: 'text-w-brand',
   };
 
   return (
