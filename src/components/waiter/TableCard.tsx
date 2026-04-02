@@ -90,7 +90,7 @@ export default function TableCard({ table }: TableCardProps) {
     );
   }
 
-  // Compute nearest timer info for active rounds
+  // Compute nearest timer info based on individual category estimates within active rounds
   const activeRounds = table.rounds.filter((r) => r.status === 'cooking' || r.status === 'confirmed');
   let timerBadge: React.ReactNode = null;
   if (activeRounds.length > 0) {
@@ -98,14 +98,19 @@ export default function TableCard({ table }: TableCardProps) {
     let nearestOverdue = 0;
     activeRounds.forEach((r) => {
       const started = r.cookingStartedAt || r.createdAt;
-      const est = getRoundEstimate(r);
       const elapsedSec = (Date.now() - new Date(started).getTime()) / 1000;
-      const remaining = est * 60 - elapsedSec;
-      const overdue = getOverdueMinutes(elapsedSec, est);
-      if (remaining < nearestRemaining) {
-        nearestRemaining = remaining;
-        nearestOverdue = overdue;
-      }
+      // Check each category independently to find the nearest delivery
+      const categories = new Set(r.items.map((i) => i.category || 'Otros'));
+      categories.forEach((cat) => {
+        const base = CATEGORY_BASE_MINUTES[cat] || 15;
+        const est = Math.round(base * 1.2);
+        const remaining = est * 60 - elapsedSec;
+        const overdue = getOverdueMinutes(elapsedSec, est);
+        if (remaining < nearestRemaining) {
+          nearestRemaining = remaining;
+          nearestOverdue = overdue;
+        }
+      });
     });
 
     if (nearestOverdue > 0) {

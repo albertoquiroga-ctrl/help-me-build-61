@@ -116,9 +116,16 @@ export function deriveTableStatus(table: WaiterTable): { status: TableStatus; st
     const activeRounds = table.rounds.filter((r) => r.status === 'cooking' || r.status === 'confirmed');
     const nearest = activeRounds.reduce((best, r) => {
       const started = r.cookingStartedAt || r.createdAt;
-      const est = getRoundEstimate(r);
-      const remaining = est * 60 - (Date.now() - new Date(started).getTime()) / 1000;
-      if (best === null || remaining < best.remaining) return { remaining, est, started };
+      const elapsedSec = (Date.now() - new Date(started).getTime()) / 1000;
+      const categories = new Set(r.items.map((i) => i.category || 'Otros'));
+      for (const cat of categories) {
+        const base = CATEGORY_BASE_MINUTES[cat] || 15;
+        const est = Math.round(base * 1.2);
+        const remaining = est * 60 - elapsedSec;
+        if (best === null || remaining < best.remaining) {
+          best = { remaining, est, started };
+        }
+      }
       return best;
     }, null as { remaining: number; est: number; started: string } | null);
 
