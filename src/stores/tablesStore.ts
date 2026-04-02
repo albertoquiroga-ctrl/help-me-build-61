@@ -276,6 +276,14 @@ const initialTables: WaiterTable[] = [
   },
   {
     id: '7', number: 7, section: 'Terraza', assignedWaiter: 'Luis',
+    loyaltyGuest: {
+      name: 'Ricardo Méndez',
+      tier: 'bronze',
+      visits: 3,
+      favoriteItems: ['Guacamole', 'Quesadillas de Flor', 'Agua de Jamaica'],
+      lastVisit: '2 semanas',
+      avgSpend: 280,
+    },
     rounds: [
       { number: 1, label: 'Bebidas', items: [
         { name: 'Margarita Clásica', qty: 3, price: 120, category: 'Bebidas' },
