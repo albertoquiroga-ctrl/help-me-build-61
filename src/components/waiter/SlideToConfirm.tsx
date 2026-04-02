@@ -98,7 +98,7 @@ export default function SlideToConfirm({
           dragMomentum={false}
           onDragEnd={handleDragEnd}
           style={{ x }}
-          className={`absolute top-1 bottom-1 left-1 w-[${THUMB_W - 8}px] rounded-[6px] ${thumbColor} flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg`}
+          className={`absolute top-1 bottom-1 left-1 w-11 rounded-[6px] ${thumbColor} flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg`}
           whileTap={{ scale: 1.05 }}
         >
           <span className="text-white text-[16px] font-bold">→</span>
