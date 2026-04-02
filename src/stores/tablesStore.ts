@@ -490,4 +490,16 @@ export const useTablesStore = create<TablesState>((set) => ({
       });
       return { tables: applyDerived(updated, tableId) };
     }),
+  attachVoucher: (tableId, paymentId, photoDataUrl) =>
+    set((s) => ({
+      tables: s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        return {
+          ...t,
+          payments: t.payments.map((p) =>
+            p.id === paymentId ? { ...p, voucherPhoto: photoDataUrl } : p
+          ),
+        };
+      }),
+    })),
 }));
