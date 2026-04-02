@@ -1,10 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Camera, CheckCircle, SkipForward, Banknote, ChevronDown } from 'lucide-react';
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { X, Heart, Camera, CheckCircle, SkipForward, Banknote, ChevronDown, AlertTriangle } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
 import { useTablesStore, computeTableBill, computeTotalPaid } from '@/stores/tablesStore';
 import { useTipsStore } from '@/stores/tipsStore';
 import { toast } from 'sonner';
-import SlideToConfirm from './SlideToConfirm';
 
 interface Props {
   tableId: string;
@@ -25,7 +24,6 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
   const addTip = useTipsStore((s) => s.addTip);
 
   const [amount, setAmount] = useState('');
-  const [payKey, setPayKey] = useState(0);
   const [tipMode, setTipMode] = useState<'none' | 'percent' | 'custom'>('none');
   const [tipPercent, setTipPercent] = useState<number | null>(null);
   const [customTip, setCustomTip] = useState('');
@@ -33,6 +31,9 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
   // Voucher photo step state
   const [billOpen, setBillOpen] = useState(false);
   const [billReceived, setBillReceived] = useState<number | null>(null);
+
+  // Confirmation step: 'none' | 'cash-confirm' | 'card-confirm' | 'card-failed'
+  const [confirmStep, setConfirmStep] = useState<'none' | 'cash-confirm' | 'card-confirm' | 'card-failed'>('none');
 
   // Voucher photo step state
   const [voucherStep, setVoucherStep] = useState(false);
@@ -119,7 +120,115 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
         className="fixed bottom-0 left-0 right-0 z-[51] bg-w-elevated rounded-t-[16px] border-t border-w-border max-h-[85vh] flex flex-col"
       >
         <AnimatePresence mode="wait">
-          {voucherStep ? (
+          {/* Cash confirmation step */}
+          {confirmStep === 'cash-confirm' ? (
+            <motion.div
+              key="cash-confirm"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              className="p-5 space-y-4"
+            >
+              <div className="text-center space-y-1">
+                <div className="w-12 h-12 rounded-full bg-w-success/10 flex items-center justify-center mx-auto">
+                  <span className="text-[24px]">💵</span>
+                </div>
+                <h3 className="text-[15px] font-semibold text-w-text">¿Ya recibiste el dinero?</h3>
+                <p className="text-[12px] text-w-text-secondary">
+                  Confirma que recibiste <span className="font-semibold text-w-text">${grandTotal}</span> en efectivo
+                  {tipAmount > 0 && <> (incluye <span className="text-w-priority">${tipAmount} de propina</span>)</>}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    handlePay('cash');
+                  }}
+                  className="w-full h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                >
+                  <CheckCircle size={16} /> Sí, cobro recibido
+                </button>
+                <button
+                  onClick={() => setConfirmStep('none')}
+                  className="w-full h-10 rounded-[8px] border border-w-border text-w-text-secondary text-[13px] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                >
+                  ← Regresar
+                </button>
+              </div>
+            </motion.div>
+          ) : confirmStep === 'card-confirm' ? (
+            <motion.div
+              key="card-confirm"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              className="p-5 space-y-4"
+            >
+              <div className="text-center space-y-1">
+                <div className="w-12 h-12 rounded-full bg-w-brand/10 flex items-center justify-center mx-auto">
+                  <span className="text-[24px]">💳</span>
+                </div>
+                <h3 className="text-[15px] font-semibold text-w-text">¿Se generó el voucher?</h3>
+                <p className="text-[12px] text-w-text-secondary">
+                  Confirma que la terminal procesó el cobro de <span className="font-semibold text-w-text">${grandTotal}</span> correctamente
+                </p>
+              </div>
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    handlePay('card-physical');
+                  }}
+                  className="w-full h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                >
+                  <CheckCircle size={16} /> Sí, voucher generado
+                </button>
+                <button
+                  onClick={() => setConfirmStep('card-failed')}
+                  className="w-full h-10 rounded-[8px] border border-w-priority/50 text-w-priority text-[13px] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                >
+                  <AlertTriangle size={14} /> No, hubo un error
+                </button>
+                <button
+                  onClick={() => setConfirmStep('none')}
+                  className="w-full h-10 rounded-[8px] border border-w-border text-w-text-secondary text-[13px] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                >
+                  ← Regresar
+                </button>
+              </div>
+            </motion.div>
+          ) : confirmStep === 'card-failed' ? (
+            <motion.div
+              key="card-failed"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              className="p-5 space-y-4"
+            >
+              <div className="text-center space-y-1">
+                <div className="w-12 h-12 rounded-full bg-w-priority/10 flex items-center justify-center mx-auto">
+                  <AlertTriangle size={24} className="text-w-priority" />
+                </div>
+                <h3 className="text-[15px] font-semibold text-w-text">Pago con tarjeta no procesado</h3>
+                <p className="text-[12px] text-w-text-secondary">
+                  No se registró ningún cobro. Puedes intentar de nuevo o usar otro método de pago.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setConfirmStep('card-confirm')}
+                  className="w-full h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                >
+                  🔄 Intentar de nuevo
+                </button>
+                <button
+                  onClick={() => setConfirmStep('none')}
+                  className="w-full h-10 rounded-[8px] border border-w-border text-w-text-secondary text-[13px] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                >
+                  ← Regresar al cobro
+                </button>
+              </div>
+            </motion.div>
+          ) : voucherStep ? (
             <motion.div
               key="voucher"
               initial={{ opacity: 0, x: 40 }}
@@ -430,25 +539,21 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
                     <span className="font-mono text-[20px] font-bold text-w-text">${grandTotal}</span>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <SlideToConfirm
-                    label="Efectivo"
-                    icon="💵"
-                    onConfirm={() => handlePay('cash')}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmStep('cash-confirm')}
                     disabled={numAmount <= 0}
-                    trackColor="bg-w-success/15"
-                    thumbColor="bg-w-success"
-                    key={`cash-${payKey}`}
-                  />
-                  <SlideToConfirm
-                    label="Tarjeta"
-                    icon="💳"
-                    onConfirm={() => handlePay('card-physical')}
+                    className="flex-1 h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform disabled:opacity-40"
+                  >
+                    💵 Efectivo
+                  </button>
+                  <button
+                    onClick={() => setConfirmStep('card-confirm')}
                     disabled={numAmount <= 0}
-                    trackColor="bg-w-brand/15"
-                    thumbColor="bg-w-brand"
-                    key={`card-${payKey}`}
-                  />
+                    className="flex-1 h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform disabled:opacity-40"
+                  >
+                    💳 Tarjeta
+                  </button>
                 </div>
               </div>
             </motion.div>
