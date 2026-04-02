@@ -177,7 +177,7 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
               )}
             </motion.div>
           ) : (
-            <motion.div key="payment" initial={{ opacity: 1 }} exit={{ opacity: 0, x: -40 }}>
+            <motion.div key="payment" initial={{ opacity: 1 }} exit={{ opacity: 0, x: -40 }} className="flex flex-col max-h-[85vh]">
               {/* Header */}
               <div className="flex items-center justify-between p-4 pb-2 shrink-0">
                 <div>
