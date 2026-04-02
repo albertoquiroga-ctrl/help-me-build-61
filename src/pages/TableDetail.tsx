@@ -380,27 +380,41 @@ export default function TableDetail() {
                     {(isCooking || isConfirmed) && (() => {
                       const isBeverage = cat === 'Bebidas';
                       return (
-                        <button
-                          onClick={() => {
-                            const notifStore = useNotificationsStore.getState();
-                            notifStore.addNotification({
-                              id: `reminder-${table.id}-${cat}-${Date.now()}`,
-                              type: isBeverage ? 'bar-msg' : 'kitchen-msg',
-                              priority: 'high',
-                              tableId: table.id,
-                              title: `🔔 Recordatorio · Mesa ${table.number}`,
-                              subtitle: `El mesero solicita actualización de ${cat}`,
-                              channel: isBeverage ? 'barra' : 'cocina',
-                              timestamp: new Date().toISOString(),
-                              dismissed: false,
-                              resolved: false,
-                            });
-                            toast.success(isBeverage ? '🔔 Recordatorio enviado a barra' : '🔔 Recordatorio enviado a cocina');
-                          }}
-                          className="flex-1 h-10 rounded-[8px] border border-w-warning text-w-warning font-semibold text-[12px] active:scale-[0.98] transition-transform"
-                        >
-                          {isBeverage ? '🍹 Recordar a barra' : '🔔 Recordar a cocina'}
-                        </button>
+                        <>
+                          <button
+                            onClick={() => {
+                              const notifStore = useNotificationsStore.getState();
+                              notifStore.addNotification({
+                                id: `reminder-${table.id}-${cat}-${Date.now()}`,
+                                type: isBeverage ? 'bar-msg' : 'kitchen-msg',
+                                priority: 'high',
+                                tableId: table.id,
+                                title: `🔔 Recordatorio · Mesa ${table.number}`,
+                                subtitle: `El mesero solicita actualización de ${cat}`,
+                                channel: isBeverage ? 'barra' : 'cocina',
+                                timestamp: new Date().toISOString(),
+                                dismissed: false,
+                                resolved: false,
+                              });
+                              toast.success(isBeverage ? '🔔 Recordatorio enviado a barra' : '🔔 Recordatorio enviado a cocina');
+                            }}
+                            className="flex-1 h-10 rounded-[8px] border border-w-warning text-w-warning font-semibold text-[12px] active:scale-[0.98] transition-transform"
+                          >
+                            {isBeverage ? '🍹 Recordar a barra' : '🔔 Recordar a cocina'}
+                          </button>
+                          {group.roundNumbers.map((rn) => (
+                            <button
+                              key={`force-${rn}`}
+                              onClick={() => {
+                                markDelivered(table.id, rn);
+                                toast.success(`✓ ${cat} marcado como entregado · Mesa ${table.number}`);
+                              }}
+                              className="flex-1 h-10 rounded-[8px] border border-w-success text-w-success font-semibold text-[12px] active:scale-[0.98] transition-transform"
+                            >
+                              ✓ Entregado
+                            </button>
+                          ))}
+                        </>
                       );
                     })()}
                   </div>
