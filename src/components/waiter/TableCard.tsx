@@ -162,6 +162,12 @@ export default function TableCard({ table }: TableCardProps) {
           </span>
         )}
       </div>
+      {topSuggestion && (
+        <div className="flex items-center gap-1 mt-1 px-0.5">
+          <span className="text-[9px]">{topSuggestion.icon}</span>
+          <span className="text-[9px] text-w-brand font-medium truncate leading-tight">{topSuggestion.text}</span>
+        </div>
+      )}
       <div className="mt-auto flex items-end justify-between">
         <span className="text-[11px] text-w-text-secondary leading-tight">{table.statusText}</span>
         <span className="font-mono text-[11px] text-w-text-secondary">
