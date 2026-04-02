@@ -33,6 +33,16 @@ export interface PaymentRecord {
   timestamp: string;
 }
 
+/** Loyalty guest seated at this table (persistent, not notification-based) */
+export interface LoyaltyGuest {
+  name: string;
+  tier: 'gold' | 'silver' | 'bronze';
+  visits: number;
+  favoriteItems: string[];
+  lastVisit: string;
+  avgSpend: number;
+}
+
 export interface WaiterTable {
   id: string;
   number: number;
@@ -44,6 +54,7 @@ export interface WaiterTable {
   tipTotal: number;
   section?: string;
   assignedWaiter?: string;
+  loyaltyGuest?: LoyaltyGuest;
 }
 
 /** Compute total bill from all rounds */
