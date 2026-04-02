@@ -177,7 +177,7 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
               )}
             </motion.div>
           ) : (
-            <motion.div key="payment" initial={{ opacity: 1 }} exit={{ opacity: 0, x: -40 }}>
+            <motion.div key="payment" initial={{ opacity: 1 }} exit={{ opacity: 0, x: -40 }} className="flex flex-col flex-1 min-h-0">
               {/* Header */}
               <div className="flex items-center justify-between p-4 pb-2 shrink-0">
                 <div>
@@ -205,6 +205,7 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
                 <p className="text-[10px] text-w-text-secondary mt-1 text-right font-mono">{paidPct}% cubierto</p>
               </div>
 
+              <div className="overflow-y-auto flex-1 min-h-0">
               {/* Amount input */}
               <div className="px-4 pb-3 space-y-2">
                 <div className="relative">
@@ -406,6 +407,8 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
                   </div>
                 </div>
               )}
+
+              </div>
 
               {/* Footer */}
               <div className="shrink-0 border-t border-w-border px-4 pt-3 pb-4 space-y-3">
