@@ -150,7 +150,7 @@ function DiscrepancyNote({ tables }: { tables: WaiterTable[] }) {
   );
 }
 
-function MethodList({ rows, label, showCamera }: { rows: FlatPayment[]; label: string; showCamera?: boolean }) {
+function MethodList({ rows, label, showCamera, showMethod }: { rows: FlatPayment[]; label: string; showCamera?: boolean; showMethod?: boolean }) {
   const total = rows.reduce((s, r) => s + r.payment.amount, 0);
   const tips = rows.reduce((s, r) => s + r.payment.tipAmount, 0);
 
@@ -162,7 +162,7 @@ function MethodList({ rows, label, showCamera }: { rows: FlatPayment[]; label: s
     <div>
       <div className="divide-y divide-w-border/30">
         {rows.map((r) => (
-          <PaymentRow key={r.payment.id} row={r} showCamera={showCamera} />
+          <PaymentRow key={r.payment.id} row={r} showCamera={showCamera} showMethod={showMethod} />
         ))}
       </div>
       <div className="rounded-[8px] bg-w-brand/10 border border-w-brand/30 p-3 flex items-center justify-between mt-2">
