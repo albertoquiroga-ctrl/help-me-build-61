@@ -208,6 +208,14 @@ const initialTables: WaiterTable[] = [
   },
   {
     id: '4', number: 4, section: 'Barra', assignedWaiter: 'María',
+    loyaltyGuest: {
+      name: 'Andrea Ríos',
+      tier: 'gold',
+      visits: 12,
+      favoriteItems: ['Margarita de Tamarindo', 'Tacos al Pastor', 'Flan Napolitano'],
+      lastVisit: '3 días',
+      avgSpend: 420,
+    },
     rounds: [
       { number: 1, label: 'Bebidas + Entradas', items: [
         { name: 'Margarita Clásica', qty: 2, price: 120, category: 'Bebidas' },
