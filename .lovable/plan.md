@@ -1,27 +1,45 @@
 
 
-## Marcar entregado manualmente en Table Detail
+## Calculadora "Quédate con el cambio" en CashPaymentSheet
 
 ### Problema
-Actualmente el botón "Marcar entregado" solo aparece cuando el status de la ronda es `ready`. Si cocina no actualiza el status en el app, el mesero no tiene forma de marcar que ya entregó los platillos.
+Cuando un cliente da un billete grande (ej. $500) para una cuenta de $160 y dice "quédate con el cambio", el mesero tiene que calcular mentalmente cuánto es pago ($160) y cuánto es propina ($340), y luego ingresarlo manualmente en dos campos separados.
 
 ### Solución
-Agregar un botón "Marcar entregado" también en las rondas con status `cooking` o `confirmed`, permitiendo al mesero forzar la entrega manualmente cuando cocina no está sincronizada.
+Agregar un mini-tool "💵 Billete recibido" debajo de los quick amounts. El mesero ingresa el billete que recibió, y el sistema auto-calcula:
+- **Pago** = monto restante de la cuenta (o lo que haya en el campo)
+- **Propina** = billete − pago
+- Auto-rellena ambos campos con un solo tap
+
+### Diseño UI
+
+```text
+┌─ Monto ─────────────────────────────┐
+│  $ [160]                            │
+│  [$50] [$100] [$200] [$500] [Todo]  │
+│                                     │
+│  💵 ¿Billete grande? ───────────── │
+│  "El cliente paga $160 con..."      │
+│  [$200] [$500] [$1000]              │
+│  → Pago: $160 · Propina: $340  ✓   │
+└─────────────────────────────────────┘
+```
 
 ### Cambio técnico
 
-**`src/pages/TableDetail.tsx`** — En la sección de active orders por categoría (líneas ~367-405):
+**`src/components/waiter/CashPaymentSheet.tsx`**:
 
-- Agregar un botón "✓ Marcar entregado" junto al botón de "Recordar a cocina/barra" para rondas en estado `cooking` o `confirmed`
-- El botón tendrá estilo secundario (outline verde) para diferenciarlo del caso `ready` (que es sólido verde)
-- Al presionar, llama `markDelivered` para cada `roundNumber` del grupo y muestra toast de confirmación
-- Se mantiene el botón de recordatorio existente; ambos coexisten en la misma fila
+- Agregar estado `billReceived: number | null` para rastrear si el mesero activó la calculadora
+- Debajo de los quick amounts, mostrar una sección colapsable "💵 ¿Billete grande? Quédate con el cambio"
+- Al expandir, mostrar botones con denominaciones comunes de billetes mexicanos: $200, $500, $1000
+- Al seleccionar un billete:
+  - Si no hay monto ingresado, auto-llenar `amount` con `remaining` (lo que falta por pagar)
+  - Calcular `cambio = billete - amount`
+  - Si `cambio > 0`, auto-seleccionar `tipMode = 'custom'` y `customTip = cambio`
+  - Mostrar un resumen: "Pago: $160 · Propina: $340 · Cambio: $0"
+- El mesero puede ajustar si quiere dar cambio parcial (ej. "de los $340 dame $100 y quédate con $240")
+- Solo se muestra esta sección cuando el método será efectivo (no tiene sentido en tarjeta)
 
-```text
-┌─ Platos Fuertes ─── En cocina 🔥 ─┐
-│  Entrecot ×2, Pasta ×1             │
-│  🔥 ~12 min restante               │
-│  [🔔 Recordar cocina] [✓ Entregado]│
-└─────────────────────────────────────┘
-```
+### Archivo a modificar
+- `src/components/waiter/CashPaymentSheet.tsx`
 
