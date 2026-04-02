@@ -51,7 +51,7 @@ export default function TableDetail() {
   const [showManualOrder, setShowManualOrder] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const allBarOrders = useBarStore((s) => s.orders);
-  const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && (o.status === 'pending' || o.status === 'preparing')), [allBarOrders, id]);
+  const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && o.status !== 'delivered'), [allBarOrders, id]);
 
   // Smart suggestions based on behavioral patterns
   const smartSuggestions = useMemo(() => {
