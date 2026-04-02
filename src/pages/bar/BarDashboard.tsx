@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import BarBottomNav from '@/components/bar/BarBottomNav';
 import RoleSwitcher from '@/components/RoleSwitcher';
 import { useTablesStore } from '@/stores/tablesStore';
@@ -157,7 +158,7 @@ export default function BarDashboard() {
                 <h2 className="text-[13px] font-semibold text-w-warning mb-2">Pendientes</h2>
                 <div className="space-y-2">
                   {pending.map((g) => (
-                    <GroupCard key={g.key} group={g} onAction={() => handleAcceptGroup(g)} actionLabel="Aceptar" actionColor="bg-w-warning" />
+                    <ExpandableGroupCard key={g.key} group={g} onAction={() => handleAcceptGroup(g)} actionLabel="Aceptar" actionColor="bg-w-warning" />
                   ))}
                 </div>
               </section>
@@ -173,24 +174,14 @@ export default function BarDashboard() {
                     const est = 5; // beverages base
                     const isOverdue = getOverdueMinutes(elapsed, est) > 0;
                     return (
-                      <div key={g.key} className={`rounded-xl bg-w-surface border p-3 space-y-2 ${isOverdue ? 'border-w-error/50 bg-w-error/5' : 'border-w-border'}`}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-[14px] font-medium text-w-text">{g.itemName} ×{g.totalQty}</p>
-                            <p className="text-[11px] text-w-text-secondary">
-                              {g.tables.map((t) => `Mesa ${t.tableNumber}`).join(', ')}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleReadyGroup(g)}
-                            className="px-3 py-1.5 rounded-lg bg-w-success text-white text-[12px] font-medium min-h-[36px]"
-                          >
-                            Listo ✓
-                          </button>
-                        </div>
-                        {/* Timer uses createdAt — never resets */}
-                        <CookingTimer startedAt={g.oldestCreatedAt} estimatedMinutes={5} />
-                      </div>
+                      <ExpandableGroupCard
+                        key={g.key}
+                        group={g}
+                        onAction={() => handleReadyGroup(g)}
+                        actionLabel="Listo ✓"
+                        actionColor="bg-w-success"
+                        borderClass={isOverdue ? 'border-w-error/50 bg-w-error/5' : 'border-w-border'}
+                      />
                     );
                   })}
                 </div>
@@ -203,15 +194,7 @@ export default function BarDashboard() {
                 <h2 className="text-[13px] font-semibold text-w-success mb-2">Listos para recoger</h2>
                 <div className="space-y-2">
                   {ready.map((g) => (
-                    <div key={g.key} className="rounded-xl bg-w-surface border border-w-success/30 p-3 flex items-center justify-between opacity-70">
-                      <div>
-                        <p className="text-[14px] font-medium text-w-text">{g.itemName} ×{g.totalQty}</p>
-                        <p className="text-[11px] text-w-text-secondary">
-                          {g.tables.map((t) => `Mesa ${t.tableNumber}`).join(', ')}
-                        </p>
-                      </div>
-                      <span className="text-[11px] text-w-success font-medium">✓ Listo</span>
-                    </div>
+                    <ReadyGroupCard key={g.key} group={g} />
                   ))}
                 </div>
               </section>
@@ -225,22 +208,52 @@ export default function BarDashboard() {
   );
 }
 
-function GroupCard({
+/** Table breakdown row */
+function TableBreakdown({ tables }: { tables: GroupedDrink['tables'] }) {
+  return (
+    <div className="border-t border-w-border/50 pt-2 mt-1 space-y-1">
+      {tables.sort((a, b) => a.tableNumber - b.tableNumber).map((t) => (
+        <div key={t.tableNumber} className="flex items-center justify-between px-1">
+          <span className="text-[12px] text-w-text">Mesa {t.tableNumber}</span>
+          <span className="text-[12px] font-medium text-w-text-secondary">×{t.qty}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Expandable group card for pending / preparing */
+function ExpandableGroupCard({
   group,
   onAction,
   actionLabel,
   actionColor,
+  borderClass,
 }: {
   group: GroupedDrink;
   onAction: () => void;
   actionLabel: string;
   actionColor: string;
+  borderClass?: string;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const multiTable = group.tables.length > 1;
+
   return (
-    <div className="rounded-xl bg-w-surface border border-w-border p-3 space-y-2">
+    <div className={`rounded-xl bg-w-surface border p-3 space-y-2 ${borderClass || 'border-w-border'}`}>
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[14px] font-medium text-w-text">{group.itemName} ×{group.totalQty}</p>
+        <div
+          className={multiTable ? 'cursor-pointer flex-1' : 'flex-1'}
+          onClick={() => multiTable && setExpanded(!expanded)}
+        >
+          <div className="flex items-center gap-1.5">
+            <p className="text-[14px] font-medium text-w-text">{group.itemName} ×{group.totalQty}</p>
+            {multiTable && (
+              expanded
+                ? <ChevronUp size={14} className="text-w-text-secondary" />
+                : <ChevronDown size={14} className="text-w-text-secondary" />
+            )}
+          </div>
           <p className="text-[11px] text-w-text-secondary">
             {group.tables.map((t) => `Mesa ${t.tableNumber}${t.qty > 1 ? ` (×${t.qty})` : ''}`).join(', ')}
             {' · '}{minutesAgo(group.oldestCreatedAt)} min esperando
@@ -248,13 +261,44 @@ function GroupCard({
         </div>
         <button
           onClick={onAction}
-          className={`px-3 py-1.5 rounded-lg ${actionColor} text-white text-[12px] font-medium min-h-[36px]`}
+          className={`px-3 py-1.5 rounded-lg ${actionColor} text-white text-[12px] font-medium min-h-[36px] shrink-0 ml-2`}
         >
           {actionLabel}
         </button>
       </div>
-      {/* Timer always uses original createdAt — continuous */}
+      {expanded && <TableBreakdown tables={group.tables} />}
       <CookingTimer startedAt={group.oldestCreatedAt} estimatedMinutes={5} />
+    </div>
+  );
+}
+
+/** Ready group card — always expanded to help sort by table */
+function ReadyGroupCard({ group }: { group: GroupedDrink }) {
+  const [expanded, setExpanded] = useState(true);
+  const multiTable = group.tables.length > 1;
+
+  return (
+    <div className="rounded-xl bg-w-surface border border-w-success/30 p-3 space-y-1">
+      <div
+        className={`flex items-center justify-between ${multiTable ? 'cursor-pointer' : ''}`}
+        onClick={() => multiTable && setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-1.5">
+          <p className="text-[14px] font-medium text-w-text">{group.itemName} ×{group.totalQty}</p>
+          {multiTable && (
+            expanded
+              ? <ChevronUp size={14} className="text-w-text-secondary" />
+              : <ChevronDown size={14} className="text-w-text-secondary" />
+          )}
+        </div>
+        <span className="text-[11px] text-w-success font-medium">✓ Listo</span>
+      </div>
+      {!expanded && (
+        <p className="text-[11px] text-w-text-secondary">
+          {group.tables.map((t) => `Mesa ${t.tableNumber}`).join(', ')}
+        </p>
+      )}
+      {expanded && <TableBreakdown tables={group.tables} />}
     </div>
   );
 }
