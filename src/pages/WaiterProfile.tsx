@@ -61,6 +61,9 @@ export default function WaiterProfile() {
           </div>
         </div>
 
+        {/* Shift consolidation */}
+        <ShiftConsolidation />
+
         {/* Settings */}
         <div className="rounded-[10px] bg-w-surface border border-w-border divide-y divide-w-border">
           {[
