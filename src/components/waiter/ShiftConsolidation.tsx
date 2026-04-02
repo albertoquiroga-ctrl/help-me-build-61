@@ -107,6 +107,7 @@ function VoucherButton({ payment, tableId }: { payment: PaymentRecord; tableId: 
 
 function PaymentRow({ row, showMethod, showCamera }: { row: FlatPayment; showMethod?: boolean; showCamera?: boolean }) {
   const p = row.payment;
+  const showVoucher = showCamera || (showMethod && p.method === 'card-physical');
   return (
     <div className="flex items-center gap-2 py-2 px-1">
       <span className="text-[12px] font-medium text-w-text w-14 shrink-0">Mesa {row.tableNumber}</span>
@@ -120,7 +121,7 @@ function PaymentRow({ row, showMethod, showCamera }: { row: FlatPayment; showMet
       <div className="ml-auto flex items-center gap-2 shrink-0">
         <span className="font-mono text-[13px] text-w-text">${p.amount}</span>
         {p.tipAmount > 0 && <span className="font-mono text-[11px] text-w-tip">+${p.tipAmount}</span>}
-        {showCamera && <VoucherButton payment={p} tableId={row.tableId} />}
+        {showVoucher && <VoucherButton payment={p} tableId={row.tableId} />}
       </div>
     </div>
   );
