@@ -202,6 +202,14 @@ const initialTables: WaiterTable[] = [
   },
   {
     id: '2', number: 2, section: 'Interior', assignedWaiter: 'Carlos',
+    loyaltyGuest: {
+      name: 'Sofía Hernández',
+      tier: 'silver',
+      visits: 7,
+      favoriteItems: ['Margarita Clásica', 'Tacos de Asada', 'Churros'],
+      lastVisit: '5 días',
+      avgSpend: 340,
+    },
     rounds: [
       { number: 1, label: 'Bebidas', items: [
         { name: 'Margarita Clásica', qty: 2, price: 120, category: 'Bebidas' },
