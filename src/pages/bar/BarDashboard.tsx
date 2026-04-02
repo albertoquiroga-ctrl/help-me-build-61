@@ -158,7 +158,7 @@ export default function BarDashboard() {
                 <h2 className="text-[13px] font-semibold text-w-warning mb-2">Pendientes</h2>
                 <div className="space-y-2">
                   {pending.map((g) => (
-                    <GroupCard key={g.key} group={g} onAction={() => handleAcceptGroup(g)} actionLabel="Aceptar" actionColor="bg-w-warning" />
+                    <ExpandableGroupCard key={g.key} group={g} onAction={() => handleAcceptGroup(g)} actionLabel="Aceptar" actionColor="bg-w-warning" />
                   ))}
                 </div>
               </section>
