@@ -5,6 +5,7 @@ import RoleSwitcher from '@/components/RoleSwitcher';
 import { useRoleStore } from '@/stores/roleStore';
 import { useWaiterSession } from '@/stores/waiterSessionStore';
 import { useTipsStore } from '@/stores/tipsStore';
+import ShiftConsolidation from '@/components/waiter/ShiftConsolidation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
