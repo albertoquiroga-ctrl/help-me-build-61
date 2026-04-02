@@ -24,7 +24,6 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
   const addTip = useTipsStore((s) => s.addTip);
 
   const [amount, setAmount] = useState('');
-  const [payKey, setPayKey] = useState(0);
   const [tipMode, setTipMode] = useState<'none' | 'percent' | 'custom'>('none');
   const [tipPercent, setTipPercent] = useState<number | null>(null);
   const [customTip, setCustomTip] = useState('');
