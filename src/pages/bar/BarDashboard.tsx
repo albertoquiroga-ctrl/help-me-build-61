@@ -174,24 +174,14 @@ export default function BarDashboard() {
                     const est = 5; // beverages base
                     const isOverdue = getOverdueMinutes(elapsed, est) > 0;
                     return (
-                      <div key={g.key} className={`rounded-xl bg-w-surface border p-3 space-y-2 ${isOverdue ? 'border-w-error/50 bg-w-error/5' : 'border-w-border'}`}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-[14px] font-medium text-w-text">{g.itemName} ×{g.totalQty}</p>
-                            <p className="text-[11px] text-w-text-secondary">
-                              {g.tables.map((t) => `Mesa ${t.tableNumber}`).join(', ')}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleReadyGroup(g)}
-                            className="px-3 py-1.5 rounded-lg bg-w-success text-white text-[12px] font-medium min-h-[36px]"
-                          >
-                            Listo ✓
-                          </button>
-                        </div>
-                        {/* Timer uses createdAt — never resets */}
-                        <CookingTimer startedAt={g.oldestCreatedAt} estimatedMinutes={5} />
-                      </div>
+                      <ExpandableGroupCard
+                        key={g.key}
+                        group={g}
+                        onAction={() => handleReadyGroup(g)}
+                        actionLabel="Listo ✓"
+                        actionColor="bg-w-success"
+                        borderClass={isOverdue ? 'border-w-error/50 bg-w-error/5' : 'border-w-border'}
+                      />
                     );
                   })}
                 </div>
