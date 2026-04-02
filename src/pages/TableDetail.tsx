@@ -439,6 +439,7 @@ export default function TableDetail() {
                         ✓ Entregar todo
                       </button>
                     )}
+                  </div>
                 </motion.div>
               );
             });
