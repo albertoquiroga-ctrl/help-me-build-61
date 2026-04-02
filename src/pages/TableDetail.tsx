@@ -150,7 +150,7 @@ export default function TableDetail() {
                 className="h-full rounded-full transition-all duration-300"
                 style={{
                   width: `${paidPct}%`,
-                  background: fullyPaid ? 'hsl(var(--w-success))' : 'hsl(var(--w-brand))',
+                  background: fullyPaid ? 'hsl(var(--success))' : 'hsl(var(--brand-primary))',
                 }}
               />
             </div>
