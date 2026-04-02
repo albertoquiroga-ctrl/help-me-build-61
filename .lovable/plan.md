@@ -1,56 +1,55 @@
 
 
-## Consolidación de turno — Sección en perfil del mesero
+## Mejora de Consolidación de Turno — Lista cronológica + Foto de voucher
 
 ### Resumen
-Agregar una sección expandible "Consolidación de turno" en el perfil del mesero que muestre todos los cobros del turno desglosados por método de pago (App/QR, Terminal/Tarjeta, Efectivo), con vista individual, por mesa y totales. Incluye botón para compartir el reporte.
+Rediseñar la consolidación para que sea una herramienta práctica de reconciliación: el mesero ve listas planas ordenadas por hora (mesa, hora, monto) separadas por método de pago, para comparar contra lo que tiene físicamente en la mano. Además, al registrar pagos con terminal, puede tomar foto del voucher como respaldo.
 
-### Diseño
+### Cambios
 
-La sección se ubica entre el "Resumen de turno" y los Settings, con tres tabs:
+**1. Rediseñar `ShiftConsolidation.tsx` — Listas planas por método**
+
+Cambiar de la vista agrupada por mesa a listas cronológicas planas por tab:
 
 ```text
-┌─────────────────────────────────┐
-│  💰 Consolidación de turno      │
-│  ┌─────┬──────────┬──────────┐  │
-│  │ App │ Terminal │ Efectivo │  │
-│  └─────┴──────────┴──────────┘  │
-│                                 │
-│  MESA 2                         │
-│  ├ C1 QR    $185    tip $20     │
-│  └ Subtotal $185    tip $20     │
-│                                 │
-│  MESA 4                         │
-│  ├ C1 QR    $426    tip $56     │
-│  ├ C4 QR    $210    tip $30     │
-│  └ Subtotal $636    tip $86     │
-│                                 │
-│  ═══════════════════════════     │
-│  TOTAL APP: $821   Tips: $106   │
-│                                 │
-│  [📋 Copiar reporte]            │
-│  [📤 Compartir consolidación]   │
-└─────────────────────────────────┘
+┌─ Tab: Terminal ──────────────────┐
+│  Mesa 4 · 14:32 · $426   📷     │
+│  Mesa 2 · 15:10 · $185   📷     │
+│  ─────────────────────────────── │
+│  Total Terminal: $611            │
+│  Propinas: $76                   │
+└──────────────────────────────────┘
 ```
 
-### Cambios técnicos
+- Cada pago es una fila: mesa, hora, monto, propina
+- Ordenado cronológicamente (más antiguo arriba)
+- En tab Terminal: cada fila tiene botón de cámara (📷) para adjuntar foto de voucher
+- Tab "Todos" muestra todas las filas con badge del método
+- Mantener totales por tab y discrepancias (mesas sin pagar completo) como nota al final, no como foco principal
 
-**1. Nuevo componente `src/components/waiter/ShiftConsolidation.tsx`**
-- Lee todas las mesas del mesero desde `useTablesStore`
-- Filtra pagos agrupados por método: `qr` → "App", `card-physical` → "Terminal", `cash` → "Efectivo"
-- Tres tabs (uno por método) mostrando:
-  - Pagos individuales por mesa (monto, propina, nombre del comensal, hora)
-  - Subtotal por mesa
-  - Gran total al final
-- Tab "Todos" como vista default con las 3 columnas lado a lado en resumen
-- Botón "Copiar reporte" genera texto plano al clipboard
-- Botón "Compartir" usa `navigator.share()` si disponible, si no copia al clipboard
-- Muestra discrepancias: compara total cobrado vs total de la cuenta de cada mesa, marca en rojo si no cuadran
+**2. Agregar `voucherPhoto` a `PaymentRecord`**
 
-**2. Editar `src/pages/WaiterProfile.tsx`**
-- Importar y renderizar `<ShiftConsolidation />` entre el resumen de turno y los settings
-- El componente es colapsable con un toggle para no saturar la vista del perfil
+- Nuevo campo opcional `voucherPhoto?: string` (base64 data URL) en la interfaz `PaymentRecord`
+- Al tomar foto, se guarda directamente en el payment record del store
 
-### Datos
-Los `PaymentRecord` ya tienen `method`, `amount`, `tipAmount`, `guestName` y `timestamp` — toda la data necesaria ya existe en el store. Se agrupa por `table.assignedWaiter === 'Carlos'` y se itera sobre `table.payments`.
+**3. Agregar acción `attachVoucher` al store**
+
+- Nueva acción en `tablesStore`: `attachVoucher(tableId: string, paymentId: string, photoDataUrl: string)`
+- Busca el payment por ID y le asigna el `voucherPhoto`
+
+**4. Componente de captura de foto en `ShiftConsolidation`**
+
+- Botón de cámara junto a cada pago de terminal
+- Al tocar: abre `<input type="file" accept="image/*" capture="environment">` (abre cámara en móvil)
+- Convierte a base64 y llama `attachVoucher`
+- Si ya tiene foto: muestra miniatura clickeable que abre la foto en un modal/lightbox simple
+- Icono cambia de gris a verde cuando ya tiene foto adjunta
+
+**5. Mantener funcionalidad existente**
+- Botones de copiar/compartir reporte siguen funcionando
+- El reporte de texto indica "(con voucher)" junto a pagos que tienen foto
+
+### Archivos a modificar
+- `src/stores/tablesStore.ts` — agregar `voucherPhoto` a `PaymentRecord` y acción `attachVoucher`
+- `src/components/waiter/ShiftConsolidation.tsx` — rediseño completo de la UI + captura de foto
 
