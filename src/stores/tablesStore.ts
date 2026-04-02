@@ -87,7 +87,28 @@ export function deriveTableStatus(table: WaiterTable): { status: TableStatus; st
   if (hasReadyRound) return { status: 'active', statusText: 'Orden lista para recoger' };
 
   const hasCookingRound = table.rounds.some((r) => r.status === 'cooking');
-  if (hasCookingRound) return { status: 'active', statusText: 'En cocina' };
+  const hasConfirmedRound = table.rounds.some((r) => r.status === 'confirmed');
+  if (hasCookingRound || hasConfirmedRound) {
+    // Find the round closest to being done
+    const activeRounds = table.rounds.filter((r) => r.status === 'cooking' || r.status === 'confirmed');
+    const nearest = activeRounds.reduce((best, r) => {
+      const started = r.cookingStartedAt || r.createdAt;
+      const est = r.estimatedMinutes ?? 15;
+      const remaining = est * 60 - (Date.now() - new Date(started).getTime()) / 1000;
+      if (best === null || remaining < best.remaining) return { remaining, est, started };
+      return best;
+    }, null as { remaining: number; est: number; started: string } | null);
+
+    if (nearest) {
+      const remainingSec = Math.max(0, nearest.remaining);
+      const remainingMin = Math.ceil(remainingSec / 60);
+      if (remainingSec <= 0) {
+        return { status: 'active', statusText: '⏰ Orden retrasada' };
+      }
+      return { status: 'active', statusText: `🔥 ~${remainingMin} min restante` };
+    }
+    return { status: 'active', statusText: 'En cocina' };
+  }
 
   const allDelivered = table.rounds.length > 0 && table.rounds.every((r) => r.status === 'delivered');
   const totalBill = computeTableBill(table);
