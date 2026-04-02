@@ -275,7 +275,7 @@ const initialTables: WaiterTable[] = [
     ],
     payments: [
       { id: 'p6-1', amount: 510, tipAmount: 52, method: 'qr', timestamp: new Date(Date.now() - 20 * 60000).toISOString() },
-      { id: 'p6-2', amount: 310, tipAmount: 45, method: 'qr', timestamp: new Date(Date.now() - 18 * 60000).toISOString() },
+      { id: 'p6-2', amount: 310, tipAmount: 45, method: 'card-physical', guestName: 'Roberto', timestamp: new Date(Date.now() - 18 * 60000).toISOString() },
     ],
     status: 'paying', statusText: 'Todo pagado', timeOpened: 70, tipTotal: 97,
   },
