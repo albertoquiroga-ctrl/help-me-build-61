@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, Camera, CheckCircle, SkipForward, Banknote, ChevronDown, AlertTriangle } from 'lucide-react';
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useTablesStore, computeTableBill, computeTotalPaid } from '@/stores/tablesStore';
 import { useTipsStore } from '@/stores/tipsStore';
 import { toast } from 'sonner';
