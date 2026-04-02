@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import type { WaiterTable, Round } from '@/stores/tablesStore';
@@ -7,6 +7,7 @@ import { useBarStore } from '@/stores/barStore';
 import { toast } from 'sonner';
 import OpenTableDialog from './OpenTableDialog';
 import { getOverdueMinutes } from './CookingTimer';
+import { generateSmartSuggestions } from '@/lib/smartSuggestions';
 
 const CATEGORY_BASE_MINUTES: Record<string, number> = {
   'Bebidas': 5,
