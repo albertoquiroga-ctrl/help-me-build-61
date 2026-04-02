@@ -53,6 +53,10 @@ export default function TableCard({ table }: TableCardProps) {
   const totalPaid = computeTotalPaid(table);
   const itemCount = table.rounds.reduce((s, r) => s + r.items.reduce((a, i) => a + i.qty, 0), 0);
 
+  // Smart suggestions for this table
+  const suggestions = useMemo(() => generateSmartSuggestions(table), [table]);
+  const topSuggestion = suggestions.length > 0 ? suggestions[0] : null;
+
   // Recalculate status every 30s so the timer text stays fresh
   useEffect(() => {
     const hasActive = table.rounds.some((r) => r.status === 'cooking' || r.status === 'confirmed');
