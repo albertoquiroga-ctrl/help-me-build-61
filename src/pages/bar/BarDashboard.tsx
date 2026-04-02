@@ -276,7 +276,7 @@ function ExpandableGroupCard({
           {actionLabel}
         </button>
       </div>
-      {expanded && <TableBreakdown tables={group.tables} />}
+      {expanded && <TableBreakdown tables={group.tables} orders={group.orders} showTimers />}
       <CookingTimer startedAt={group.oldestCreatedAt} estimatedMinutes={5} />
     </div>
   );
