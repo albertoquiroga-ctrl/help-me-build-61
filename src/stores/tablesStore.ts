@@ -11,6 +11,7 @@ export interface OrderItem {
   category?: string;
   modifiers?: string[];
   extras?: { name: string; price: number }[];
+  delivered?: boolean;
 }
 
 export interface Round {
@@ -162,6 +163,7 @@ interface TablesState {
   addRound: (id: string, round: Round) => void;
   updateRoundStatus: (tableId: string, roundNumber: number, status: RoundStatus) => void;
   markDelivered: (id: string, roundNumber: number) => void;
+  markItemDelivered: (tableId: string, roundNumber: number, itemIndex: number) => void;
   closeTable: (id: string) => void;
   recalculateStatus: (id: string) => void;
   addManualOrder: (tableId: string, items: OrderItem[]) => void;
@@ -416,6 +418,24 @@ export const useTablesStore = create<TablesState>((set) => ({
           : t
       );
       return { tables: applyDerived(updated, id) };
+    }),
+  markItemDelivered: (tableId, roundNumber, itemIndex) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        return {
+          ...t,
+          rounds: t.rounds.map((r) => {
+            if (r.number !== roundNumber) return r;
+            const newItems = r.items.map((item, idx) =>
+              idx === itemIndex ? { ...item, delivered: true } : item
+            );
+            const allDelivered = newItems.every((item) => item.delivered);
+            return { ...r, items: newItems, status: allDelivered ? 'delivered' as RoundStatus : r.status };
+          }),
+        };
+      });
+      return { tables: applyDerived(updated, tableId) };
     }),
   closeTable: (id) =>
     set((s) => ({

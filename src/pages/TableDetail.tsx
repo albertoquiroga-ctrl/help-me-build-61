@@ -44,6 +44,7 @@ export default function TableDetail() {
   const navigate = useNavigate();
   const table = useTablesStore((s) => s.tables.find((t) => t.id === id));
   const markDelivered = useTablesStore((s) => s.markDelivered);
+  const markItemDelivered = useTablesStore((s) => s.markItemDelivered);
   const updateRoundStatus = useTablesStore((s) => s.updateRoundStatus);
   const removeItemFromRound = useTablesStore((s) => s.removeItemFromRound);
   const editItemInRound = useTablesStore((s) => s.editItemInRound);
@@ -308,16 +309,27 @@ export default function TableDetail() {
             const activeRounds = table.rounds.filter((r) => r.status !== 'delivered' && r.status !== 'pending');
             if (activeRounds.length === 0) return null;
 
-            // Group items across active rounds by category
-            const categoryGroups: Record<string, { items: { name: string; qty: number }[]; startedAt: string; status: string; roundNumbers: number[] }> = {};
+            // Group items across active rounds by category, keeping per-item tracking
+            const categoryGroups: Record<string, {
+              items: { name: string; qty: number; delivered?: boolean; roundNumber: number; itemIndex: number }[];
+              startedAt: string;
+              status: string;
+              roundNumbers: number[];
+            }> = {};
             activeRounds.forEach((r) => {
               const startedAt = r.cookingStartedAt || r.createdAt;
-              r.items.forEach((item) => {
+              r.items.forEach((item, itemIdx) => {
                 const cat = item.category || 'Otros';
                 if (!categoryGroups[cat]) {
                   categoryGroups[cat] = { items: [], startedAt, status: r.status, roundNumbers: [] };
                 }
-                categoryGroups[cat].items.push({ name: item.name, qty: item.qty });
+                categoryGroups[cat].items.push({
+                  name: item.name,
+                  qty: item.qty,
+                  delivered: item.delivered,
+                  roundNumber: r.number,
+                  itemIndex: itemIdx,
+                });
                 if (!categoryGroups[cat].roundNumbers.includes(r.number)) {
                   categoryGroups[cat].roundNumbers.push(r.number);
                 }
@@ -333,7 +345,9 @@ export default function TableDetail() {
               });
             });
 
-            return Object.entries(categoryGroups).map(([cat, group]) => {
+            return Object.entries(categoryGroups)
+              .filter(([, group]) => group.items.some((i) => !i.delivered))
+              .map(([cat, group]) => {
               const isCooking = group.status === 'cooking';
               const isReady = group.status === 'ready';
               const isConfirmed = group.status === 'confirmed';
@@ -357,66 +371,76 @@ export default function TableDetail() {
                     </div>
                     <span className={`text-[10px] px-2 py-0.5 rounded-[6px] ${badge.bg} ${badge.text}`}>{badge.label}</span>
                   </div>
-                  <div className="text-[11px] text-w-text-secondary">
-                    {group.items.map((i) => `${i.name}${i.qty > 1 ? ` ×${i.qty}` : ''}`).join(', ')}
+                  {/* Per-item delivery checklist */}
+                  <div className="space-y-1">
+                    {group.items.map((item, idx) => (
+                      <div key={`${item.roundNumber}-${item.itemIndex}-${idx}`} className="flex items-center justify-between">
+                        <span className={`text-[11px] ${item.delivered ? 'text-w-success line-through' : 'text-w-text-secondary'}`}>
+                          {item.name}{item.qty > 1 ? ` ×${item.qty}` : ''}
+                        </span>
+                        {item.delivered ? (
+                          <span className="text-[10px] text-w-success font-medium">✓</span>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              markItemDelivered(table.id, item.roundNumber, item.itemIndex);
+                              toast.success(`✓ ${item.name} entregado · Mesa ${table.number}`);
+                            }}
+                            className="text-[10px] px-2 py-1 rounded-[6px] border border-w-success/50 text-w-success font-medium active:scale-[0.95] transition-transform"
+                          >
+                            ✓ Entregado
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
                   <CookingTimer
                     startedAt={group.startedAt}
                     estimatedMinutes={estimatedMinutes}
                   />
+                  {/* Reminder + mark all delivered */}
                   <div className="flex gap-2">
-                    {isReady && group.roundNumbers.map((rn) => (
-                      <button
-                        key={rn}
-                        onClick={() => {
-                          markDelivered(table.id, rn);
-                          toast.success(`✓ ${cat} entregado · Mesa ${table.number}`);
-                        }}
-                        className="flex-1 h-10 rounded-[8px] bg-w-success text-white font-semibold text-[12px] active:scale-[0.98] transition-transform"
-                      >
-                        ✓ Marcar entregado
-                      </button>
-                    ))}
                     {(isCooking || isConfirmed) && (() => {
                       const isBeverage = cat === 'Bebidas';
                       return (
-                        <>
-                          <button
-                            onClick={() => {
-                              const notifStore = useNotificationsStore.getState();
-                              notifStore.addNotification({
-                                id: `reminder-${table.id}-${cat}-${Date.now()}`,
-                                type: isBeverage ? 'bar-msg' : 'kitchen-msg',
-                                priority: 'high',
-                                tableId: table.id,
-                                title: `🔔 Recordatorio · Mesa ${table.number}`,
-                                subtitle: `El mesero solicita actualización de ${cat}`,
-                                channel: isBeverage ? 'barra' : 'cocina',
-                                timestamp: new Date().toISOString(),
-                                dismissed: false,
-                                resolved: false,
-                              });
-                              toast.success(isBeverage ? '🔔 Recordatorio enviado a barra' : '🔔 Recordatorio enviado a cocina');
-                            }}
-                            className="flex-1 h-10 rounded-[8px] border border-w-warning text-w-warning font-semibold text-[12px] active:scale-[0.98] transition-transform"
-                          >
-                            {isBeverage ? '🍹 Recordar a barra' : '🔔 Recordar a cocina'}
-                          </button>
-                          {group.roundNumbers.map((rn) => (
-                            <button
-                              key={`force-${rn}`}
-                              onClick={() => {
-                                markDelivered(table.id, rn);
-                                toast.success(`✓ ${cat} marcado como entregado · Mesa ${table.number}`);
-                              }}
-                              className="flex-1 h-10 rounded-[8px] border border-w-success text-w-success font-semibold text-[12px] active:scale-[0.98] transition-transform"
-                            >
-                              ✓ Entregado
-                            </button>
-                          ))}
-                        </>
+                        <button
+                          onClick={() => {
+                            const notifStore = useNotificationsStore.getState();
+                            notifStore.addNotification({
+                              id: `reminder-${table.id}-${cat}-${Date.now()}`,
+                              type: isBeverage ? 'bar-msg' : 'kitchen-msg',
+                              priority: 'high',
+                              tableId: table.id,
+                              title: `🔔 Recordatorio · Mesa ${table.number}`,
+                              subtitle: `El mesero solicita actualización de ${cat}`,
+                              channel: isBeverage ? 'barra' : 'cocina',
+                              timestamp: new Date().toISOString(),
+                              dismissed: false,
+                              resolved: false,
+                            });
+                            toast.success(isBeverage ? '🔔 Recordatorio enviado a barra' : '🔔 Recordatorio enviado a cocina');
+                          }}
+                          className="flex-1 h-10 rounded-[8px] border border-w-warning text-w-warning font-semibold text-[12px] active:scale-[0.98] transition-transform"
+                        >
+                          {isBeverage ? '🍹 Recordar a barra' : '🔔 Recordar a cocina'}
+                        </button>
                       );
                     })()}
+                    {group.items.some((i) => !i.delivered) && (
+                      <button
+                        onClick={() => {
+                          group.items.forEach((item) => {
+                            if (!item.delivered) {
+                              markItemDelivered(table.id, item.roundNumber, item.itemIndex);
+                            }
+                          });
+                          toast.success(`✓ Todo ${cat} entregado · Mesa ${table.number}`);
+                        }}
+                        className={`flex-1 h-10 rounded-[8px] ${isReady ? 'bg-w-success text-white' : 'border border-w-success text-w-success'} font-semibold text-[12px] active:scale-[0.98] transition-transform`}
+                      >
+                        ✓ Entregar todo
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               );
