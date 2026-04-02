@@ -163,6 +163,7 @@ interface TablesState {
   addRound: (id: string, round: Round) => void;
   updateRoundStatus: (tableId: string, roundNumber: number, status: RoundStatus) => void;
   markDelivered: (id: string, roundNumber: number) => void;
+  markItemDelivered: (tableId: string, roundNumber: number, itemIndex: number) => void;
   closeTable: (id: string) => void;
   recalculateStatus: (id: string) => void;
   addManualOrder: (tableId: string, items: OrderItem[]) => void;
