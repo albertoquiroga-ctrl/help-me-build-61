@@ -11,6 +11,7 @@ export interface OrderItem {
   category?: string;
   modifiers?: string[];
   extras?: { name: string; price: number }[];
+  delivered?: boolean;
 }
 
 export interface Round {
