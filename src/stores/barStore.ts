@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type DrinkPrepStatus = 'pending' | 'preparing' | 'ready';
+export type DrinkPrepStatus = 'pending' | 'preparing' | 'ready' | 'delivered';
 
 export interface DrinkOrder {
   id: string;
