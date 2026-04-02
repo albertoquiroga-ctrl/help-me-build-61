@@ -27,12 +27,21 @@ interface TableCardProps { table: WaiterTable; }
 export default function TableCard({ table }: TableCardProps) {
   const navigate = useNavigate();
   const openTable = useTablesStore((s) => s.openTable);
+  const recalculateStatus = useTablesStore((s) => s.recalculateStatus);
   const isEmpty = table.status === 'empty';
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const dot = getDotInfo(table);
   const totalBill = computeTableBill(table);
   const totalPaid = computeTotalPaid(table);
   const itemCount = table.rounds.reduce((s, r) => s + r.items.reduce((a, i) => a + i.qty, 0), 0);
+
+  // Recalculate status every 30s so the timer text stays fresh
+  useEffect(() => {
+    const hasActive = table.rounds.some((r) => r.status === 'cooking' || r.status === 'confirmed');
+    if (!hasActive) return;
+    const iv = setInterval(() => recalculateStatus(table.id), 30000);
+    return () => clearInterval(iv);
+  }, [table.rounds, table.id, recalculateStatus]);
 
   if (isEmpty) {
     return (
@@ -59,6 +68,59 @@ export default function TableCard({ table }: TableCardProps) {
     );
   }
 
+  // Compute nearest timer info for active rounds
+  const activeRounds = table.rounds.filter((r) => r.status === 'cooking' || r.status === 'confirmed');
+  let timerBadge: React.ReactNode = null;
+  if (activeRounds.length > 0) {
+    let nearestRemaining = Infinity;
+    let nearestOverdue = 0;
+    activeRounds.forEach((r) => {
+      const started = r.cookingStartedAt || r.createdAt;
+      const est = r.estimatedMinutes ?? 15;
+      const elapsedSec = (Date.now() - new Date(started).getTime()) / 1000;
+      const remaining = est * 60 - elapsedSec;
+      const overdue = getOverdueMinutes(elapsedSec, est);
+      if (remaining < nearestRemaining) {
+        nearestRemaining = remaining;
+        nearestOverdue = overdue;
+      }
+    });
+
+    if (nearestOverdue > 0) {
+      timerBadge = (
+        <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-error/15 text-w-error font-mono font-semibold animate-pulse">
+          ⏰ +{nearestOverdue}m
+        </span>
+      );
+    } else {
+      const remainMin = Math.ceil(Math.max(0, nearestRemaining) / 60);
+      timerBadge = (
+        <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-warning/15 text-w-warning font-mono font-semibold">
+          🔥 ~{remainMin}m
+        </span>
+      );
+    }
+  }
+
+  // Bar drink overdue
+  const barOrders = useBarStore.getState().orders.filter(
+    (o) => o.tableId === table.id && o.status === 'preparing' && o.preparingStartedAt && o.estimatedMinutes
+  );
+  const overdueDrink = barOrders.find((o) => {
+    const elapsed = (Date.now() - new Date(o.preparingStartedAt!).getTime()) / 1000;
+    return getOverdueMinutes(elapsed, o.estimatedMinutes!) > 0;
+  });
+  let drinkBadge: React.ReactNode = null;
+  if (overdueDrink) {
+    const elapsed = (Date.now() - new Date(overdueDrink.preparingStartedAt!).getTime()) / 1000;
+    const over = getOverdueMinutes(elapsed, overdueDrink.estimatedMinutes!);
+    drinkBadge = (
+      <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-error/15 text-w-error font-mono font-semibold animate-pulse">
+        🍸 +{over}m
+      </span>
+    );
+  }
+
   return (
     <div
       onClick={() => navigate(`/waiter/table/${table.id}`)}
@@ -70,38 +132,8 @@ export default function TableCard({ table }: TableCardProps) {
         <p className="text-[12px] text-w-text-secondary text-center mt-0.5">🍽 {itemCount} items</p>
       )}
       <div className="flex justify-center mt-1.5 gap-1 flex-wrap">
-        {(() => {
-          const overdueRound = table.rounds.find((r) => {
-            if (r.status !== 'cooking' || !r.cookingStartedAt || !r.estimatedMinutes) return false;
-            const elapsed = (Date.now() - new Date(r.cookingStartedAt).getTime()) / 1000;
-            return getOverdueMinutes(elapsed, r.estimatedMinutes) > 0;
-          });
-          if (!overdueRound || !overdueRound.cookingStartedAt || !overdueRound.estimatedMinutes) return null;
-          const elapsed = (Date.now() - new Date(overdueRound.cookingStartedAt).getTime()) / 1000;
-          const over = getOverdueMinutes(elapsed, overdueRound.estimatedMinutes);
-          return (
-            <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-error/15 text-w-error font-mono font-semibold animate-pulse">
-              ⏰ +{over}m
-            </span>
-          );
-        })()}
-        {(() => {
-          const barOrders = useBarStore.getState().orders.filter(
-            (o) => o.tableId === table.id && o.status === 'preparing' && o.preparingStartedAt && o.estimatedMinutes
-          );
-          const overdueDrink = barOrders.find((o) => {
-            const elapsed = (Date.now() - new Date(o.preparingStartedAt!).getTime()) / 1000;
-            return getOverdueMinutes(elapsed, o.estimatedMinutes!) > 0;
-          });
-          if (!overdueDrink) return null;
-          const elapsed = (Date.now() - new Date(overdueDrink.preparingStartedAt!).getTime()) / 1000;
-          const over = getOverdueMinutes(elapsed, overdueDrink.estimatedMinutes!);
-          return (
-            <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-error/15 text-w-error font-mono font-semibold animate-pulse">
-              🍸 +{over}m
-            </span>
-          );
-        })()}
+        {timerBadge}
+        {drinkBadge}
         {totalBill > 0 && totalPaid > 0 && (
           <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-success/15 text-w-success font-mono">
             ${totalPaid}/${totalBill}
