@@ -33,6 +33,9 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
   const [billOpen, setBillOpen] = useState(false);
   const [billReceived, setBillReceived] = useState<number | null>(null);
 
+  // Confirmation step: 'none' | 'cash-confirm' | 'card-confirm' | 'card-failed'
+  const [confirmStep, setConfirmStep] = useState<'none' | 'cash-confirm' | 'card-confirm' | 'card-failed'>('none');
+
   // Voucher photo step state
   const [voucherStep, setVoucherStep] = useState(false);
   const [lastPaymentId, setLastPaymentId] = useState<string | null>(null);
