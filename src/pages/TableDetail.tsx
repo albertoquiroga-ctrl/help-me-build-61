@@ -44,6 +44,7 @@ export default function TableDetail() {
   const navigate = useNavigate();
   const table = useTablesStore((s) => s.tables.find((t) => t.id === id));
   const markDelivered = useTablesStore((s) => s.markDelivered);
+  const markItemDelivered = useTablesStore((s) => s.markItemDelivered);
   const updateRoundStatus = useTablesStore((s) => s.updateRoundStatus);
   const removeItemFromRound = useTablesStore((s) => s.removeItemFromRound);
   const editItemInRound = useTablesStore((s) => s.editItemInRound);
