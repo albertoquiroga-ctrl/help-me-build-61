@@ -231,7 +231,7 @@ export default function ShiftConsolidation() {
             </TabsList>
 
             <TabsContent value="all">
-              <MethodList rows={allRows} label="General" showCamera={false} />
+              <MethodList rows={allRows} label="General" showMethod />
             </TabsContent>
             <TabsContent value="qr">
               <MethodList rows={qrRows} label="App/QR" />
