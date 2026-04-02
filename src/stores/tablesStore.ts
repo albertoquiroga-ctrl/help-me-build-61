@@ -419,6 +419,24 @@ export const useTablesStore = create<TablesState>((set) => ({
       );
       return { tables: applyDerived(updated, id) };
     }),
+  markItemDelivered: (tableId, roundNumber, itemIndex) =>
+    set((s) => {
+      const updated = s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        return {
+          ...t,
+          rounds: t.rounds.map((r) => {
+            if (r.number !== roundNumber) return r;
+            const newItems = r.items.map((item, idx) =>
+              idx === itemIndex ? { ...item, delivered: true } : item
+            );
+            const allDelivered = newItems.every((item) => item.delivered);
+            return { ...r, items: newItems, status: allDelivered ? 'delivered' as RoundStatus : r.status };
+          }),
+        };
+      });
+      return { tables: applyDerived(updated, tableId) };
+    }),
   closeTable: (id) =>
     set((s) => ({
       tables: s.tables.map((t) =>
