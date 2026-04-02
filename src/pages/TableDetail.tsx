@@ -174,6 +174,18 @@ export default function TableDetail() {
           </div>
         )}
 
+        {/* Loyalty guest banner (persistent) */}
+        {table.loyaltyGuest && (
+          <LoyaltyBanner guest={table.loyaltyGuest} />
+        )}
+
+        {/* Smart suggestions (behavioral, dismissible) */}
+        <AnimatePresence>
+          {visibleSuggestions.map((s) => (
+            <SmartSuggestion key={s.id} suggestion={s} onDismiss={handleDismissSuggestion} />
+          ))}
+        </AnimatePresence>
+
         {/* Capture order button */}
         <button
           onClick={() => setShowManualOrder(true)}
