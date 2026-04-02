@@ -93,7 +93,7 @@ export default function TableCard({ table }: TableCardProps) {
     let nearestOverdue = 0;
     activeRounds.forEach((r) => {
       const started = r.cookingStartedAt || r.createdAt;
-      const est = r.estimatedMinutes ?? 15;
+      const est = getRoundEstimate(r);
       const elapsedSec = (Date.now() - new Date(started).getTime()) / 1000;
       const remaining = est * 60 - elapsedSec;
       const overdue = getOverdueMinutes(elapsedSec, est);
