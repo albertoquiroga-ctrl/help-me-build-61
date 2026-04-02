@@ -107,6 +107,7 @@ function VoucherButton({ payment, tableId }: { payment: PaymentRecord; tableId: 
 
 function PaymentRow({ row, showMethod, showCamera }: { row: FlatPayment; showMethod?: boolean; showCamera?: boolean }) {
   const p = row.payment;
+  const showVoucher = showCamera || (showMethod && p.method === 'card-physical');
   return (
     <div className="flex items-center gap-2 py-2 px-1">
       <span className="text-[12px] font-medium text-w-text w-14 shrink-0">Mesa {row.tableNumber}</span>
@@ -120,7 +121,7 @@ function PaymentRow({ row, showMethod, showCamera }: { row: FlatPayment; showMet
       <div className="ml-auto flex items-center gap-2 shrink-0">
         <span className="font-mono text-[13px] text-w-text">${p.amount}</span>
         {p.tipAmount > 0 && <span className="font-mono text-[11px] text-w-tip">+${p.tipAmount}</span>}
-        {showCamera && <VoucherButton payment={p} tableId={row.tableId} />}
+        {showVoucher && <VoucherButton payment={p} tableId={row.tableId} />}
       </div>
     </div>
   );
@@ -149,7 +150,7 @@ function DiscrepancyNote({ tables }: { tables: WaiterTable[] }) {
   );
 }
 
-function MethodList({ rows, label, showCamera }: { rows: FlatPayment[]; label: string; showCamera?: boolean }) {
+function MethodList({ rows, label, showCamera, showMethod }: { rows: FlatPayment[]; label: string; showCamera?: boolean; showMethod?: boolean }) {
   const total = rows.reduce((s, r) => s + r.payment.amount, 0);
   const tips = rows.reduce((s, r) => s + r.payment.tipAmount, 0);
 
@@ -161,7 +162,7 @@ function MethodList({ rows, label, showCamera }: { rows: FlatPayment[]; label: s
     <div>
       <div className="divide-y divide-w-border/30">
         {rows.map((r) => (
-          <PaymentRow key={r.payment.id} row={r} showCamera={showCamera} />
+          <PaymentRow key={r.payment.id} row={r} showCamera={showCamera} showMethod={showMethod} />
         ))}
       </div>
       <div className="rounded-[8px] bg-w-brand/10 border border-w-brand/30 p-3 flex items-center justify-between mt-2">
@@ -230,7 +231,7 @@ export default function ShiftConsolidation() {
             </TabsList>
 
             <TabsContent value="all">
-              <MethodList rows={allRows} label="General" showCamera={false} />
+              <MethodList rows={allRows} label="General" showMethod />
             </TabsContent>
             <TabsContent value="qr">
               <MethodList rows={qrRows} label="App/QR" />
