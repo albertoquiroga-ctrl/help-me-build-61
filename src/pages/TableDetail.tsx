@@ -439,8 +439,6 @@ export default function TableDetail() {
                         ✓ Entregar todo
                       </button>
                     )}
-                  </div>
-                  </div>
                 </motion.div>
               );
             });
