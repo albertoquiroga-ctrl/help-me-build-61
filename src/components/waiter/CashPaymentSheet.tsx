@@ -15,6 +15,8 @@ const TIP_PERCENTAGES = [10, 15, 20];
 
 const QUICK_AMOUNTS = [50, 100, 200, 500];
 
+const BILL_DENOMINATIONS = [200, 500, 1000];
+
 export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Props) {
   const table = useTablesStore((s) => s.tables.find((t) => t.id === tableId));
   const recordPayment = useTablesStore((s) => s.recordPayment);
