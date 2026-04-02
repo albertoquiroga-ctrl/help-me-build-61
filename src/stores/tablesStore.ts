@@ -31,6 +31,7 @@ export interface PaymentRecord {
   method: 'cash' | 'card-physical' | 'qr';
   guestName?: string;
   timestamp: string;
+  voucherPhoto?: string;
 }
 
 /** Loyalty guest seated at this table (persistent, not notification-based) */
