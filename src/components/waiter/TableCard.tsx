@@ -1,12 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import type { WaiterTable } from '@/stores/tablesStore';
+import type { WaiterTable, Round } from '@/stores/tablesStore';
 import { useTablesStore, computeTableBill, computeTotalPaid } from '@/stores/tablesStore';
 import { useBarStore } from '@/stores/barStore';
 import { toast } from 'sonner';
 import OpenTableDialog from './OpenTableDialog';
 import { getOverdueMinutes } from './CookingTimer';
+
+const CATEGORY_BASE_MINUTES: Record<string, number> = {
+  'Bebidas': 5,
+  'Entradas': 10,
+  'Platos Fuertes': 20,
+  'Postres': 12,
+  'Otros': 15,
+};
+
+/** Get the effective estimated minutes for a round based on its slowest category item × 1.2 */
+function getRoundEstimate(r: Round): number {
+  const maxBase = r.items.reduce((max, item) => {
+    const base = CATEGORY_BASE_MINUTES[item.category || 'Otros'] || 15;
+    return Math.max(max, base);
+  }, 5);
+  return Math.round(maxBase * 1.2);
+}
 
 function getDotInfo(table: WaiterTable): { color: string; pulse: boolean } {
   const hasPendingRound = table.rounds.some((r) => r.status === 'pending');
