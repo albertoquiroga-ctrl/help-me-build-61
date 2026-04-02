@@ -309,16 +309,27 @@ export default function TableDetail() {
             const activeRounds = table.rounds.filter((r) => r.status !== 'delivered' && r.status !== 'pending');
             if (activeRounds.length === 0) return null;
 
-            // Group items across active rounds by category
-            const categoryGroups: Record<string, { items: { name: string; qty: number }[]; startedAt: string; status: string; roundNumbers: number[] }> = {};
+            // Group items across active rounds by category, keeping per-item tracking
+            const categoryGroups: Record<string, {
+              items: { name: string; qty: number; delivered?: boolean; roundNumber: number; itemIndex: number }[];
+              startedAt: string;
+              status: string;
+              roundNumbers: number[];
+            }> = {};
             activeRounds.forEach((r) => {
               const startedAt = r.cookingStartedAt || r.createdAt;
-              r.items.forEach((item) => {
+              r.items.forEach((item, itemIdx) => {
                 const cat = item.category || 'Otros';
                 if (!categoryGroups[cat]) {
                   categoryGroups[cat] = { items: [], startedAt, status: r.status, roundNumbers: [] };
                 }
-                categoryGroups[cat].items.push({ name: item.name, qty: item.qty });
+                categoryGroups[cat].items.push({
+                  name: item.name,
+                  qty: item.qty,
+                  delivered: item.delivered,
+                  roundNumber: r.number,
+                  itemIndex: itemIdx,
+                });
                 if (!categoryGroups[cat].roundNumbers.includes(r.number)) {
                   categoryGroups[cat].roundNumbers.push(r.number);
                 }
