@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import BarBottomNav from '@/components/bar/BarBottomNav';
 import RoleSwitcher from '@/components/RoleSwitcher';
 import { useTablesStore } from '@/stores/tablesStore';
@@ -8,6 +8,49 @@ import CookingTimer, { getOverdueMinutes } from '@/components/waiter/CookingTime
 
 function minutesAgo(iso: string) {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+}
+
+/** Group orders by drink name + status, combining quantities and tracking tables */
+interface GroupedDrink {
+  key: string;
+  itemName: string;
+  totalQty: number;
+  tables: { tableNumber: number; qty: number }[];
+  orders: DrinkOrder[];
+  oldestCreatedAt: string; // for timer continuity
+  status: DrinkOrder['status'];
+}
+
+function groupByDrink(orders: DrinkOrder[]): GroupedDrink[] {
+  const map = new Map<string, GroupedDrink>();
+  for (const o of orders) {
+    const key = `${o.itemName}-${o.status}`;
+    const existing = map.get(key);
+    if (existing) {
+      existing.totalQty += o.qty;
+      const tbl = existing.tables.find((t) => t.tableNumber === o.tableNumber);
+      if (tbl) tbl.qty += o.qty;
+      else existing.tables.push({ tableNumber: o.tableNumber, qty: o.qty });
+      existing.orders.push(o);
+      if (new Date(o.createdAt) < new Date(existing.oldestCreatedAt)) {
+        existing.oldestCreatedAt = o.createdAt;
+      }
+    } else {
+      map.set(key, {
+        key,
+        itemName: o.itemName,
+        totalQty: o.qty,
+        tables: [{ tableNumber: o.tableNumber, qty: o.qty }],
+        orders: [o],
+        oldestCreatedAt: o.createdAt,
+        status: o.status,
+      });
+    }
+  }
+  // Sort by oldest first (longest waiting)
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(a.oldestCreatedAt).getTime() - new Date(b.oldestCreatedAt).getTime()
+  );
 }
 
 export default function BarDashboard() {
@@ -45,38 +88,34 @@ export default function BarDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tables]);
 
-  const handleAccept = (orderId: string) => {
-    updateStatus(orderId, 'preparing');
+  const handleAcceptGroup = (group: GroupedDrink) => {
+    group.orders.forEach((o) => updateStatus(o.id, 'preparing'));
   };
 
-  const handleReady = (order: DrinkOrder) => {
-    updateStatus(order.id, 'ready');
-    addNotification({
-      id: `bar-ready-${order.id}-${Date.now()}`,
-      type: 'bar-msg',
-      priority: 'medium',
-      tableId: order.tableId,
-      title: `Bebida lista · Mesa ${order.tableNumber}`,
-      subtitle: `${order.itemName} ×${order.qty}`,
-      channel: 'barra',
-      timestamp: new Date().toISOString(),
-      dismissed: false,
-      resolved: false,
+  const handleReadyGroup = (group: GroupedDrink) => {
+    group.orders.forEach((o) => updateStatus(o.id, 'ready'));
+    // Send one notification per table
+    const tableMap = new Map<string, DrinkOrder>();
+    group.orders.forEach((o) => { if (!tableMap.has(o.tableId)) tableMap.set(o.tableId, o); });
+    tableMap.forEach((o) => {
+      addNotification({
+        id: `bar-ready-${o.id}-${Date.now()}`,
+        type: 'bar-msg',
+        priority: 'medium',
+        tableId: o.tableId,
+        title: `Bebida lista · Mesa ${o.tableNumber}`,
+        subtitle: `${group.itemName} ×${group.totalQty}`,
+        channel: 'barra',
+        timestamp: new Date().toISOString(),
+        dismissed: false,
+        resolved: false,
+      });
     });
   };
 
-  const pending = orders.filter((o) => o.status === 'pending');
-  const preparing = orders.filter((o) => o.status === 'preparing').sort((a, b) => {
-    // Overdue first
-    const aOver = a.preparingStartedAt && a.estimatedMinutes
-      ? getOverdueMinutes((Date.now() - new Date(a.preparingStartedAt).getTime()) / 1000, a.estimatedMinutes)
-      : 0;
-    const bOver = b.preparingStartedAt && b.estimatedMinutes
-      ? getOverdueMinutes((Date.now() - new Date(b.preparingStartedAt).getTime()) / 1000, b.estimatedMinutes)
-      : 0;
-    return bOver - aOver;
-  });
-  const ready = orders.filter((o) => o.status === 'ready');
+  const pending = useMemo(() => groupByDrink(orders.filter((o) => o.status === 'pending')), [orders]);
+  const preparing = useMemo(() => groupByDrink(orders.filter((o) => o.status === 'preparing')), [orders]);
+  const ready = useMemo(() => groupByDrink(orders.filter((o) => o.status === 'ready')), [orders]);
 
   return (
     <div className="min-h-screen bg-w-bg pb-20">
@@ -117,8 +156,8 @@ export default function BarDashboard() {
               <section>
                 <h2 className="text-[13px] font-semibold text-w-warning mb-2">Pendientes</h2>
                 <div className="space-y-2">
-                  {pending.map((o) => (
-                    <OrderCard key={o.id} order={o} onAction={() => handleAccept(o.id)} actionLabel="Aceptar" actionColor="bg-w-warning" />
+                  {pending.map((g) => (
+                    <GroupCard key={g.key} group={g} onAction={() => handleAcceptGroup(g)} actionLabel="Aceptar" actionColor="bg-w-warning" />
                   ))}
                 </div>
               </section>
@@ -129,27 +168,28 @@ export default function BarDashboard() {
               <section>
                 <h2 className="text-[13px] font-semibold text-w-brand mb-2">En preparación</h2>
                 <div className="space-y-2">
-                  {preparing.map((o) => {
-                    const isOverdue = o.preparingStartedAt && o.estimatedMinutes
-                      ? getOverdueMinutes((Date.now() - new Date(o.preparingStartedAt).getTime()) / 1000, o.estimatedMinutes) > 0
-                      : false;
+                  {preparing.map((g) => {
+                    const elapsed = (Date.now() - new Date(g.oldestCreatedAt).getTime()) / 1000;
+                    const est = 5; // beverages base
+                    const isOverdue = getOverdueMinutes(elapsed, est) > 0;
                     return (
-                      <div key={o.id} className={`rounded-xl bg-w-surface border p-3 space-y-2 ${isOverdue ? 'border-w-error/50 bg-w-error/5' : 'border-w-border'}`}>
+                      <div key={g.key} className={`rounded-xl bg-w-surface border p-3 space-y-2 ${isOverdue ? 'border-w-error/50 bg-w-error/5' : 'border-w-border'}`}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-[14px] font-medium text-w-text">{o.itemName} ×{o.qty}</p>
-                            <p className="text-[11px] text-w-text-secondary">Mesa {o.tableNumber} · R{o.roundNumber}</p>
+                            <p className="text-[14px] font-medium text-w-text">{g.itemName} ×{g.totalQty}</p>
+                            <p className="text-[11px] text-w-text-secondary">
+                              {g.tables.map((t) => `Mesa ${t.tableNumber}`).join(', ')}
+                            </p>
                           </div>
                           <button
-                            onClick={() => handleReady(o)}
+                            onClick={() => handleReadyGroup(g)}
                             className="px-3 py-1.5 rounded-lg bg-w-success text-white text-[12px] font-medium min-h-[36px]"
                           >
                             Listo ✓
                           </button>
                         </div>
-                        {o.preparingStartedAt && o.estimatedMinutes && (
-                          <CookingTimer startedAt={o.preparingStartedAt} estimatedMinutes={o.estimatedMinutes} />
-                        )}
+                        {/* Timer uses createdAt — never resets */}
+                        <CookingTimer startedAt={g.oldestCreatedAt} estimatedMinutes={5} />
                       </div>
                     );
                   })}
@@ -162,11 +202,13 @@ export default function BarDashboard() {
               <section>
                 <h2 className="text-[13px] font-semibold text-w-success mb-2">Listos para recoger</h2>
                 <div className="space-y-2">
-                  {ready.map((o) => (
-                    <div key={o.id} className="rounded-xl bg-w-surface border border-w-success/30 p-3 flex items-center justify-between opacity-70">
+                  {ready.map((g) => (
+                    <div key={g.key} className="rounded-xl bg-w-surface border border-w-success/30 p-3 flex items-center justify-between opacity-70">
                       <div>
-                        <p className="text-[14px] font-medium text-w-text">{o.itemName} ×{o.qty}</p>
-                        <p className="text-[11px] text-w-text-secondary">Mesa {o.tableNumber} · R{o.roundNumber}</p>
+                        <p className="text-[14px] font-medium text-w-text">{g.itemName} ×{g.totalQty}</p>
+                        <p className="text-[11px] text-w-text-secondary">
+                          {g.tables.map((t) => `Mesa ${t.tableNumber}`).join(', ')}
+                        </p>
                       </div>
                       <span className="text-[11px] text-w-success font-medium">✓ Listo</span>
                     </div>
@@ -183,13 +225,13 @@ export default function BarDashboard() {
   );
 }
 
-function OrderCard({
-  order,
+function GroupCard({
+  group,
   onAction,
   actionLabel,
   actionColor,
 }: {
-  order: DrinkOrder;
+  group: GroupedDrink;
   onAction: () => void;
   actionLabel: string;
   actionColor: string;
@@ -198,9 +240,10 @@ function OrderCard({
     <div className="rounded-xl bg-w-surface border border-w-border p-3 space-y-2">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[14px] font-medium text-w-text">{order.itemName} ×{order.qty}</p>
+          <p className="text-[14px] font-medium text-w-text">{group.itemName} ×{group.totalQty}</p>
           <p className="text-[11px] text-w-text-secondary">
-            Mesa {order.tableNumber} · R{order.roundNumber}
+            {group.tables.map((t) => `Mesa ${t.tableNumber}${t.qty > 1 ? ` (×${t.qty})` : ''}`).join(', ')}
+            {' · '}{minutesAgo(group.oldestCreatedAt)} min esperando
           </p>
         </div>
         <button
@@ -210,7 +253,8 @@ function OrderCard({
           {actionLabel}
         </button>
       </div>
-      <CookingTimer startedAt={order.createdAt} estimatedMinutes={5} />
+      {/* Timer always uses original createdAt — continuous */}
+      <CookingTimer startedAt={group.oldestCreatedAt} estimatedMinutes={5} />
     </div>
   );
 }
