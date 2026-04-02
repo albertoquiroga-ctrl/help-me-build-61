@@ -159,31 +159,39 @@ export default function AlertsQueue() {
         {/* Situational smart suggestions */}
         {smartSuggestions.length > 0 && (
           <section className="mb-3">
-            <div className="flex items-center gap-1.5 mb-2">
+            <button
+              onClick={() => setSmartOpen(!smartOpen)}
+              className="flex items-center gap-1.5 w-full mb-2"
+            >
               <Sparkles size={13} className="text-w-brand" />
               <h2 className="text-[13px] font-semibold text-w-brand">Check-ins inteligentes</h2>
-              <span className="text-[10px] text-w-text-secondary ml-auto">{smartSuggestions.length} sugerencias</span>
-            </div>
-            <div className="space-y-1.5">
-              {smartSuggestions.map((s) => (
-                <div
-                  key={s.id}
-                  onClick={() => navigate(`/waiter/table/${s.tableId}`)}
-                  className="rounded-[10px] border border-w-brand/20 bg-gradient-to-r from-w-brand/5 to-w-surface p-2.5 cursor-pointer active:scale-[0.98] transition-transform"
-                >
-                  <div className="flex items-start gap-2">
-                    <span className="text-[14px]">{s.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-semibold text-w-text-secondary">Mesa {s.tableNumber}</span>
+              <span className="text-[10px] text-w-text-secondary ml-1">{smartSuggestions.length} sugerencias</span>
+              <span className="ml-auto text-w-text-secondary">
+                {smartOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </span>
+            </button>
+            {smartOpen && (
+              <div className="space-y-1.5">
+                {smartSuggestions.map((s) => (
+                  <div
+                    key={s.id}
+                    onClick={() => navigate(`/waiter/table/${s.tableId}`)}
+                    className="rounded-[10px] border border-w-brand/20 bg-gradient-to-r from-w-brand/5 to-w-surface p-2.5 cursor-pointer active:scale-[0.98] transition-transform"
+                  >
+                    <div className="flex items-start gap-2">
+                      <span className="text-[14px]">{s.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-semibold text-w-text-secondary">Mesa {s.tableNumber}</span>
+                        </div>
+                        <p className="text-[12px] font-medium text-w-text leading-snug mt-0.5">{s.text}</p>
+                        <p className="text-[10px] text-w-text-secondary mt-0.5">{s.reason}</p>
                       </div>
-                      <p className="text-[12px] font-medium text-w-text leading-snug mt-0.5">{s.text}</p>
-                      <p className="text-[10px] text-w-text-secondary mt-0.5">{s.reason}</p>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
