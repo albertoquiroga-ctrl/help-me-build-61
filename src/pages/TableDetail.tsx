@@ -51,7 +51,7 @@ export default function TableDetail() {
   const [showManualOrder, setShowManualOrder] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const allBarOrders = useBarStore((s) => s.orders);
-  const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && (o.status === 'pending' || o.status === 'preparing')), [allBarOrders, id]);
+  const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && o.status !== 'delivered'), [allBarOrders, id]);
 
   // Smart suggestions based on behavioral patterns
   const smartSuggestions = useMemo(() => {
@@ -441,27 +441,38 @@ export default function TableDetail() {
                 </span>
               </div>
               <CookingTimer startedAt={drinkO.createdAt} estimatedMinutes={5} />
-              <button
-                onClick={() => {
-                  const notifStore = useNotificationsStore.getState();
-                  notifStore.addNotification({
-                    id: `bar-reminder-${drinkO.id}-${Date.now()}`,
-                    type: 'bar-msg',
-                    priority: 'high',
-                    tableId: table.id,
-                    title: `🔔 Recordatorio · Mesa ${table.number} · ${drinkO.itemName}`,
-                    subtitle: `El mesero solicita actualización de la bebida`,
-                    channel: 'barra',
-                    timestamp: new Date().toISOString(),
-                    dismissed: false,
-                    resolved: false,
-                  });
-                  toast.success(`🔔 Recordatorio enviado a barra · ${drinkO.itemName}`);
-                }}
-                className="w-full h-10 rounded-[8px] border border-w-brand text-w-brand font-semibold text-[12px] active:scale-[0.98] transition-transform"
-              >
-                🔔 Recordar a barra
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const notifStore = useNotificationsStore.getState();
+                    notifStore.addNotification({
+                      id: `bar-reminder-${drinkO.id}-${Date.now()}`,
+                      type: 'bar-msg',
+                      priority: 'high',
+                      tableId: table.id,
+                      title: `🔔 Recordatorio · Mesa ${table.number} · ${drinkO.itemName}`,
+                      subtitle: `El mesero solicita actualización de la bebida`,
+                      channel: 'barra',
+                      timestamp: new Date().toISOString(),
+                      dismissed: false,
+                      resolved: false,
+                    });
+                    toast.success(`🔔 Recordatorio enviado a barra · ${drinkO.itemName}`);
+                  }}
+                  className="flex-1 h-10 rounded-[8px] border border-w-brand text-w-brand font-semibold text-[12px] active:scale-[0.98] transition-transform"
+                >
+                  🔔 Recordar a barra
+                </button>
+                <button
+                  onClick={() => {
+                    useBarStore.getState().updateStatus(drinkO.id, 'delivered');
+                    toast.success(`✓ ${drinkO.itemName} marcado como entregado · Mesa ${table.number}`);
+                  }}
+                  className="flex-1 h-10 rounded-[8px] border border-w-success text-w-success font-semibold text-[12px] active:scale-[0.98] transition-transform"
+                >
+                  ✓ Entregado
+                </button>
+              </div>
             </motion.div>
           ))}
 
