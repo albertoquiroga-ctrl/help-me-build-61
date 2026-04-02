@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 interface TimerBarProps {
   totalSeconds: number;
   onExpire?: () => void;
-  color?: 'warning' | 'success' | 'error';
+  color?: 'warning' | 'success' | 'error' | 'brand';
   showCountdown?: boolean;
   countdownSize?: 'sm' | 'lg';
 }
