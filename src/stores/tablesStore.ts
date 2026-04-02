@@ -89,6 +89,18 @@ export function getItemsByCategory(table: WaiterTable): Record<string, OrderItem
   return cats;
 }
 
+const CATEGORY_BASE_MINUTES: Record<string, number> = {
+  'Bebidas': 5, 'Entradas': 10, 'Platos Fuertes': 20, 'Postres': 12, 'Otros': 15,
+};
+
+function getRoundEstimate(r: Round): number {
+  const maxBase = r.items.reduce((max, item) => {
+    const base = CATEGORY_BASE_MINUTES[item.category || 'Otros'] || 15;
+    return Math.max(max, base);
+  }, 5);
+  return Math.round(maxBase * 1.2);
+}
+
 /** Derive status + statusText from table data */
 export function deriveTableStatus(table: WaiterTable): { status: TableStatus; statusText: string } {
   const hasPendingRound = table.rounds.some((r) => r.status === 'pending');
@@ -100,11 +112,10 @@ export function deriveTableStatus(table: WaiterTable): { status: TableStatus; st
   const hasCookingRound = table.rounds.some((r) => r.status === 'cooking');
   const hasConfirmedRound = table.rounds.some((r) => r.status === 'confirmed');
   if (hasCookingRound || hasConfirmedRound) {
-    // Find the round closest to being done
     const activeRounds = table.rounds.filter((r) => r.status === 'cooking' || r.status === 'confirmed');
     const nearest = activeRounds.reduce((best, r) => {
       const started = r.cookingStartedAt || r.createdAt;
-      const est = r.estimatedMinutes ?? 15;
+      const est = getRoundEstimate(r);
       const remaining = est * 60 - (Date.now() - new Date(started).getTime()) / 1000;
       if (best === null || remaining < best.remaining) return { remaining, est, started };
       return best;
