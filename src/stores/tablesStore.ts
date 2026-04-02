@@ -31,6 +31,7 @@ export interface PaymentRecord {
   method: 'cash' | 'card-physical' | 'qr';
   guestName?: string;
   timestamp: string;
+  voucherPhoto?: string;
 }
 
 /** Loyalty guest seated at this table (persistent, not notification-based) */
@@ -161,6 +162,7 @@ interface TablesState {
   removeItemFromRound: (tableId: string, roundNumber: number, itemIndex: number) => void;
   removeRound: (tableId: string, roundNumber: number) => void;
   editItemInRound: (tableId: string, roundNumber: number, itemIndex: number, updates: Partial<OrderItem>) => void;
+  attachVoucher: (tableId: string, paymentId: string, photoDataUrl: string) => void;
 }
 
 function applyDerived(tables: WaiterTable[], id: string): WaiterTable[] {
@@ -223,8 +225,9 @@ const initialTables: WaiterTable[] = [
     ],
     payments: [
       { id: 'p2-1', amount: 195, tipAmount: 85, method: 'qr', guestName: 'Laura', timestamp: new Date(Date.now() - 10 * 60000).toISOString() },
+      { id: 'p2-2', amount: 130, tipAmount: 20, method: 'card-physical', guestName: 'Miguel', timestamp: new Date(Date.now() - 8 * 60000).toISOString() },
     ],
-    status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 85,
+    status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 105,
   },
   {
     id: '4', number: 4, section: 'Barra', assignedWaiter: 'María',
@@ -250,9 +253,10 @@ const initialTables: WaiterTable[] = [
     ],
     payments: [
       { id: 'p4-1', amount: 415, tipAmount: 74, method: 'qr', timestamp: new Date(Date.now() - 15 * 60000).toISOString() },
-      { id: 'p4-2', amount: 225, tipAmount: 48, method: 'cash', timestamp: new Date(Date.now() - 12 * 60000).toISOString() },
+      { id: 'p4-2', amount: 225, tipAmount: 48, method: 'cash', guestName: 'Pedro', timestamp: new Date(Date.now() - 12 * 60000).toISOString() },
+      { id: 'p4-3', amount: 180, tipAmount: 30, method: 'card-physical', guestName: 'Ana', timestamp: new Date(Date.now() - 9 * 60000).toISOString() },
     ],
-    status: 'active', statusText: 'En cocina', timeOpened: 32, tipTotal: 122,
+    status: 'active', statusText: 'En cocina', timeOpened: 32, tipTotal: 152,
   },
   {
     id: '6', number: 6, section: 'Sillones', assignedWaiter: 'Carlos',
@@ -271,7 +275,7 @@ const initialTables: WaiterTable[] = [
     ],
     payments: [
       { id: 'p6-1', amount: 510, tipAmount: 52, method: 'qr', timestamp: new Date(Date.now() - 20 * 60000).toISOString() },
-      { id: 'p6-2', amount: 310, tipAmount: 45, method: 'qr', timestamp: new Date(Date.now() - 18 * 60000).toISOString() },
+      { id: 'p6-2', amount: 310, tipAmount: 45, method: 'card-physical', guestName: 'Roberto', timestamp: new Date(Date.now() - 18 * 60000).toISOString() },
     ],
     status: 'paying', statusText: 'Todo pagado', timeOpened: 70, tipTotal: 97,
   },
@@ -488,4 +492,16 @@ export const useTablesStore = create<TablesState>((set) => ({
       });
       return { tables: applyDerived(updated, tableId) };
     }),
+  attachVoucher: (tableId, paymentId, photoDataUrl) =>
+    set((s) => ({
+      tables: s.tables.map((t) => {
+        if (t.id !== tableId) return t;
+        return {
+          ...t,
+          payments: t.payments.map((p) =>
+            p.id === paymentId ? { ...p, voucherPhoto: photoDataUrl } : p
+          ),
+        };
+      }),
+    })),
 }));
