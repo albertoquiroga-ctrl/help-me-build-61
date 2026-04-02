@@ -176,6 +176,7 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
               <div className="space-y-2">
                 <button
                   onClick={() => {
+                    setConfirmStep('none');
                     handlePay('card-physical');
                   }}
                   className="w-full h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
