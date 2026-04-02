@@ -540,25 +540,21 @@ export default function CashPaymentSheet({ tableId, tableNumber, onDismiss }: Pr
                     <span className="font-mono text-[20px] font-bold text-w-text">${grandTotal}</span>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <SlideToConfirm
-                    label="Efectivo"
-                    icon="💵"
-                    onConfirm={() => handlePay('cash')}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmStep('cash-confirm')}
                     disabled={numAmount <= 0}
-                    trackColor="bg-w-success/15"
-                    thumbColor="bg-w-success"
-                    key={`cash-${payKey}`}
-                  />
-                  <SlideToConfirm
-                    label="Tarjeta"
-                    icon="💳"
-                    onConfirm={() => handlePay('card-physical')}
+                    className="flex-1 h-12 rounded-[8px] bg-w-success text-white font-semibold text-[14px] active:scale-[0.98] transition-transform disabled:opacity-40"
+                  >
+                    💵 Efectivo
+                  </button>
+                  <button
+                    onClick={() => setConfirmStep('card-confirm')}
                     disabled={numAmount <= 0}
-                    trackColor="bg-w-brand/15"
-                    thumbColor="bg-w-brand"
-                    key={`card-${payKey}`}
-                  />
+                    className="flex-1 h-12 rounded-[8px] bg-w-brand text-white font-semibold text-[14px] active:scale-[0.98] transition-transform disabled:opacity-40"
+                  >
+                    💳 Tarjeta
+                  </button>
                 </div>
               </div>
             </motion.div>
