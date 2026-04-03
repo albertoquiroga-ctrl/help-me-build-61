@@ -614,6 +614,17 @@ export default function TableDetail() {
         )}
       </AnimatePresence>
 
+      {/* Pre-Check Sheet */}
+      <AnimatePresence>
+        {showPreCheck && (
+          <PreCheckSheet
+            table={table}
+            onDismiss={() => setShowPreCheck(false)}
+            onProceedToPayment={() => setShowPayment(true)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Payment Sheet */}
       <AnimatePresence>
         {showPayment && (
