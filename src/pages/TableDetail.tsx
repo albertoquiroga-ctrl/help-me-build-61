@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronUp, Minus, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Minus, PlusCircle, Trash2, X, StickyNote } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useTablesStore, computeTableBill, computeTotalPaid, getItemsByCategory } from '@/stores/tablesStore';
+import { useTablesStore, computeTableBill, computeTotalPaid, getItemsByCategory, type TableNote } from '@/stores/tablesStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
 import { useBarStore } from '@/stores/barStore';
 import LoyaltyBanner from '@/components/waiter/LoyaltyBanner';
@@ -53,6 +53,11 @@ export default function TableDetail() {
   const [showManualOrder, setShowManualOrder] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showPreCheck, setShowPreCheck] = useState(false);
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [noteTag, setNoteTag] = useState<TableNote['tag']>('info');
+  const addNote = useTablesStore((s) => s.addNote);
+  const removeNote = useTablesStore((s) => s.removeNote);
   const allBarOrders = useBarStore((s) => s.orders);
   const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && o.status !== 'delivered'), [allBarOrders, id]);
 
@@ -154,6 +159,101 @@ export default function TableDetail() {
             <SmartSuggestion key={s.id} suggestion={s} onDismiss={handleDismissSuggestion} />
           ))}
         </AnimatePresence>
+
+        {/* Table notes */}
+        <div className="space-y-2">
+          {table.notes.length > 0 && (
+            <div className="space-y-1.5">
+              {table.notes.map((note) => {
+                const tagStyles = {
+                  warning: { bg: 'bg-w-error/10', border: 'border-w-error/30', text: 'text-w-error', icon: '⚠️' },
+                  vip: { bg: 'bg-w-tip/10', border: 'border-w-tip/30', text: 'text-w-tip', icon: '⭐' },
+                  info: { bg: 'bg-w-brand/10', border: 'border-w-brand/30', text: 'text-w-brand', icon: '📌' },
+                }[note.tag || 'info'];
+                return (
+                  <motion.div
+                    key={note.id}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className={`flex items-start gap-2 rounded-[8px] border ${tagStyles.border} ${tagStyles.bg} px-3 py-2`}
+                  >
+                    <span className="text-[12px] mt-0.5 shrink-0">{tagStyles.icon}</span>
+                    <p className={`text-[12px] ${tagStyles.text} flex-1 leading-snug`}>{note.text}</p>
+                    <button
+                      onClick={() => removeNote(table.id, note.id)}
+                      className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center opacity-50 hover:opacity-100"
+                    >
+                      <X size={10} className="text-w-text-secondary" />
+                    </button>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
+          {showNoteInput ? (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-[10px] border border-w-border bg-w-surface p-3 space-y-2"
+            >
+              <input
+                autoFocus
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Ej: cumpleaños, alergia, cliente VIP..."
+                className="w-full bg-transparent text-[13px] text-w-text placeholder:text-w-text-secondary/50 outline-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && noteText.trim()) {
+                    addNote(table.id, noteText.trim(), noteTag);
+                    setNoteText('');
+                    setShowNoteInput(false);
+                    toast.success('📌 Nota agregada');
+                  }
+                }}
+              />
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  {([['info', '📌'], ['warning', '⚠️'], ['vip', '⭐']] as [TableNote['tag'], string][]).map(([tag, icon]) => (
+                    <button
+                      key={tag}
+                      onClick={() => setNoteTag(tag)}
+                      className={`text-[11px] px-2 py-1 rounded-[6px] border transition-colors ${noteTag === tag ? 'border-w-brand bg-w-brand/10 text-w-brand' : 'border-w-border text-w-text-secondary'}`}
+                    >
+                      {icon} {tag === 'info' ? 'Info' : tag === 'warning' ? 'Alerta' : 'VIP'}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex-1" />
+                <button onClick={() => { setShowNoteInput(false); setNoteText(''); }} className="text-[12px] text-w-text-secondary px-2">
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (noteText.trim()) {
+                      addNote(table.id, noteText.trim(), noteTag);
+                      setNoteText('');
+                      setShowNoteInput(false);
+                      toast.success('📌 Nota agregada');
+                    }
+                  }}
+                  className="text-[12px] font-semibold text-w-brand px-2"
+                >
+                  Guardar
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <button
+              onClick={() => setShowNoteInput(true)}
+              className="flex items-center gap-1.5 text-[12px] text-w-text-secondary hover:text-w-brand transition-colors"
+            >
+              <StickyNote size={13} />
+              <span>Agregar nota</span>
+            </button>
+          )}
+        </div>
 
         {/* Capture order button */}
         <button
