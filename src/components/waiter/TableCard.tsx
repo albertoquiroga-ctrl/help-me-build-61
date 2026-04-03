@@ -187,6 +187,7 @@ export default function TableCard({ table }: TableCardProps) {
       )}
       <div className="flex justify-center mt-1.5 gap-1 flex-wrap">
         {serviceCallBadge}
+        {checkRequestBadge}
         {timerBadge}
         {drinkBadge}
         {totalBill > 0 && totalPaid > 0 && (
