@@ -313,8 +313,14 @@ const initialTables: WaiterTable[] = [
   },
   {
     id: '3', number: 3, section: 'Interior', assignedWaiter: 'Carlos',
-    rounds: [], payments: [],
-    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+    rounds: [
+      { number: 1, label: 'Bebidas', items: [
+        { name: 'Cerveza Artesanal', qty: 2, price: 95, category: 'Bebidas' },
+        { name: 'Limonada', qty: 1, price: 55, category: 'Bebidas' },
+      ], status: 'delivered', createdAt: new Date(Date.now() - 20 * 60000).toISOString() },
+    ],
+    payments: [],
+    status: 'active', statusText: 'Todo entregado', timeOpened: 22, tipTotal: 0,
   },
   {
     id: '5', number: 5, section: 'Bancos altos', assignedWaiter: 'María',
