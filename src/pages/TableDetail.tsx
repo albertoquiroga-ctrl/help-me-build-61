@@ -204,43 +204,37 @@ export default function TableDetail() {
         )}
 
         {/* Service calls from diners */}
-        {(() => {
-          const notifStore = useNotificationsStore.getState();
-          const serviceCalls = notifStore.queue.filter(
-            (n) => n.type === 'service-call' && n.tableId === table.id && !n.resolved
-          );
-          if (serviceCalls.length === 0) return null;
-          return serviceCalls.map((sc) => (
-            <motion.div
-              key={sc.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-[10px] border-2 border-w-priority/40 bg-w-priority/5 p-3 space-y-2"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-[16px]">🔔</span>
-                  <div>
-                    <p className="text-[13px] font-semibold text-w-text">{sc.title}</p>
-                    <p className="text-[11px] text-w-text-secondary">{sc.subtitle}</p>
-                  </div>
+        {pendingServiceCalls.length > 0 && pendingServiceCalls.map((sc) => (
+          <motion.div
+            key={sc.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="rounded-[10px] border-2 border-w-priority/40 bg-w-priority/5 p-3 space-y-2"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-[16px]">🔔</span>
+                <div>
+                  <p className="text-[13px] font-semibold text-w-text">{sc.title}</p>
+                  <p className="text-[11px] text-w-text-secondary">{sc.subtitle}</p>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-w-priority/15 text-w-priority font-medium animate-pulse">
-                  Pendiente
-                </span>
               </div>
-              <button
-                onClick={() => {
-                  useNotificationsStore.getState().resolve(sc.id, 'Atendido ✓');
-                  toast.success(`✓ Llamado atendido · Mesa ${table.number}`);
-                }}
-                className="w-full h-10 rounded-[8px] bg-w-priority text-white font-semibold text-[12px] active:scale-[0.98] transition-transform"
-              >
-                ✓ Marcar como atendido
-              </button>
-            </motion.div>
-          ));
-        })()}
+              <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-w-priority/15 text-w-priority font-medium animate-pulse">
+                Pendiente
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                useNotificationsStore.getState().resolve(sc.id, 'Atendido ✓');
+                toast.success(`✓ Llamado atendido · Mesa ${table.number}`);
+              }}
+              className="w-full h-10 rounded-[8px] bg-w-priority text-white font-semibold text-[12px] active:scale-[0.98] transition-transform"
+            >
+              ✓ Marcar como atendido
+            </button>
+          </motion.div>
+        ))}
 
         {/* Contextual Actions */}
         <div className="space-y-2">
