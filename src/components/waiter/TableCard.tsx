@@ -130,12 +130,12 @@ export default function TableCard({ table }: TableCardProps) {
     }
   }
 
-  // Service call badge
-  const serviceCallNotifs = useNotificationsStore((s) => s.queue.filter(
-    (n) => n.type === 'service-call' && n.tableId === table.id && !n.resolved
-  ));
+  // Service call badge — use a stable selector (boolean) to avoid new array refs
+  const hasServiceCall = useNotificationsStore((s) =>
+    s.queue.some((n) => n.type === 'service-call' && n.tableId === table.id && !n.resolved)
+  );
   let serviceCallBadge: React.ReactNode = null;
-  if (serviceCallNotifs.length > 0) {
+  if (hasServiceCall) {
     serviceCallBadge = (
       <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-priority/15 text-w-priority font-semibold animate-pulse">
         🔔 Llamado
