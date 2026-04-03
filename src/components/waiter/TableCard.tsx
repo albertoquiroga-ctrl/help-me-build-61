@@ -130,6 +130,19 @@ export default function TableCard({ table }: TableCardProps) {
     }
   }
 
+  // Service call badge
+  const serviceCallNotifs = useNotificationsStore((s) => s.queue.filter(
+    (n) => n.type === 'service-call' && n.tableId === table.id && !n.resolved
+  ));
+  let serviceCallBadge: React.ReactNode = null;
+  if (serviceCallNotifs.length > 0) {
+    serviceCallBadge = (
+      <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-priority/15 text-w-priority font-semibold animate-pulse">
+        🔔 Llamado
+      </span>
+    );
+  }
+
   // Bar drink overdue
   const barOrders = useBarStore.getState().orders.filter(
     (o) => o.tableId === table.id && o.status === 'preparing' && o.preparingStartedAt && o.estimatedMinutes
