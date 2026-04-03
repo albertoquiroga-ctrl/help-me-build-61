@@ -11,6 +11,7 @@ import { generateSmartSuggestions } from '@/lib/smartSuggestions';
 import type { SmartSuggestionData } from '@/lib/smartSuggestions';
 import ManualOrderSheet from '@/components/waiter/ManualOrderSheet';
 import CashPaymentSheet from '@/components/waiter/CashPaymentSheet';
+import PreCheckSheet from '@/components/waiter/PreCheckSheet';
 import CookingTimer from '@/components/waiter/CookingTimer';
 import { toast } from 'sonner';
 
@@ -51,6 +52,7 @@ export default function TableDetail() {
   const closeTable = useTablesStore((s) => s.closeTable);
   const [showManualOrder, setShowManualOrder] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showPreCheck, setShowPreCheck] = useState(false);
   const allBarOrders = useBarStore((s) => s.orders);
   const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && o.status !== 'delivered'), [allBarOrders, id]);
 
@@ -549,6 +551,16 @@ export default function TableDetail() {
             </button>
           )}
 
+          {/* Pre-check button */}
+          {totalBill > 0 && !fullyPaid && (
+            <button
+              onClick={() => setShowPreCheck(true)}
+              className="w-full h-12 rounded-[8px] border-2 border-w-brand text-w-brand font-semibold text-[14px] active:scale-[0.98] transition-transform"
+            >
+              🧾 Pedir la cuenta
+            </button>
+          )}
+
           {/* Payment button */}
           {totalBill > 0 && !fullyPaid && (
             <button
@@ -598,6 +610,17 @@ export default function TableDetail() {
           <ManualOrderSheet
             tableId={table.id}
             onDismiss={() => setShowManualOrder(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Pre-Check Sheet */}
+      <AnimatePresence>
+        {showPreCheck && (
+          <PreCheckSheet
+            table={table}
+            onDismiss={() => setShowPreCheck(false)}
+            onProceedToPayment={() => setShowPayment(true)}
           />
         )}
       </AnimatePresence>
