@@ -45,6 +45,13 @@ export interface LoyaltyGuest {
   avgSpend: number;
 }
 
+export interface TableNote {
+  id: string;
+  text: string;
+  createdAt: string;
+  tag?: 'warning' | 'info' | 'vip';
+}
+
 export interface WaiterTable {
   id: string;
   number: number;
@@ -57,6 +64,7 @@ export interface WaiterTable {
   section?: string;
   assignedWaiter?: string;
   loyaltyGuest?: LoyaltyGuest;
+  notes: TableNote[];
 }
 
 /** Compute total bill from all rounds */
