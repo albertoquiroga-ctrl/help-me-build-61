@@ -143,6 +143,19 @@ export default function TableCard({ table }: TableCardProps) {
     );
   }
 
+  // Check request badge
+  const hasCheckRequest = useNotificationsStore((s) =>
+    s.queue.some((n) => n.type === 'check-request' && n.tableId === table.id && !n.resolved)
+  );
+  let checkRequestBadge: React.ReactNode = null;
+  if (hasCheckRequest) {
+    checkRequestBadge = (
+      <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-brand/15 text-w-brand font-semibold animate-pulse">
+        🧾 Cuenta
+      </span>
+    );
+  }
+
   // Bar drink overdue
   const barOrders = useBarStore.getState().orders.filter(
     (o) => o.tableId === table.id && o.status === 'preparing' && o.preparingStartedAt && o.estimatedMinutes
