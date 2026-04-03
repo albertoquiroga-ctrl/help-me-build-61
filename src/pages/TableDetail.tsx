@@ -54,9 +54,11 @@ export default function TableDetail() {
   const allBarOrders = useBarStore((s) => s.orders);
   const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && o.status !== 'delivered'), [allBarOrders, id]);
 
-  // Reactive service call notifications for this table
-  const pendingServiceCalls = useNotificationsStore((s) =>
-    s.queue.filter((n) => n.type === 'service-call' && n.tableId === id && !n.resolved)
+  // Reactive service call notifications for this table — use stable selector
+  const allNotifications = useNotificationsStore((s) => s.queue);
+  const pendingServiceCalls = useMemo(() =>
+    allNotifications.filter((n) => n.type === 'service-call' && n.tableId === id && !n.resolved),
+    [allNotifications, id]
   );
 
   // Smart suggestions based on behavioral patterns
