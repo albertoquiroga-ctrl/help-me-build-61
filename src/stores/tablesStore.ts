@@ -220,7 +220,7 @@ const initialTables: WaiterTable[] = [
   {
     id: '1', number: 1, section: 'Interior', assignedWaiter: 'Carlos',
     rounds: [], payments: [],
-    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0, notes: [],
   },
   {
     id: '2', number: 2, section: 'Interior', assignedWaiter: 'Carlos',
@@ -246,7 +246,7 @@ const initialTables: WaiterTable[] = [
       { id: 'p2-1', amount: 195, tipAmount: 85, method: 'qr', guestName: 'Laura', timestamp: new Date(Date.now() - 10 * 60000).toISOString() },
       { id: 'p2-2', amount: 130, tipAmount: 20, method: 'card-physical', guestName: 'Miguel', timestamp: new Date(Date.now() - 8 * 60000).toISOString() },
     ],
-    status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 105,
+    status: 'active', statusText: 'En cocina', timeOpened: 45, tipTotal: 105, notes: [],
   },
   {
     id: '4', number: 4, section: 'Barra', assignedWaiter: 'María',
@@ -275,7 +275,7 @@ const initialTables: WaiterTable[] = [
       { id: 'p4-2', amount: 225, tipAmount: 48, method: 'cash', guestName: 'Pedro', timestamp: new Date(Date.now() - 12 * 60000).toISOString() },
       { id: 'p4-3', amount: 180, tipAmount: 30, method: 'card-physical', guestName: 'Ana', timestamp: new Date(Date.now() - 9 * 60000).toISOString() },
     ],
-    status: 'active', statusText: 'En cocina', timeOpened: 32, tipTotal: 152,
+    status: 'active', statusText: 'En cocina', timeOpened: 32, tipTotal: 152, notes: [],
   },
   {
     id: '6', number: 6, section: 'Sillones', assignedWaiter: 'Carlos',
@@ -296,7 +296,7 @@ const initialTables: WaiterTable[] = [
       { id: 'p6-1', amount: 510, tipAmount: 52, method: 'qr', timestamp: new Date(Date.now() - 20 * 60000).toISOString() },
       { id: 'p6-2', amount: 310, tipAmount: 45, method: 'card-physical', guestName: 'Roberto', timestamp: new Date(Date.now() - 18 * 60000).toISOString() },
     ],
-    status: 'paying', statusText: 'Todo pagado', timeOpened: 70, tipTotal: 97,
+    status: 'paying', statusText: 'Todo pagado', timeOpened: 70, tipTotal: 97, notes: [],
   },
   {
     id: '7', number: 7, section: 'Terraza', assignedWaiter: 'Luis',
@@ -319,7 +319,7 @@ const initialTables: WaiterTable[] = [
       ], status: 'pending', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
     ],
     payments: [],
-    status: 'active', statusText: 'En orden', timeOpened: 28, tipTotal: 0,
+    status: 'active', statusText: 'En orden', timeOpened: 28, tipTotal: 0, notes: [],
   },
   {
     id: '3', number: 3, section: 'Interior', assignedWaiter: 'Carlos',
@@ -330,47 +330,47 @@ const initialTables: WaiterTable[] = [
       ], status: 'delivered', createdAt: new Date(Date.now() - 20 * 60000).toISOString() },
     ],
     payments: [],
-    status: 'active', statusText: 'Todo entregado', timeOpened: 22, tipTotal: 0,
+    status: 'active', statusText: 'Todo entregado', timeOpened: 22, tipTotal: 0, notes: [{ id: 'n3-1', text: 'Cumpleaños de la señora — traer pastel con vela', createdAt: new Date(Date.now() - 15 * 60000).toISOString(), tag: 'info' }, { id: 'n3-2', text: 'Alergia a mariscos', createdAt: new Date(Date.now() - 20 * 60000).toISOString(), tag: 'warning' }],
   },
   {
     id: '5', number: 5, section: 'Bancos altos', assignedWaiter: 'María',
     rounds: [], payments: [],
-    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0, notes: [],
   },
   {
     id: '8', number: 8, section: 'Bancos altos', assignedWaiter: 'María',
     rounds: [], payments: [],
-    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0, notes: [],
   },
   {
     id: '9', number: 9, section: 'Área de fumar', assignedWaiter: 'Luis',
     rounds: [], payments: [],
-    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0, notes: [],
   },
   {
     id: '10', number: 10, section: 'Terraza', assignedWaiter: 'Luis',
     rounds: [], payments: [],
-    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0, notes: [],
   },
   {
     id: '12', number: 12, section: 'Sillones', assignedWaiter: 'María',
     rounds: [], payments: [],
-    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0, notes: [],
   },
   {
     id: '13', number: 13, section: 'Interior', assignedWaiter: 'Luis',
     rounds: [], payments: [],
-    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0, notes: [],
   },
   {
     id: '14', number: 14, section: 'Área de fumar', assignedWaiter: 'Carlos',
     rounds: [], payments: [],
-    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0, notes: [],
   },
   {
     id: '15', number: 15, section: 'Terraza', assignedWaiter: 'Luis',
     rounds: [], payments: [],
-    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0,
+    status: 'empty', statusText: 'Disponible', timeOpened: 0, tipTotal: 0, notes: [],
   },
   {
     id: '11', number: 11, section: 'Barra', assignedWaiter: 'María',
@@ -383,7 +383,7 @@ const initialTables: WaiterTable[] = [
     payments: [
       { id: 'p11-1', amount: 245, tipAmount: 36, method: 'qr', timestamp: new Date(Date.now() - 30 * 60000).toISOString() },
     ],
-    status: 'active', statusText: 'En orden', timeOpened: 55, tipTotal: 36,
+    status: 'active', statusText: 'En orden', timeOpened: 55, tipTotal: 36, notes: [],
   },
 ];
 
