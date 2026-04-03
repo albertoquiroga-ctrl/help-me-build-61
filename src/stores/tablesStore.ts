@@ -456,7 +456,7 @@ export const useTablesStore = create<TablesState>((set) => ({
   closeTable: (id) =>
     set((s) => ({
       tables: s.tables.map((t) =>
-        t.id === id ? { ...t, status: 'empty' as TableStatus, statusText: 'Disponible', rounds: [], payments: [], tipTotal: 0, timeOpened: 0 } : t
+        t.id === id ? { ...t, status: 'empty' as TableStatus, statusText: 'Disponible', rounds: [], payments: [], tipTotal: 0, timeOpened: 0, notes: [], loyaltyGuest: undefined } : t
       ),
     })),
   recalculateStatus: (id) =>
