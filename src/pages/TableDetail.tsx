@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronDown, ChevronUp, Minus, PlusCircle, Trash2, X, StickyNote } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useTablesStore, computeTableBill, computeTotalPaid, getItemsByCategory } from '@/stores/tablesStore';
+import { useTablesStore, computeTableBill, computeTotalPaid, getItemsByCategory, type TableNote } from '@/stores/tablesStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
 import { useBarStore } from '@/stores/barStore';
 import LoyaltyBanner from '@/components/waiter/LoyaltyBanner';
