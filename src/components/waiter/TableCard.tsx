@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import type { WaiterTable, Round } from '@/stores/tablesStore';
 import { useTablesStore, computeTableBill, computeTotalPaid } from '@/stores/tablesStore';
 import { useBarStore } from '@/stores/barStore';
+import { useNotificationsStore } from '@/stores/notificationsStore';
 import { toast } from 'sonner';
 import OpenTableDialog from './OpenTableDialog';
 import { getOverdueMinutes } from './CookingTimer';
@@ -129,6 +130,19 @@ export default function TableCard({ table }: TableCardProps) {
     }
   }
 
+  // Service call badge
+  const serviceCallNotifs = useNotificationsStore((s) => s.queue.filter(
+    (n) => n.type === 'service-call' && n.tableId === table.id && !n.resolved
+  ));
+  let serviceCallBadge: React.ReactNode = null;
+  if (serviceCallNotifs.length > 0) {
+    serviceCallBadge = (
+      <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] bg-w-priority/15 text-w-priority font-semibold animate-pulse">
+        🔔 Llamado
+      </span>
+    );
+  }
+
   // Bar drink overdue
   const barOrders = useBarStore.getState().orders.filter(
     (o) => o.tableId === table.id && o.status === 'preparing' && o.preparingStartedAt && o.estimatedMinutes
@@ -159,6 +173,7 @@ export default function TableCard({ table }: TableCardProps) {
         <p className="text-[12px] text-w-text-secondary text-center mt-0.5">🍽 {itemCount} items</p>
       )}
       <div className="flex justify-center mt-1.5 gap-1 flex-wrap">
+        {serviceCallBadge}
         {timerBadge}
         {drinkBadge}
         {totalBill > 0 && totalPaid > 0 && (
