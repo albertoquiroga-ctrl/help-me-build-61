@@ -173,6 +173,7 @@ export default function TableCard({ table }: TableCardProps) {
         <p className="text-[12px] text-w-text-secondary text-center mt-0.5">🍽 {itemCount} items</p>
       )}
       <div className="flex justify-center mt-1.5 gap-1 flex-wrap">
+        {serviceCallBadge}
         {timerBadge}
         {drinkBadge}
         {totalBill > 0 && totalPaid > 0 && (
