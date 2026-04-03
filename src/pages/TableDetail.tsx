@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronUp, Minus, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Minus, PlusCircle, Trash2, X, StickyNote } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTablesStore, computeTableBill, computeTotalPaid, getItemsByCategory } from '@/stores/tablesStore';
