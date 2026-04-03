@@ -551,6 +551,16 @@ export default function TableDetail() {
             </button>
           )}
 
+          {/* Pre-check button */}
+          {totalBill > 0 && !fullyPaid && (
+            <button
+              onClick={() => setShowPreCheck(true)}
+              className="w-full h-12 rounded-[8px] border-2 border-w-brand text-w-brand font-semibold text-[14px] active:scale-[0.98] transition-transform"
+            >
+              🧾 Pedir la cuenta
+            </button>
+          )}
+
           {/* Payment button */}
           {totalBill > 0 && !fullyPaid && (
             <button
