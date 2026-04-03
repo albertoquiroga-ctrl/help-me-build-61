@@ -67,6 +67,10 @@ export default function TableDetail() {
     allNotifications.filter((n) => n.type === 'service-call' && n.tableId === id && !n.resolved),
     [allNotifications, id]
   );
+  const pendingCheckRequests = useMemo(() =>
+    allNotifications.filter((n) => n.type === 'check-request' && n.tableId === id && !n.resolved),
+    [allNotifications, id]
+  );
 
   // Smart suggestions based on behavioral patterns
   const smartSuggestions = useMemo(() => {
