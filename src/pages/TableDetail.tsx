@@ -67,6 +67,10 @@ export default function TableDetail() {
     allNotifications.filter((n) => n.type === 'service-call' && n.tableId === id && !n.resolved),
     [allNotifications, id]
   );
+  const pendingCheckRequests = useMemo(() =>
+    allNotifications.filter((n) => n.type === 'check-request' && n.tableId === id && !n.resolved),
+    [allNotifications, id]
+  );
 
   // Smart suggestions based on behavioral patterns
   const smartSuggestions = useMemo(() => {
@@ -651,15 +655,39 @@ export default function TableDetail() {
             </button>
           )}
 
-          {/* Pre-check button */}
-          {totalBill > 0 && !fullyPaid && (
-            <button
-              onClick={() => setShowPreCheck(true)}
-              className="w-full h-12 rounded-[8px] border-2 border-w-brand text-w-brand font-semibold text-[14px] active:scale-[0.98] transition-transform"
+          {/* Check request from diner */}
+          {pendingCheckRequests.length > 0 && pendingCheckRequests.map((cr) => (
+            <motion.div
+              key={cr.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="rounded-[10px] border-2 border-w-brand/50 bg-w-brand/5 p-3 space-y-2"
             >
-              🧾 Pedir la cuenta
-            </button>
-          )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-[16px]">🧾</span>
+                  <div>
+                    <p className="text-[13px] font-semibold text-w-text">{cr.title}</p>
+                    <p className="text-[11px] text-w-text-secondary">{cr.subtitle}</p>
+                  </div>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-w-brand/15 text-w-brand font-medium animate-pulse">
+                  Pendiente
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  useNotificationsStore.getState().resolve(cr.id, 'Cuenta generada ✓');
+                  setShowPreCheck(true);
+                  toast.success(`🧾 Generando pre-cuenta · Mesa ${table.number}`);
+                }}
+                className="w-full h-10 rounded-[8px] bg-w-brand text-white font-semibold text-[12px] active:scale-[0.98] transition-transform"
+              >
+                🧾 Generar y llevar la cuenta
+              </button>
+            </motion.div>
+          ))}
 
           {/* Payment button */}
           {totalBill > 0 && !fullyPaid && (
