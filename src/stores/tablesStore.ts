@@ -547,4 +547,20 @@ export const useTablesStore = create<TablesState>((set) => ({
         };
       }),
     })),
+  addNote: (tableId, text, tag) =>
+    set((s) => ({
+      tables: s.tables.map((t) =>
+        t.id === tableId
+          ? { ...t, notes: [...t.notes, { id: `note-${Date.now()}`, text, createdAt: new Date().toISOString(), tag }] }
+          : t
+      ),
+    })),
+  removeNote: (tableId, noteId) =>
+    set((s) => ({
+      tables: s.tables.map((t) =>
+        t.id === tableId
+          ? { ...t, notes: t.notes.filter((n) => n.id !== noteId) }
+          : t
+      ),
+    })),
 }));
