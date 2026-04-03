@@ -52,6 +52,7 @@ export default function TableDetail() {
   const closeTable = useTablesStore((s) => s.closeTable);
   const [showManualOrder, setShowManualOrder] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showPreCheck, setShowPreCheck] = useState(false);
   const allBarOrders = useBarStore((s) => s.orders);
   const barDrinkOrders = useMemo(() => allBarOrders.filter((o) => o.tableId === id && o.status !== 'delivered'), [allBarOrders, id]);
 
