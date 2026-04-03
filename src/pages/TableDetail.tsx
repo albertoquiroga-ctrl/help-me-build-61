@@ -11,6 +11,7 @@ import { generateSmartSuggestions } from '@/lib/smartSuggestions';
 import type { SmartSuggestionData } from '@/lib/smartSuggestions';
 import ManualOrderSheet from '@/components/waiter/ManualOrderSheet';
 import CashPaymentSheet from '@/components/waiter/CashPaymentSheet';
+import PreCheckSheet from '@/components/waiter/PreCheckSheet';
 import CookingTimer from '@/components/waiter/CookingTimer';
 import { toast } from 'sonner';
 
