@@ -47,6 +47,12 @@ export default function TableCard({ table }: TableCardProps) {
   const navigate = useNavigate();
   const openTable = useTablesStore((s) => s.openTable);
   const recalculateStatus = useTablesStore((s) => s.recalculateStatus);
+  const hasServiceCall = useNotificationsStore((s) =>
+    s.queue.some((n) => n.type === 'service-call' && n.tableId === table.id && !n.resolved)
+  );
+  const hasCheckRequest = useNotificationsStore((s) =>
+    s.queue.some((n) => n.type === 'check-request' && n.tableId === table.id && !n.resolved)
+  );
   const isEmpty = table.status === 'empty';
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const dot = getDotInfo(table);
@@ -131,9 +137,6 @@ export default function TableCard({ table }: TableCardProps) {
   }
 
   // Service call badge — use a stable selector (boolean) to avoid new array refs
-  const hasServiceCall = useNotificationsStore((s) =>
-    s.queue.some((n) => n.type === 'service-call' && n.tableId === table.id && !n.resolved)
-  );
   let serviceCallBadge: React.ReactNode = null;
   if (hasServiceCall) {
     serviceCallBadge = (
@@ -144,9 +147,6 @@ export default function TableCard({ table }: TableCardProps) {
   }
 
   // Check request badge
-  const hasCheckRequest = useNotificationsStore((s) =>
-    s.queue.some((n) => n.type === 'check-request' && n.tableId === table.id && !n.resolved)
-  );
   let checkRequestBadge: React.ReactNode = null;
   if (hasCheckRequest) {
     checkRequestBadge = (
